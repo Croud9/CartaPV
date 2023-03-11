@@ -1,0 +1,448 @@
+/*!*********************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[0].use[1]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[0].use[2]!./src/scss/base.scss ***!
+  \*********************************************************************************************************************************************************************/
+@import url(https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700;800;900&display=swap);
+/*!*************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[0].use[1]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[0].use[2]!./src/scss/base.scss (1) ***!
+  \*************************************************************************************************************************************************************************/
+@import url(https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css);
+/*!*************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[0].use[1]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[0].use[2]!./src/scss/base.scss (2) ***!
+  \*************************************************************************************************************************************************************************/
+@import url(https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.2.0/mapbox-gl-draw.css);
+/*!***************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[0].use[1]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[0].use[2]!./node_modules/mapbox-gl-style-switcher/styles.css ***!
+  \***************************************************************************************************************************************************************************************************/
+.mapboxgl-style-list {
+  display: none; }
+
+.mapboxgl-ctrl-group .mapboxgl-style-list button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: block;
+  font-size: 14px;
+  padding: 8px 8px 6px;
+  text-align: right;
+  width: 100%;
+  height: auto; }
+
+.mapboxgl-style-list button.active {
+  font-weight: bold; }
+
+.mapboxgl-style-list button:hover {
+  background-color: rgba(0, 0, 0, 0.05); }
+
+.mapboxgl-style-list button + button {
+  border-top: 1px solid #ddd; }
+
+.mapboxgl-style-switcher {
+  background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/PjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+PHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJDYXBhXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IiB3aWR0aD0iNTQuODQ5cHgiIGhlaWdodD0iNTQuODQ5cHgiIHZpZXdCb3g9IjAgMCA1NC44NDkgNTQuODQ5IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA1NC44NDkgNTQuODQ5OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+PGc+PGc+PGc+PHBhdGggZD0iTTU0LjQ5NywzOS42MTRsLTEwLjM2My00LjQ5bC0xNC45MTcsNS45NjhjLTAuNTM3LDAuMjE0LTEuMTY1LDAuMzE5LTEuNzkzLDAuMzE5Yy0wLjYyNywwLTEuMjU0LTAuMTA0LTEuNzktMC4zMThsLTE0LjkyMS01Ljk2OEwwLjM1MSwzOS42MTRjLTAuNDcyLDAuMjAzLTAuNDY3LDAuNTI0LDAuMDEsMC43MTZMMjYuNTYsNTAuODFjMC40NzcsMC4xOTEsMS4yNTEsMC4xOTEsMS43MjksMEw1NC40ODgsNDAuMzNDNTQuOTY0LDQwLjEzOSw1NC45NjksMzkuODE3LDU0LjQ5NywzOS42MTR6Ii8+PHBhdGggZD0iTTU0LjQ5NywyNy41MTJsLTEwLjM2NC00LjQ5MWwtMTQuOTE2LDUuOTY2Yy0wLjUzNiwwLjIxNS0xLjE2NSwwLjMyMS0xLjc5MiwwLjMyMWMtMC42MjgsMC0xLjI1Ni0wLjEwNi0xLjc5My0wLjMyMWwtMTQuOTE4LTUuOTY2TDAuMzUxLDI3LjUxMmMtMC40NzIsMC4yMDMtMC40NjcsMC41MjMsMC4wMSwwLjcxNkwyNi41NiwzOC43MDZjMC40NzcsMC4xOSwxLjI1MSwwLjE5LDEuNzI5LDBsMjYuMTk5LTEwLjQ3OUM1NC45NjQsMjguMDM2LDU0Ljk2OSwyNy43MTYsNTQuNDk3LDI3LjUxMnoiLz48cGF0aCBkPSJNMC4zNjEsMTYuMTI1bDEzLjY2Miw1LjQ2NWwxMi41MzcsNS4wMTVjMC40NzcsMC4xOTEsMS4yNTEsMC4xOTEsMS43MjksMGwxMi41NDEtNS4wMTZsMTMuNjU4LTUuNDYzYzAuNDc3LTAuMTkxLDAuNDgtMC41MTEsMC4wMS0wLjcxNkwyOC4yNzcsNC4wNDhjLTAuNDcxLTAuMjA0LTEuMjM2LTAuMjA0LTEuNzA4LDBMMC4zNTEsMTUuNDFDLTAuMTIxLDE1LjYxNC0wLjExNiwxNS45MzUsMC4zNjEsMTYuMTI1eiIvPjwvZz48L2c+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjwvc3ZnPg==);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 70%; }
+
+/*!************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[0].use[1]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[0].use[2]!./node_modules/@watergis/mapbox-gl-elevation/css/styles.css ***!
+  \************************************************************************************************************************************************************************************************************/
+.mapboxgl-print-list {
+  display: none; }
+
+.mapboxgl-ctrl-group .mapboxgl-elevation-list button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: block;
+  font-size: 14px;
+  padding: 8px 8px 6px;
+  text-align: right;
+  width: 100%;
+  height: auto; }
+
+.mapboxgl-elevation-list button.active {
+  font-weight: bold; }
+
+.mapboxgl-elevation-list button:hover {
+  background-color: rgba(0, 0, 0, 0.05); }
+
+.mapboxgl-elevation-list button + button {
+  border-top: 1px solid #ddd; }
+
+.mapboxgl-elevation-measure-button {
+  background: url("data:image/svg+xml;charset=UTF-8,<svg id=\"Capa_1\" enable-background=\"new 0 0 355.175 355.175\" height=\"355.175\" viewBox=\"0 0 355.175 355.175\" width=\"355.175\" xmlns=\"http://www.w3.org/2000/svg\"><g><path d=\"M346.175,191.576h-46.989l-33.557-36.854c-3.194-3.508-8.563-3.934-12.27-0.975l-20.818,16.62l-54.918-86.747 c-1.65-2.606-4.52-4.186-7.604-4.186s-5.954,1.58-7.604,4.186l-46.893,74.071L97.94,131.962c-1.677-2.454-4.458-3.922-7.431-3.922 s-5.753,1.468-7.431,3.922L42.34,191.576H9c-4.971,0-9,4.029-9,9s4.029,9,9,9h21.039l-7.162,10.479c-2.805,4.104-1.751,9.704,2.353,12.509c1.553,1.062,3.321,1.57,5.07,1.57c2.873,0,5.696-1.373,7.439-3.923l3.47-5.078 l49.301-72.141l14.529,21.261l-32.212,50.881l-23.292,36.792c-2.659,4.2-1.41,9.759,2.79,12.418 c1.494,0.945,3.159,1.396,4.806,1.396c2.981,0,5.899-1.481,7.612-4.187l4.277-6.756l101-159.536l82.055,129.612l2.049,3.236 c2.658,4.199,8.218,5.448,12.418,2.79c3.822-2.42,5.19-7.24,3.402-11.253c-0.177-0.396-0.373-0.788-0.612-1.165l-27.104-42.813 l15.771-12.591l54.048,59.359l6.299,6.918c1.776,1.951,4.212,2.941,6.657,2.941c2.163,0,4.332-0.775,6.057-2.345 c3.675-3.347,3.942-9.039,0.596-12.714l-16.08-17.66h30.6c4.971,0,9-4.029,9-9S351.146,191.576,346.175,191.576z\"/></g></svg>");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 70%; }
+
+.mapboxgl-elevation-download-button {
+  background: url("data:image/svg+xml;charset=UTF-8,<svg id=\"Capa_1\" enable-background=\"new 0 0 512 512\" height=\"512\" viewBox=\"0 0 512 512\" width=\"512\" xmlns=\"http://www.w3.org/2000/svg\"><g><g><path d=\"M382.56,233.376C379.968,227.648,374.272,224,368,224h-64V16c0-8.832-7.168-16-16-16h-64c-8.832,0-16,7.168-16,16v208h-64c-6.272,0-11.968,3.68-14.56,9.376c-2.624,5.728-1.6,12.416,2.528,17.152l112,128c3.04,3.488,7.424,5.472,12.032,5.472 c4.608,0,8.992-2.016,12.032-5.472l112-128C384.192,245.824,385.152,239.104,382.56,233.376z\"/></g></g><g><g><path d=\"M432,352v96H80v-96H16v128c0,17.696,14.336,32,32,32h416c17.696,0,32-14.304,32-32V352H432z\"/></g></g></svg>");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 70%; }
+
+.mapboxgl-elevation-clear-button {
+  background: url("data:image/svg+xml;charset=UTF-8,<svg id=\"Capa_1\" enable-background=\"new 0 0 512 512\" height=\"512\" viewBox=\"0 0 512 512\" width=\"512\" xmlns=\"http://www.w3.org/2000/svg\"><g><path d=\"m317.025 33.131-317.025 317.025 128.835 128.834h132.521l250.765-250.764zm152.67 195.095-84.233 84.233-152.669-152.669 84.232-84.232zm-105.446 105.446-21.247 21.247-152.67-152.669 21.248-21.248zm-115.318 115.318h-107.67l-98.835-98.834 126.693-126.693 152.67 152.669z\"/></g></svg>");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 70%; }
+
+/*!****************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[0].use[1]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[0].use[2]!./node_modules/@maplibre/maplibre-gl-geocoder/dist/maplibre-gl-geocoder.css ***!
+  \****************************************************************************************************************************************************************************************************************************/
+/* Basics */
+.maplibregl-ctrl-geocoder,
+.maplibregl-ctrl-geocoder *,
+.maplibregl-ctrl-geocoder *:after,
+.maplibregl-ctrl-geocoder *:before {
+  box-sizing: border-box; }
+
+.maplibregl-ctrl-geocoder {
+  font-size: 18px;
+  line-height: 24px;
+  font-family: "Open Sans", "Helvetica Neue", Arial, Helvetica, sans-serif;
+  position: relative;
+  background-color: #fff;
+  width: 100%;
+  min-width: 240px;
+  z-index: 1;
+  border-radius: 4px;
+  transition: width 0.25s, min-width 0.25s; }
+
+.maplibregl-ctrl-geocoder--input {
+  font: inherit;
+  width: 100%;
+  border: 0;
+  background-color: transparent;
+  margin: 0;
+  height: 50px;
+  color: #404040;
+  /* fallback */
+  color: rgba(0, 0, 0, 0.75);
+  padding: 6px 45px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden; }
+
+.maplibregl-ctrl-geocoder--input::-ms-clear {
+  display: none;
+  /* hide input clear button in IE */ }
+
+.maplibregl-ctrl-geocoder--input:focus {
+  color: #404040;
+  /* fallback */
+  color: rgba(0, 0, 0, 0.75);
+  outline: 0;
+  box-shadow: none;
+  outline: thin dotted; }
+
+.maplibregl-ctrl-geocoder .maplibregl-ctrl-geocoder--pin-right > * {
+  z-index: 2;
+  position: absolute;
+  right: 8px;
+  top: 7px;
+  display: none; }
+
+.maplibregl-ctrl-geocoder,
+.maplibregl-ctrl-geocoder .suggestions {
+  box-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.1); }
+
+/* Collapsed */
+.maplibregl-ctrl-geocoder.maplibregl-ctrl-geocoder--collapsed {
+  width: 50px;
+  min-width: 50px;
+  transition: width 0.25s, min-width 0.25s; }
+
+/* Suggestions */
+.maplibregl-ctrl-geocoder .suggestions {
+  background-color: #fff;
+  border-radius: 4px;
+  left: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  width: 100%;
+  top: 110%;
+  /* fallback */
+  top: calc(100% + 6px);
+  z-index: 1000;
+  overflow: hidden;
+  font-size: 15px; }
+
+.maplibregl-ctrl-bottom-left .suggestions,
+.maplibregl-ctrl-bottom-right .suggestions {
+  top: auto;
+  bottom: 100%; }
+
+.maplibregl-ctrl-geocoder .suggestions > li > a {
+  cursor: default;
+  display: block;
+  padding: 6px 12px;
+  color: #404040; }
+
+.maplibregl-ctrl-geocoder .suggestions > .active > a,
+.maplibregl-ctrl-geocoder .suggestions > li > a:hover {
+  color: #404040;
+  background-color: #f3f3f3;
+  text-decoration: none;
+  cursor: pointer; }
+
+.maplibregl-ctrl-geocoder--suggestion {
+  display: flex;
+  flex-direction: row;
+  align-items: center; }
+
+.maplibre-ctrl-geocoder--suggestion-icon {
+  min-width: 30px;
+  min-height: 24px;
+  max-width: 30px;
+  max-height: 24px;
+  padding-right: 12px; }
+
+.maplibregl-ctrl-geocoder--suggestion-info {
+  display: flex;
+  flex-direction: column; }
+
+.maplibregl-ctrl-geocoder--suggestion-match {
+  font-weight: bold; }
+
+.maplibregl-ctrl-geocoder--suggestion-title,
+.maplibregl-ctrl-geocoder--suggestion-address {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap; }
+
+.maplibregl-ctrl-geocoder--result {
+  display: flex;
+  flex-direction: row;
+  align-items: center; }
+
+.maplibre-ctrl-geocoder--result-icon {
+  min-width: 30px;
+  min-height: 24px;
+  max-width: 30px;
+  max-height: 24px;
+  padding-right: 12px; }
+
+.maplibregl-ctrl-geocoder--result-title {
+  font-weight: bold; }
+
+.maplibregl-ctrl-geocoder--result-title,
+.maplibregl-ctrl-geocoder--result-address {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap; }
+
+/* Icons */
+.maplibregl-ctrl-geocoder--icon {
+  display: inline-block;
+  vertical-align: middle;
+  speak: none;
+  fill: #757575;
+  top: 15px; }
+
+.maplibregl-ctrl-geocoder--icon-search {
+  position: absolute;
+  top: 13px;
+  left: 12px;
+  width: 23px;
+  height: 23px; }
+
+.maplibregl-ctrl-geocoder--button {
+  padding: 0;
+  margin: 0;
+  border: none;
+  cursor: pointer;
+  background: #fff;
+  line-height: 1; }
+
+.maplibregl-ctrl-geocoder--icon-close {
+  width: 20px;
+  height: 20px;
+  margin-top: 8px;
+  margin-right: 3px; }
+
+.maplibregl-ctrl-geocoder--button:hover .maplibregl-ctrl-geocoder--icon-close {
+  fill: #909090; }
+
+.maplibregl-ctrl-geocoder--icon-loading {
+  width: 26px;
+  height: 26px;
+  margin-top: 5px;
+  margin-right: 0px;
+  -moz-animation: rotate 0.8s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  -webkit-animation: rotate 0.8s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  animation: rotate 0.8s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95); }
+
+/* Animation */
+@-webkit-keyframes rotate {
+  from {
+    -webkit-transform: rotate(0);
+    transform: rotate(0); }
+  to {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg); } }
+
+@keyframes rotate {
+  from {
+    -webkit-transform: rotate(0);
+    transform: rotate(0); }
+  to {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg); } }
+
+/* Media queries*/
+@media screen and (min-width: 640px) {
+  .maplibregl-ctrl-geocoder.maplibregl-ctrl-geocoder--collapsed {
+    width: 36px;
+    min-width: 36px; }
+  .maplibregl-ctrl-geocoder {
+    width: 33.3333%;
+    font-size: 15px;
+    line-height: 20px;
+    max-width: 360px; }
+  .maplibregl-ctrl-geocoder .suggestions {
+    font-size: 13px; }
+  .maplibregl-ctrl-geocoder--icon {
+    top: 8px; }
+  .maplibregl-ctrl-geocoder--icon-close {
+    width: 16px;
+    height: 16px;
+    margin-top: 3px;
+    margin-right: 0; }
+  .maplibregl-ctrl-geocoder--icon-search {
+    left: 7px;
+    width: 20px;
+    height: 20px; }
+  .maplibregl-ctrl-geocoder--input {
+    height: 36px;
+    padding: 6px 35px; }
+  .maplibregl-ctrl-geocoder--icon-loading {
+    width: 26px;
+    height: 26px;
+    margin-top: -2px;
+    margin-right: -5px; }
+  .maplibre-gl-geocoder--error {
+    color: #909090;
+    padding: 6px 12px;
+    font-size: 16px;
+    text-align: center; } }
+
+/*!*************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[0].use[1]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[0].use[2]!./src/scss/base.scss (3) ***!
+  \*************************************************************************************************************************************************************************/
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif; }
+
+body {
+  background: linear-gradient(45deg, #EECFBA, #C5DDE8);
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  margin: 0; }
+
+header, footer {
+  height: 10vh;
+  padding: 1em;
+  text-align: center; }
+
+a {
+  text-decoration: none;
+  color: black;
+  font-weight: 500; }
+
+a:hover {
+  color: #616161; }
+
+table {
+  width: 40%;
+  border: none;
+  margin-bottom: 20px; }
+  table thead th {
+    font-weight: bold;
+    text-align: left;
+    border: none;
+    padding: 10px 15px;
+    background: #d8d8d8;
+    font-size: 14px; }
+  table thead tr th:first-child {
+    border-radius: 8px 0 0 8px; }
+  table thead tr th:last-child {
+    border-radius: 0 8px 8px 0; }
+  table tbody td {
+    text-align: left;
+    border: none;
+    padding: 10px 15px;
+    font-size: 14px;
+    vertical-align: top; }
+  table tbody tr:nth-child(even) {
+    background: #f3f3f3; }
+  table tbody tr td:first-child {
+    border-radius: 8px 0 0 8px; }
+  table tbody tr td:last-child {
+    border-radius: 0 8px 8px 0; }
+
+.btn, .input_field, .submit {
+  border: none;
+  padding: 0.5em;
+  border-radius: 5px;
+  margin: 5px 0 5px 0; }
+
+.btn:hover, .submit:hover {
+  background: #e9e962; }
+
+.main {
+  flex: 1;
+  text-align: center;
+  /* height: 80vh; */
+  /* padding: 2em; */ }
+
+.calculation-box {
+  position: absolute;
+  height: 200px;
+  width: 200px;
+  top: 10vh;
+  right: 10vh;
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 15px;
+  text-align: center; }
+
+#notice {
+  color: #3737d6; }
+
+#map {
+  /* flex: 1; */
+  height: 80vh;
+  width: 100%; }
+
+.maplibregl-ctrl-geocoder {
+  font-size: 18px;
+  line-height: 24px;
+  font-family: "Open Sans", "Helvetica Neue", Arial, Helvetica, sans-serif;
+  position: relative;
+  background-color: #fff;
+  width: 100%;
+  min-width: 240px;
+  z-index: 1;
+  border-radius: 4px;
+  transition: width 0.25s, min-width 0.25s; }
+
+.distance-container {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1; }
+
+.distance-container > * {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 11px;
+  line-height: 18px;
+  display: block;
+  margin: 0;
+  padding: 5px 10px;
+  border-radius: 3px; }
+
