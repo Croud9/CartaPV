@@ -64,20 +64,56 @@ function checkInterPoints(lower_left_point, poly_for_pv, width_area, angle_from_
     return inter_points
 }
 
+function farPoints(coordinates) {
+    let top_coord = coordinates[0]
+    let lower_coord = coordinates[0]
+    let right_coord = coordinates[0]
+    let left_coord = coordinates[0]
+    for (var i = 0; i < coordinates.length; i++) {
+        top_coord = (coordinates[i][1] > top_coord[1]) ? coordinates[i] : top_coord
+        lower_coord = (coordinates[i][1] < lower_coord[1]) ? coordinates[i] : lower_coord
+        left_coord = (coordinates[i][0] < left_coord[0]) ? coordinates[i] : left_coord
+        right_coord = (coordinates[i][0] > right_coord[0]) ? coordinates[i] : right_coord
+    }   
+    return [top_coord, lower_coord, left_coord, right_coord]
+}
+
+function offsetPoints(pt_area_start, pt_area_end, offset_border) {
+    let string = lineString([pt_area_start, pt_area_end]);
+    let rotateLine = transformRotate(string, 90);
+    let angle_90 = bearing(rotateLine.geometry['coordinates'][0], rotateLine.geometry['coordinates'][1]);
+    let pt_start = rhumbDestination(pt_area_start, offset_border, angle_90, {units: 'kilometers'});
+    let pt_end = rhumbDestination(pt_area_end, offset_border, angle_90, {units: 'kilometers'}); 
+    return [pt_start, pt_end]
+}
+
 function calcAreaForPV(id_area) {
     const border_lines = []
     const points_intersect = []
-    const coordinates_area = draw.get(id_area).geometry['coordinates'][0]
-    const counterClockwiseRing = lineString([coordinates_area[0], coordinates_area[1], coordinates_area[2], coordinates_area[0]])
-    const offset_border = (booleanClockwise(counterClockwiseRing) == true) ? 0.02 : -0.02
+    const area = draw.get(id_area)
+    const coordinates_area = area.geometry['coordinates'][0]
+    let offset_border = 0.02
+
+    let [pt_start, pt_end] = offsetPoints(coordinates_area[0], coordinates_area[1], offset_border)
+    if (booleanPointInPolygon(pt_start, area) == true && booleanPointInPolygon(pt_end, area) == true) {
+        offset_border = offset_border;
+    }
+    else if (booleanPointInPolygon(pt_start, area) == false && booleanPointInPolygon(pt_end, area) == false) {
+        offset_border = -offset_border;
+    }
+    else {
+        [pt_start, pt_end] = offsetPoints(coordinates_area[1], coordinates_area[2], offset_border)
+        if (booleanPointInPolygon(pt_start, area) == true && booleanPointInPolygon(pt_end, area) == true) {
+            offset_border = offset_border;
+        }
+        else if (booleanPointInPolygon(pt_start, area) == false && booleanPointInPolygon(pt_end, area) == false) {
+            offset_border = -offset_border;
+        }
+    }
     
     for (var i = 0; i < coordinates_area.length - 1; i++) {
-        const string = lineString([coordinates_area[i], coordinates_area[i + 1]])
-        const rotateLine = transformRotate(string, 90);
-        const angle_90 = bearing(rotateLine.geometry['coordinates'][0], rotateLine.geometry['coordinates'][1]);
-        const dest_start = rhumbDestination(coordinates_area[i], offset_border, angle_90, {units: 'kilometers'});
-        const dest_end = rhumbDestination(coordinates_area[i + 1], offset_border, angle_90, {units: 'kilometers'});
-        const line_parallel = lineString([dest_start.geometry['coordinates'], dest_end.geometry['coordinates']])
+        [pt_start, pt_end] = offsetPoints(coordinates_area[i], coordinates_area[i + 1], offset_border)
+        const line_parallel = lineString([pt_start.geometry['coordinates'], pt_end.geometry['coordinates']])
         border_lines.push(line_parallel)
     }
     
@@ -106,17 +142,7 @@ function calcAreaForPV(id_area) {
         points_intersect.push(intersect.features[0].geometry['coordinates'])
     }
     points_intersect.push(points_intersect[0])
-    
-    let top_coord = points_intersect[0]
-    let lower_coord = points_intersect[0]
-    let right_coord = points_intersect[0]
-    let left_coord = points_intersect[0]
-    for (var i = 0; i < points_intersect.length; i++) {
-        top_coord = (points_intersect[i][1] > top_coord[1]) ? points_intersect[i] : top_coord
-        lower_coord = (points_intersect[i][1] < lower_coord[1]) ? points_intersect[i] : lower_coord
-        left_coord = (points_intersect[i][0] < left_coord[0]) ? points_intersect[i] : left_coord
-        right_coord = (points_intersect[i][0] > right_coord[0]) ? points_intersect[i] : right_coord
-    }
+    let [top_coord, lower_coord, left_coord, right_coord] = farPoints(points_intersect)
     const poly_for_pv = polygon([points_intersect]);
     return [poly_for_pv, top_coord, lower_coord, left_coord, right_coord]
 }
@@ -254,40 +280,38 @@ function calcPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right
                     // console.log('Кол-во столов: ' + count_tables + 'отступ от края: ' + offset_border)
                     const align_center = offset_border / 2
                     let offset_point
-                    
-                    offset_point = rhumbDestination(line_down.geometry.coordinates[1], align_center, angle_from_azimut, options);
-                    for (let i = 1; i <= count_tables; i++ ) {
-                        const left_up_point_table = rhumbDestination(offset_point, -height_table, angle_90_for_pv, options);
-                        const left_line_table = lineString([offset_point.geometry.coordinates, left_up_point_table.geometry.coordinates]);
-                        offset_point = rhumbDestination(offset_point, width_table, angle_from_azimut, options);
-                        const right_up_point_table = rhumbDestination(offset_point, -height_table, angle_90_for_pv, options);
-                        const right_line_table = lineString([offset_point.geometry.coordinates, right_up_point_table.geometry.coordinates]);
-                        if (i < count_tables) {
-                            offset_point = rhumbDestination(offset_point, width_offset_tables, angle_from_azimut, options);
-                        }
-                        const coords_poly = [left_line_table.geometry.coordinates[0],
-                        left_line_table.geometry.coordinates[1],
-                        right_line_table.geometry.coordinates[1],
-                        right_line_table.geometry.coordinates[0],
-                        left_line_table.geometry.coordinates[0]]
-                        const poly_table = polygon([coords_poly])
-                        // drawLine(`line_left_up${id_area + id_tables}`, left_line_table, '#3333ff')
-                        // drawLine(`line_right_up${id_area + id_tables}`, right_line_table, '#3333ff')
-                        // drawLine(`line_up${id_area + id_tables}`, up_line_table, '#3333ff')
 
-                        map.addSource(`poly_for_table${id_area + id_tables}`, { 'type': 'geojson', 'data': poly_table });
-                        map.addLayer({
-                            'id': `poly_for_table${id_area + id_tables}`,
-                            'type': 'fill',
-                            'source': `poly_for_table${id_area + id_tables}`,
-                            // 'layout': {},
-                            'paint': {
-                                'fill-color': '#3333ff',
-                                'fill-opacity': 0.7
-                            }
-                        });
-                        id_tables++
-                    }
+                    // строится только от нижней линии, нужно чтобы выбирал основную  линию и ограничивал себя
+                    // offset_point = rhumbDestination(line_down.geometry.coordinates[1], align_center, angle_from_azimut, options);
+                    // for (let i = 1; i <= count_tables; i++ ) {
+                    //     const left_up_point_table = rhumbDestination(offset_point, -height_table, angle_90_for_pv, options);
+                    //     const left_line_table = lineString([offset_point.geometry.coordinates, left_up_point_table.geometry.coordinates]);
+                    //     offset_point = rhumbDestination(offset_point, width_table, angle_from_azimut, options);
+                    //     const right_up_point_table = rhumbDestination(offset_point, -height_table, angle_90_for_pv, options);
+                    //     const right_line_table = lineString([offset_point.geometry.coordinates, right_up_point_table.geometry.coordinates]);
+                    //     if (i < count_tables) {
+                    //         offset_point = rhumbDestination(offset_point, width_offset_tables, angle_from_azimut, options);
+                    //     }
+                    //     const coords_poly = [left_line_table.geometry.coordinates[0],
+                    //     left_line_table.geometry.coordinates[1],
+                    //     right_line_table.geometry.coordinates[1],
+                    //     right_line_table.geometry.coordinates[0],
+                    //     left_line_table.geometry.coordinates[0]]
+                    //     const poly_table = polygon([coords_poly])
+
+                    //     map.addSource(`poly_for_table${id_area + id_tables}`, { 'type': 'geojson', 'data': poly_table });
+                    //     map.addLayer({
+                    //         'id': `poly_for_table${id_area + id_tables}`,
+                    //         'type': 'fill',
+                    //         'source': `poly_for_table${id_area + id_tables}`,
+                    //         'layout': {},
+                    //         'paint': {
+                    //             'fill-color': '#3333ff',
+                    //             'fill-opacity': 0.7
+                    //         }
+                    //     });
+                    //     id_tables++
+                    // }
                     idx++
                 }
                 else {    
@@ -327,6 +351,7 @@ function drawPVs(id_area) {
         current_source.setData(poly_for_pv);
     }
     const lines_for_PV = calcPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord)
+    
     // lines_for_PV.forEach( (elem, idx, arr) => {
     //     map.addSource(`lines_for_PV${id_area + idx}`, {'type': 'geojson', 'data':elem});
     //     map.addLayer({
