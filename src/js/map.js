@@ -95,19 +95,17 @@ function calcAreaForPV(id_area) {
     let offset_border = 0.02
 
     let [pt_start, pt_end] = offsetPoints(coordinates_area[0], coordinates_area[1], offset_border)
-    if (booleanPointInPolygon(pt_start, area) == true && booleanPointInPolygon(pt_end, area) == true) {
-        offset_border = offset_border;
-    }
-    else if (booleanPointInPolygon(pt_start, area) == false && booleanPointInPolygon(pt_end, area) == false) {
-        offset_border = -offset_border;
-    }
-    else {
-        [pt_start, pt_end] = offsetPoints(coordinates_area[1], coordinates_area[2], offset_border)
+    for (let i = 1; i < coordinates_area.length - 1; i++) {
         if (booleanPointInPolygon(pt_start, area) == true && booleanPointInPolygon(pt_end, area) == true) {
             offset_border = offset_border;
+            break;
         }
         else if (booleanPointInPolygon(pt_start, area) == false && booleanPointInPolygon(pt_end, area) == false) {
             offset_border = -offset_border;
+            break;
+        }
+        else {
+            [pt_start, pt_end] = offsetPoints(coordinates_area[i], coordinates_area[i+1], offset_border)
         }
     }
     
@@ -147,23 +145,6 @@ function calcAreaForPV(id_area) {
     return [poly_for_pv, top_coord, lower_coord, left_coord, right_coord]
 }
 
-function drawLine(id, string, select_color  = '#3333ff') {
-    map.addSource(id, {'type': 'geojson', 'data': string});
-    map.addLayer({
-        'id': id,
-        'type': 'line',
-        'source': id,
-        'layout': {
-            'line-join': 'round',
-            'line-cap': 'round'
-        },
-        'paint': {
-            'line-color': select_color,
-            'line-width': 1
-        }
-    });
-}
-
 function calcTables(len, width_table, width_offset) {
     let count_tables, offset_border
     count_tables = len / width_table
@@ -185,7 +166,7 @@ function calcTables(len, width_table, width_offset) {
     return [count_tables, offset_border]
 }
 
-function calcPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
+function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
     const options = {units: 'kilometers'}
     const scan_dist = 1 / 1000
     const height_table = 5 / 1000 //5m
@@ -200,6 +181,7 @@ function calcPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right
     let lower_left_point = point([left_coord[0], lower_coord[1]]);
     let idx = 0
     let id_tables = 0
+    let all_tables = 0
 
     while (lower_left_point.geometry['coordinates'][1] <= top_coord[1]) {
         const check_point_up = rhumbDestination(lower_left_point, -height_table, angle_90_for_pv, options);
@@ -214,7 +196,6 @@ function calcPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right
                                                     inter_points.features[some_inter + 1].geometry.coordinates])
                 const check_line_for_table = lineString([check_inter_points.features[some_inter].geometry.coordinates, 
                                                             check_inter_points.features[some_inter + 1].geometry.coordinates]);   
-                // console.log('check_line_for_table -->>', check_line_for_table)
                 some_inter += 2                                                          
                 const len_main_line = length(line_in_poly, options)
                 const len_check_line = length(check_line_for_table, options)
@@ -225,7 +206,7 @@ function calcPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right
                     const pt_right_down = rhumbDestination(check_line_for_table.geometry.coordinates[1], height_table, angle_90_for_pv, options);
                     const left_pt_in_poly = booleanPointInPolygon(pt_left_up, poly_for_pv);
                     const right_pt_in_poly = booleanPointInPolygon(pt_right_up, poly_for_pv);
-                    let line_left_up, line_right_up, line_up, line_down, select_color
+                    let line_left_up, line_right_up, line_up, line_down
     
                     if (left_pt_in_poly == true && right_pt_in_poly == true ) {
                         line_left_up = lineString([line_in_poly.geometry.coordinates[0], 
@@ -236,7 +217,6 @@ function calcPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right
                                                     pt_right_up.geometry.coordinates]);
                         line_down = lineString([line_in_poly.geometry.coordinates[0], 
                                                     line_in_poly.geometry.coordinates[1]]);
-                        select_color = '#3333ff' 
                     }
                     else if (left_pt_in_poly == false && right_pt_in_poly == true) {
                         line_left_up = lineString([check_line_for_table.geometry.coordinates[0], 
@@ -247,7 +227,6 @@ function calcPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right
                                                 pt_right_up.geometry.coordinates]);
                         line_down = lineString([pt_left_down.geometry.coordinates, 
                                                     line_in_poly.geometry.coordinates[1]]);
-                        select_color = '#ff333d' 
                     }
                     else if (left_pt_in_poly == true && right_pt_in_poly == false) {
                         line_left_up = lineString([line_in_poly.geometry.coordinates[0], 
@@ -258,7 +237,6 @@ function calcPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right
                                                 check_line_for_table.geometry.coordinates[1]]);
                         line_down = lineString([line_in_poly.geometry.coordinates[0], 
                                                     pt_right_down.geometry.coordinates]); 
-                        select_color = '#d8db00' 
                     }
                     else {
                         line_left_up = lineString([check_line_for_table.geometry.coordinates[0], 
@@ -268,50 +246,42 @@ function calcPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right
                         line_up = lineString([pt_left_down.geometry.coordinates, 
                                                 pt_right_down.geometry.coordinates]);
                         line_down = lineString([check_line_for_table.geometry.coordinates[0], 
-                                                    check_line_for_table.geometry.coordinates[1]]);  
-                        select_color = '#af6b1d'           
+                                                    check_line_for_table.geometry.coordinates[1]]);       
                     }
                     const len_down_line = length(line_down, options);
-                    // drawLine(`lines_for_PV${id_area + idx}`, line_up, select_color)
-                    // drawLine(`lines_for_PV2${id_area + idx}`, line_down, select_color)
-                    // drawLine(`line_left_up${id_area + idx}`, line_left_up, select_color)
-                    // drawLine(`line_left_down${id_area + idx}`, line_right_up, select_color)
+                    lines_for_PV.push(line_up)
+                    lines_for_PV.push(line_down)
+                    lines_for_PV.push(line_left_up)
+                    lines_for_PV.push(line_right_up)
                     let [count_tables, offset_border] = calcTables(len_down_line, width_table, width_offset_tables);
-                    // console.log('Кол-во столов: ' + count_tables + 'отступ от края: ' + offset_border)
+                    all_tables += count_tables
                     const align_center = offset_border / 2
-                    let offset_point
-
+                    let offset_point, left_pt_loc, down_pt_loc
+                    
                     // строится только от нижней линии, нужно чтобы выбирал основную  линию и ограничивал себя
-                    // offset_point = rhumbDestination(line_down.geometry.coordinates[1], align_center, angle_from_azimut, options);
-                    // for (let i = 1; i <= count_tables; i++ ) {
-                    //     const left_up_point_table = rhumbDestination(offset_point, -height_table, angle_90_for_pv, options);
-                    //     const left_line_table = lineString([offset_point.geometry.coordinates, left_up_point_table.geometry.coordinates]);
-                    //     offset_point = rhumbDestination(offset_point, width_table, angle_from_azimut, options);
-                    //     const right_up_point_table = rhumbDestination(offset_point, -height_table, angle_90_for_pv, options);
-                    //     const right_line_table = lineString([offset_point.geometry.coordinates, right_up_point_table.geometry.coordinates]);
-                    //     if (i < count_tables) {
-                    //         offset_point = rhumbDestination(offset_point, width_offset_tables, angle_from_azimut, options);
-                    //     }
-                    //     const coords_poly = [left_line_table.geometry.coordinates[0],
-                    //     left_line_table.geometry.coordinates[1],
-                    //     right_line_table.geometry.coordinates[1],
-                    //     right_line_table.geometry.coordinates[0],
-                    //     left_line_table.geometry.coordinates[0]]
-                    //     const poly_table = polygon([coords_poly])
+                    left_pt_loc = (line_down.geometry.coordinates[0][0] < line_down.geometry.coordinates[1][0]) ? 0 : 1
+                    down_pt_loc = (line_left_up.geometry.coordinates[0][1] < line_left_up.geometry.coordinates[1][1]) ? 0 : 1
 
-                    //     map.addSource(`poly_for_table${id_area + id_tables}`, { 'type': 'geojson', 'data': poly_table });
-                    //     map.addLayer({
-                    //         'id': `poly_for_table${id_area + id_tables}`,
-                    //         'type': 'fill',
-                    //         'source': `poly_for_table${id_area + id_tables}`,
-                    //         'layout': {},
-                    //         'paint': {
-                    //             'fill-color': '#3333ff',
-                    //             'fill-opacity': 0.7
-                    //         }
-                    //     });
-                    //     id_tables++
-                    // }
+                    const left_down_point_loc = point([line_down.geometry.coordinates[left_pt_loc][0], line_left_up.geometry.coordinates[down_pt_loc][1]])
+                    offset_point = rhumbDestination(left_down_point_loc, align_center, angle_from_azimut, options);
+                    for (let i = 1; i <= count_tables; i++ ) {
+                        const left_up_point_table = rhumbDestination(offset_point, -height_table, angle_90_for_pv, options);
+                        const left_line_table = lineString([offset_point.geometry.coordinates, left_up_point_table.geometry.coordinates]);
+                        offset_point = rhumbDestination(offset_point, width_table, angle_from_azimut, options);
+                        const right_up_point_table = rhumbDestination(offset_point, -height_table, angle_90_for_pv, options);
+                        const right_line_table = lineString([offset_point.geometry.coordinates, right_up_point_table.geometry.coordinates]);
+                        if (i < count_tables) {
+                            offset_point = rhumbDestination(offset_point, width_offset_tables, angle_from_azimut, options);
+                        }
+                        const coords_poly = [left_line_table.geometry.coordinates[0],
+                        left_line_table.geometry.coordinates[1],
+                        right_line_table.geometry.coordinates[1],
+                        right_line_table.geometry.coordinates[0],
+                        left_line_table.geometry.coordinates[0]]
+                        const poly_table = polygon([coords_poly])
+                        lines_for_PV.push(poly_table)
+                        id_tables++
+                    }
                     idx++
                 }
                 else {    
@@ -324,17 +294,17 @@ function calcPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right
             lower_left_point = rhumbDestination(lower_left_point, -scan_dist, angle_90_for_pv, options);
         }
     }
-    return lines_for_PV
+    return [lines_for_PV , all_tables]
 }
 
-function drawPVs(id_area) {
+function drawPVs(id_area, square_text, answer) {
     // var bearing_peling = rhumbBearing(rotateLine.geometry['coordinates'][0], rotateLine.geometry['coordinates'][1]);
     // console.log('угол от севера ' + bearing1 + ' / ' + bearing_peling);
     const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(id_area)
 
 
-    const current_source = map.getSource(`poly_for_pv${id_area}`)
-    if (current_source === undefined) {
+    const current_source_poly = map.getSource(`poly_for_pv${id_area}`)
+    if (current_source_poly === undefined) {
         map.addSource(`poly_for_pv${id_area}`, { 'type': 'geojson', 'data': poly_for_pv });
         map.addLayer({
             'id': `poly_for_pv${id_area}`,
@@ -348,26 +318,51 @@ function drawPVs(id_area) {
         });
     }
     else {
-        current_source.setData(poly_for_pv);
+        current_source_poly.setData(poly_for_pv);
     }
-    const lines_for_PV = calcPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord)
     
-    // lines_for_PV.forEach( (elem, idx, arr) => {
-    //     map.addSource(`lines_for_PV${id_area + idx}`, {'type': 'geojson', 'data':elem});
-    //     map.addLayer({
-    //         'id': `lines_for_PV${id_area + idx}`,
-    //         'type': 'line',
-    //         'source': `lines_for_PV${id_area + idx}`,
-    //         'layout': {
-    //             'line-join': 'round',
-    //             'line-cap': 'round'
-    //         },
-    //         'paint': {
-    //             'line-color': '#3333ff',
-    //             'line-width': 1
-    //         }
-    //     });
-    // })
+    const [lines_for_PV , all_tables] = calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord)
+    const current_source_pvs = map.getSource(`pvs${id_area}`)
+    if (current_source_pvs === undefined) {
+        map.addSource(`pvs${id_area}`, {
+            'type': 'geojson',
+            'data': {
+                'type': 'FeatureCollection',
+                'features': lines_for_PV
+            }
+        });
+        map.addLayer({
+            'id': `pvs_line${id_area}`,
+            'type': 'line',
+            'source': `pvs${id_area}`,
+            'layout': {
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            'paint': {
+                'line-color': '#B42222',
+                'line-width': 1
+            },
+            'filter': ['==', '$type', 'LineString']
+        });
+        map.addLayer({
+            'id': `pvs_poly${id_area}`,
+            'type': 'fill',
+            'source': `pvs${id_area}`,
+            'paint': {
+                'fill-color': '#3333ff',
+                'fill-opacity': 0.4
+            },
+            'filter': ['==', '$type', 'Polygon']
+        });
+    }
+    else {
+        current_source_pvs.setData({
+            'type': 'FeatureCollection',
+            'features': lines_for_PV
+        });
+    }
+    answer.innerHTML = square_text + '<p>Столов: <strong>' + all_tables + ' </strong>шт.</p>'
 }
 
 function updateArea(e) {
@@ -379,12 +374,13 @@ function updateArea(e) {
         const square = area(draw.get(id_area));
         const rounded_area_ga = Math.round((square / 10000) * 100) / 100;
         const rounded_area_m = Math.round(square * 100) / 100;
-        answer.innerHTML = 'Площадь выделенной области <p><strong>' + 
+        const square_text = 'Площадь области: <strong>' + 
                                 rounded_area_ga + 
-                                '</strong></p><p>га</p>  <p><strong>' + 
+                                '</strong> га / <strong>' + 
                                 rounded_area_m + 
-                                '</strong></p><p>м²</p>';
-        drawPVs(id_area);
+                                '</strong> м²';
+        answer.innerHTML = square_text                       
+        drawPVs(id_area, square_text, answer);
     } else {
         answer.innerHTML = '';
         if (e.type !== 'draw.delete')
@@ -627,8 +623,3 @@ function updateArea(e) {
 //         ? 'pointer'
 //         : 'crosshair';
 // });
-
-
-
-
-
