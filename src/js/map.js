@@ -8,6 +8,8 @@ import transformRotate from '@turf/transform-rotate';
 import lineIntersect from '@turf/line-intersect';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import booleanClockwise from '@turf/boolean-clockwise';
+import booleanWithin from '@turf/boolean-within';
+import booleanContains from '@turf/boolean-contains';
 import lineOverlap from '@turf/line-overlap';
 import bearing from '@turf/bearing';
 import rhumbBearing from '@turf/rhumb-bearing';
@@ -28,9 +30,9 @@ var map = new maplibregl.Map({
         zoom: 12,
         center: [100, 65],
         style:
-        // 'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd', // Актуальные, бесшовные изображения для всего мира с учетом контекста
+        'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd', // Актуальные, бесшовные изображения для всего мира с учетом контекста
         // 'https://api.maptiler.com/maps/3f98f986-5df3-44da-b349-6569ed7b764c/style.json?key=QA99yf3HkkZG97cZrjXd' //Идеальная карта для активного отдыха
-        'https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd' // Идеальная базовая карта местности с контурами и заштрихованным рельефом.
+        // 'https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd' // Идеальная базовая карта местности с контурами и заштрихованным рельефом.
         
         // antialias: true // create the gl context with MSAA antialiasing, so custom layers are antialiased
     }); 
@@ -76,7 +78,7 @@ function farPoints(coordinates) {
         right_coord = (coordinates[i][0] > right_coord[0]) ? coordinates[i] : right_coord
     }   
     return [top_coord, lower_coord, left_coord, right_coord]
-}
+};
 
 function offsetPoints(pt_area_start, pt_area_end, offset_border) {
     let string = lineString([pt_area_start, pt_area_end]);
@@ -85,7 +87,7 @@ function offsetPoints(pt_area_start, pt_area_end, offset_border) {
     let pt_start = rhumbDestination(pt_area_start, offset_border, angle_90, {units: 'kilometers'});
     let pt_end = rhumbDestination(pt_area_end, offset_border, angle_90, {units: 'kilometers'}); 
     return [pt_start, pt_end]
-}
+};
 
 function calcAreaForPV(id_area) {
     const border_lines = []
@@ -143,7 +145,7 @@ function calcAreaForPV(id_area) {
     let [top_coord, lower_coord, left_coord, right_coord] = farPoints(points_intersect)
     const poly_for_pv = polygon([points_intersect]);
     return [poly_for_pv, top_coord, lower_coord, left_coord, right_coord]
-}
+};
 
 function calcTables(len, width_table, width_offset) {
     let count_tables, offset_border
@@ -164,15 +166,25 @@ function calcTables(len, width_table, width_offset) {
         offset_border = (len - width_table)
     }
     return [count_tables, offset_border]
-}
+};
+
+function checkWithin(poly, points, angle) {
+    const options = {units: 'kilometers'};
+    const offset = length(lineString(points), options) * 0.01;
+    const pt_top_with_offset = rhumbDestination(points[0], -offset, angle, options);
+    const pt_bottom_with_offset = rhumbDestination(points[1], offset, angle, options);
+    const scale_line = lineString([pt_bottom_with_offset, pt_top_with_offset]);
+    const in_poly = booleanWithin(scale_line, poly);
+    return in_poly
+};
 
 function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
     const options = {units: 'kilometers'}
-    const scan_dist = 1 / 1000
+    const scan_dist = 0.25 / 1000
     const height_table = 5 / 1000 //5m
     const width_table = 10 / 1000
     const width_offset_tables = 20 / 1e5 //20см
-    const height_offset_tables = 10 / 1000 //10m
+    const height_offset_tables = 10 / 1000 //10m 
     const angle_from_azimut = 90
     const angle_90_for_pv = angle_from_azimut + 90
     const line_width_area = lineString([[left_coord[0], lower_coord[1]], [right_coord[0], lower_coord[1]]])
@@ -184,31 +196,38 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
     let all_tables = 0
 
     while (lower_left_point.geometry['coordinates'][1] <= top_coord[1]) {
+        let top_in_points = [];
+        let bottom_in_points = [];
         const check_point_up = rhumbDestination(lower_left_point, -height_table, angle_90_for_pv, options);
-        const inter_points = checkInterPoints(lower_left_point, poly_for_pv, width_area, angle_from_azimut)
-        const check_inter_points = checkInterPoints(check_point_up, poly_for_pv, width_area, angle_from_azimut)
-        if (inter_points.features.length % 2 == 0 && check_inter_points.features.length % 2 == 0 &&
-                inter_points.features.length == check_inter_points.features.length) {
-            let some_inter = 0
-            const count_inter = inter_points.features.length / 2
+        const inter_points = checkInterPoints(lower_left_point, poly_for_pv, width_area, angle_from_azimut).features;
+        const check_inter_points = checkInterPoints(check_point_up, poly_for_pv, width_area, angle_from_azimut).features;
+        inter_points.forEach((item) => { bottom_in_points.push(item.geometry.coordinates) });
+        check_inter_points.forEach((item) => { top_in_points.push(item.geometry.coordinates) });
+        bottom_in_points.sort( (a, b) => a[0] - b[0] );
+        top_in_points.sort( (a, b) => a[0] - b[0] );
+        if (bottom_in_points.length % 2 == 0 && top_in_points.length % 2 == 0 &&
+                bottom_in_points.length == top_in_points.length) {
+            let some_inter = 0;
+            const count_inter = bottom_in_points.length / 2;
             for (let i = 0; i < count_inter; i++) {
-                const line_in_poly = lineString([inter_points.features[some_inter].geometry.coordinates, 
-                                                    inter_points.features[some_inter + 1].geometry.coordinates])
-                const check_line_for_table = lineString([check_inter_points.features[some_inter].geometry.coordinates, 
-                                                            check_inter_points.features[some_inter + 1].geometry.coordinates]);   
+                const line_in_poly = lineString([bottom_in_points[some_inter], 
+                                                    bottom_in_points[some_inter + 1]]);
+                const check_line_for_table = lineString([top_in_points[some_inter], 
+                                                            top_in_points[some_inter + 1]]);   
                 some_inter += 2                                                          
-                const len_main_line = length(line_in_poly, options)
-                const len_check_line = length(check_line_for_table, options)
+                const len_main_line = length(line_in_poly, options);
+                const len_check_line = length(check_line_for_table, options);
                 if (len_main_line >= width_table && len_check_line >= width_table) {
                     const pt_left_up = rhumbDestination(line_in_poly.geometry.coordinates[0], -height_table, angle_90_for_pv, options);
                     const pt_right_up = rhumbDestination(line_in_poly.geometry.coordinates[1], -height_table, angle_90_for_pv, options);
                     const pt_left_down = rhumbDestination(check_line_for_table.geometry.coordinates[0], height_table, angle_90_for_pv, options);
                     const pt_right_down = rhumbDestination(check_line_for_table.geometry.coordinates[1], height_table, angle_90_for_pv, options);
-                    const left_pt_in_poly = booleanPointInPolygon(pt_left_up, poly_for_pv);
-                    const right_pt_in_poly = booleanPointInPolygon(pt_right_up, poly_for_pv);
+                    const left_line_in_poly = checkWithin(poly_for_pv, [line_in_poly.geometry.coordinates[0], pt_left_up], angle_90_for_pv );
+                    const right_line_in_poly = checkWithin(poly_for_pv, [line_in_poly.geometry.coordinates[1], pt_right_up], angle_90_for_pv );
+                    
                     let line_left_up, line_right_up, line_up, line_down
-    
-                    if (left_pt_in_poly == true && right_pt_in_poly == true ) {
+                    
+                    if (left_line_in_poly == true && right_line_in_poly == true ) {
                         line_left_up = lineString([line_in_poly.geometry.coordinates[0], 
                                                             pt_left_up.geometry.coordinates]);
                         line_right_up = lineString([line_in_poly.geometry.coordinates[1], 
@@ -218,7 +237,7 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
                         line_down = lineString([line_in_poly.geometry.coordinates[0], 
                                                     line_in_poly.geometry.coordinates[1]]);
                     }
-                    else if (left_pt_in_poly == false && right_pt_in_poly == true) {
+                    else if (left_line_in_poly == false && right_line_in_poly == true) {
                         line_left_up = lineString([check_line_for_table.geometry.coordinates[0], 
                                                             pt_left_down.geometry.coordinates]);
                         line_right_up = lineString([line_in_poly.geometry.coordinates[1], 
@@ -228,7 +247,7 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
                         line_down = lineString([pt_left_down.geometry.coordinates, 
                                                     line_in_poly.geometry.coordinates[1]]);
                     }
-                    else if (left_pt_in_poly == true && right_pt_in_poly == false) {
+                    else if (left_line_in_poly == true && right_line_in_poly == false) {
                         line_left_up = lineString([line_in_poly.geometry.coordinates[0], 
                                                             pt_left_up.geometry.coordinates]);
                         line_right_up = lineString([check_line_for_table.geometry.coordinates[1], 
@@ -249,14 +268,14 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
                                                     check_line_for_table.geometry.coordinates[1]]);       
                     }
                     const len_down_line = length(line_down, options);
-                    lines_for_PV.push(line_up)
-                    lines_for_PV.push(line_down)
-                    lines_for_PV.push(line_left_up)
-                    lines_for_PV.push(line_right_up)
+                    lines_for_PV.push(line_up);
+                    lines_for_PV.push(line_down);
+                    lines_for_PV.push(line_left_up);
+                    lines_for_PV.push(line_right_up);
                     let [count_tables, offset_border] = calcTables(len_down_line, width_table, width_offset_tables);
-                    all_tables += count_tables
-                    const align_center = offset_border / 2
-                    let offset_point, left_pt_loc, down_pt_loc
+                    all_tables += count_tables;
+                    const align_center = offset_border / 2;
+                    let offset_point, left_pt_loc, down_pt_loc;
                     
                     // строится только от нижней линии, нужно чтобы выбирал основную  линию и ограничивал себя
                     left_pt_loc = (line_down.geometry.coordinates[0][0] < line_down.geometry.coordinates[1][0]) ? 0 : 1

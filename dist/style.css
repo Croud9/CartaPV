@@ -402,11 +402,11 @@ table {
 
 .calculation-box {
   position: absolute;
-  height: 200px;
-  width: 200px;
-  top: 10vh;
-  right: 10vh;
-  background-color: rgba(255, 255, 255, 0.7);
+  height: 10vh;
+  width: 400px;
+  bottom: 0vh;
+  right: 0vh;
+  background-color: rgba(255, 255, 255, 0);
   padding: 15px;
   text-align: center; }
 
