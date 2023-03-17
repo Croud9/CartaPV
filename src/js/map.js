@@ -30,8 +30,8 @@ var map = new maplibregl.Map({
         zoom: 12,
         center: [100, 65],
         style:
-        'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd', // Актуальные, бесшовные изображения для всего мира с учетом контекста
-        // 'https://api.maptiler.com/maps/3f98f986-5df3-44da-b349-6569ed7b764c/style.json?key=QA99yf3HkkZG97cZrjXd' //Идеальная карта для активного отдыха
+        // 'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd', // Актуальные, бесшовные изображения для всего мира с учетом контекста
+        'https://api.maptiler.com/maps/3f98f986-5df3-44da-b349-6569ed7b764c/style.json?key=QA99yf3HkkZG97cZrjXd' //Идеальная карта для активного отдыха
         // 'https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd' // Идеальная базовая карта местности с контурами и заштрихованным рельефом.
         
         // antialias: true // create the gl context with MSAA antialiasing, so custom layers are antialiased
@@ -59,12 +59,13 @@ map.on('draw.create', updateArea);
 map.on('draw.delete', updateArea);
 map.on('draw.update', updateArea);
 
-function checkInterPoints(lower_left_point, poly_for_pv, width_area, angle_from_azimut) {
-    const destination_right = rhumbDestination(lower_left_point, width_area, angle_from_azimut, {units: 'kilometers'});
-    const line_coords = lineString([lower_left_point.geometry['coordinates'], destination_right.geometry['coordinates']])
-    const inter_points = lineIntersect(poly_for_pv, line_coords);
+function checkInterPoints(lower_left_point, poly_for_pv, diagonal_area, angle_from_azimut) {
+    const pt_direct = rhumbDestination(lower_left_point, diagonal_area, angle_from_azimut, {units: 'kilometers'});
+    const pt_direct_revers = rhumbDestination(lower_left_point, -diagonal_area, angle_from_azimut, {units: 'kilometers'});
+    const line_direct = lineString([pt_direct_revers.geometry.coordinates, lower_left_point.geometry.coordinates, pt_direct.geometry.coordinates]);
+    const inter_points = lineIntersect(poly_for_pv, line_direct);
     return inter_points
-}
+};
 
 function farPoints(coordinates) {
     let top_coord = coordinates[0]
@@ -179,32 +180,39 @@ function checkWithin(poly, points, angle) {
 };
 
 function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
+    const lines_for_PV = []
     const options = {units: 'kilometers'}
     const scan_dist = 0.25 / 1000
     const height_table = 5 / 1000 //5m
     const width_table = 10 / 1000
     const width_offset_tables = 20 / 1e5 //20см
     const height_offset_tables = 10 / 1000 //10m 
-    const angle_from_azimut = 90
+    let angle_from_azimut = 90 // 0 - 180
+    angle_from_azimut = (angle_from_azimut == 0) ? 180 : angle_from_azimut;
     const angle_90_for_pv = angle_from_azimut + 90
-    const line_width_area = lineString([[left_coord[0], lower_coord[1]], [right_coord[0], lower_coord[1]]])
-    const width_area  = length(line_width_area, options);
-    const lines_for_PV = []
-    let lower_left_point = point([left_coord[0], lower_coord[1]]);
-    let idx = 0
-    let id_tables = 0
+    const start_point = (angle_from_azimut < 90) ? point([right_coord[0], lower_coord[1]]) : point([left_coord[0], lower_coord[1]]);
+    const line_diagonal_area = lineString([[left_coord[0], lower_coord[1]], [right_coord[0], top_coord[1]]]);
+    const diagonal_area = length(line_diagonal_area, options);
+    const top_loc_diagonal = rhumbDestination(start_point, -diagonal_area, angle_90_for_pv, options);
+    const end_point = (angle_from_azimut == 180) ? right_coord[0] : top_loc_diagonal.geometry.coordinates[1]
+    const x_or_y = (angle_from_azimut == 180) ? 0 : 1
+    const x_or_y_sort = (angle_from_azimut == 180) ? 1 : 0
+
+    let lower_left_point = start_point;
     let all_tables = 0
 
-    while (lower_left_point.geometry['coordinates'][1] <= top_coord[1]) {
+    while (lower_left_point.geometry.coordinates[x_or_y] <= end_point) {
         let top_in_points = [];
         let bottom_in_points = [];
         const check_point_up = rhumbDestination(lower_left_point, -height_table, angle_90_for_pv, options);
-        const inter_points = checkInterPoints(lower_left_point, poly_for_pv, width_area, angle_from_azimut).features;
-        const check_inter_points = checkInterPoints(check_point_up, poly_for_pv, width_area, angle_from_azimut).features;
+        const inter_points = checkInterPoints(lower_left_point, poly_for_pv, diagonal_area, angle_from_azimut).features;
+        const check_inter_points = checkInterPoints(check_point_up, poly_for_pv, diagonal_area, angle_from_azimut).features;
+
         inter_points.forEach((item) => { bottom_in_points.push(item.geometry.coordinates) });
         check_inter_points.forEach((item) => { top_in_points.push(item.geometry.coordinates) });
-        bottom_in_points.sort( (a, b) => a[0] - b[0] );
-        top_in_points.sort( (a, b) => a[0] - b[0] );
+        bottom_in_points.sort( (a, b) => a[x_or_y_sort] - b[x_or_y_sort] );
+        top_in_points.sort( (a, b) => a[x_or_y_sort] - b[x_or_y_sort] );
+
         if (bottom_in_points.length % 2 == 0 && top_in_points.length % 2 == 0 &&
                 bottom_in_points.length == top_in_points.length) {
             let some_inter = 0;
@@ -272,16 +280,40 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
                     lines_for_PV.push(line_down);
                     lines_for_PV.push(line_left_up);
                     lines_for_PV.push(line_right_up);
+                    let left_down_point_loc
+                    const coord_place_for_tables = [line_down.geometry.coordinates[0], line_down.geometry.coordinates[1], line_up.geometry.coordinates[0], line_up.geometry.coordinates[1]]
+                    if (angle_from_azimut == 180) {
+                        const x = coord_place_for_tables.sort( (a, b) => a[0] - b[0] )[0][0];
+                        const y = coord_place_for_tables.sort( (a, b) => b[1] - a[1] )[0][1];
+                        left_down_point_loc = point([x, y])
+                    }
+                    else if (angle_from_azimut == 90) {
+                        const x = coord_place_for_tables.sort( (a, b) => a[0] - b[0] )[0][0];
+                        const y = coord_place_for_tables.sort( (a, b) => a[1] - b[1] )[0][1];
+                        left_down_point_loc = point([x, y])
+                    }
+                    else if (angle_from_azimut < 90) {
+                        const bottom_point = coord_place_for_tables.sort( (a, b) => a[1] - b[1] )[0];
+                        left_down_point_loc = point(bottom_point)
+                    }
+                    else {
+                        const left_point = coord_place_for_tables.sort( (a, b) => a[0] - b[0] )[0];
+                        left_down_point_loc = point(left_point)
+                    }
+
                     let [count_tables, offset_border] = calcTables(len_down_line, width_table, width_offset_tables);
                     all_tables += count_tables;
-                    const align_center = offset_border / 2;
+                    const align_center = offset_border / 2; // center - offset_border / 2; left - 0; right - offset_border
                     let offset_point, left_pt_loc, down_pt_loc;
                     
-                    // строится только от нижней линии, нужно чтобы выбирал основную  линию и ограничивал себя
-                    left_pt_loc = (line_down.geometry.coordinates[0][0] < line_down.geometry.coordinates[1][0]) ? 0 : 1
-                    down_pt_loc = (line_left_up.geometry.coordinates[0][1] < line_left_up.geometry.coordinates[1][1]) ? 0 : 1
+                    // left_pt_loc = (line_down.geometry.coordinates[0][0] < line_down.geometry.coordinates[1][0]) ? 0 : 1
+                    // down_pt_loc = (line_left_up.geometry.coordinates[0][1] < line_left_up.geometry.coordinates[1][1]) ? 0 : 1
+                    // const left_down_point_loc = point([line_down.geometry.coordinates[left_pt_loc][0], line_left_up.geometry.coordinates[down_pt_loc][1]])
 
-                    const left_down_point_loc = point([line_down.geometry.coordinates[left_pt_loc][0], line_left_up.geometry.coordinates[down_pt_loc][1]])
+                    // down_pt_loc = (line_down.geometry.coordinates[0][1] > line_down.geometry.coordinates[1][1]) ? 0 : 1
+                    // left_pt_loc = (line_left_up.geometry.coordinates[0][0] < line_left_up.geometry.coordinates[1][0]) ? 0 : 1
+                    // const left_down_point_loc = point([line_left_up.geometry.coordinates[left_pt_loc][0], line_down.geometry.coordinates[down_pt_loc][1]])
+
                     offset_point = rhumbDestination(left_down_point_loc, align_center, angle_from_azimut, options);
                     for (let i = 1; i <= count_tables; i++ ) {
                         const left_up_point_table = rhumbDestination(offset_point, -height_table, angle_90_for_pv, options);
@@ -299,16 +331,17 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
                         left_line_table.geometry.coordinates[0]]
                         const poly_table = polygon([coords_poly])
                         lines_for_PV.push(poly_table)
-                        id_tables++
                     }
-                    idx++
                 }
-                else {    
-                    lower_left_point = rhumbDestination(lower_left_point, -scan_dist, angle_90_for_pv, options);
-                } 
             }
             lower_left_point = rhumbDestination(lower_left_point, -(height_offset_tables + height_table), angle_90_for_pv, options);
         }
+        // else if (bottom_in_points.length % 2 == 0 && top_in_points.length % 2 != 0) {
+            
+        // }
+        // else if (bottom_in_points.length % 2 == 0 && top_in_points.length % 2 == 0) {
+            
+        // }
         else {    
             lower_left_point = rhumbDestination(lower_left_point, -scan_dist, angle_90_for_pv, options);
         }
