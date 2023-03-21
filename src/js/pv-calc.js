@@ -7,6 +7,7 @@ import transformRotate from '@turf/transform-rotate';
 import lineIntersect from '@turf/line-intersect';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import booleanClockwise from '@turf/boolean-clockwise';
+import mask from '@turf/mask';
 import booleanWithin from '@turf/boolean-within';
 import booleanContains from '@turf/boolean-contains';
 import lineOverlap from '@turf/line-overlap';
@@ -136,11 +137,6 @@ function checkWithin(poly, points, angle) {
     const in_poly = booleanWithin(scale_line, poly);
     return in_poly
 };
-
-
- 
-
- 
 
 function getPointMerger(poly, points, angle, width_table) {
     const options = {units: 'kilometers'}
@@ -276,143 +272,143 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
         
         if (count_top_lines != 0 && count_bottom_lines != 0) {
             if (count_top_lines == count_bottom_lines) {
-                // for (let i = 0; i < count_top_lines; i++) {
-                //     const line_in_poly = bottom_lines[i];
-                //     const check_line_for_table = top_lines[i];   
+                for (let i = 0; i < count_top_lines; i++) {
+                    const line_in_poly = bottom_lines[i];
+                    const check_line_for_table = top_lines[i];   
 
-                //     const pt_left_up = rhumbDestination(line_in_poly.geometry.coordinates[0], -height_table, angle_90_for_pv, options);
-                //     const pt_right_up = rhumbDestination(line_in_poly.geometry.coordinates[1], -height_table, angle_90_for_pv, options);
-                //     const pt_left_down = rhumbDestination(check_line_for_table.geometry.coordinates[0], height_table, angle_90_for_pv, options);
-                //     const pt_right_down = rhumbDestination(check_line_for_table.geometry.coordinates[1], height_table, angle_90_for_pv, options);
+                    const pt_left_up = rhumbDestination(line_in_poly.geometry.coordinates[0], -height_table, angle_90_for_pv, options);
+                    const pt_right_up = rhumbDestination(line_in_poly.geometry.coordinates[1], -height_table, angle_90_for_pv, options);
+                    const pt_left_down = rhumbDestination(check_line_for_table.geometry.coordinates[0], height_table, angle_90_for_pv, options);
+                    const pt_right_down = rhumbDestination(check_line_for_table.geometry.coordinates[1], height_table, angle_90_for_pv, options);
 
-                //     const left_line_in_poly = checkWithin(poly_for_pv, [line_in_poly.geometry.coordinates[0], pt_left_up], angle_90_for_pv );
-                //     const right_line_in_poly = checkWithin(poly_for_pv, [line_in_poly.geometry.coordinates[1], pt_right_up], angle_90_for_pv );
+                    const left_line_in_poly = checkWithin(poly_for_pv, [line_in_poly.geometry.coordinates[0], pt_left_up], angle_90_for_pv );
+                    const right_line_in_poly = checkWithin(poly_for_pv, [line_in_poly.geometry.coordinates[1], pt_right_up], angle_90_for_pv );
                     
-                //     let line_left_up, line_right_up, line_up, line_down
+                    let line_left_up, line_right_up, line_up, line_down
                     
-                //     if (left_line_in_poly == true && right_line_in_poly == true ) {
-                //         line_left_up = lineString([line_in_poly.geometry.coordinates[0], 
-                //                                             pt_left_up.geometry.coordinates]);
-                //         line_right_up = lineString([line_in_poly.geometry.coordinates[1], 
-                //                                             pt_right_up.geometry.coordinates]);
-                //         line_up = lineString([pt_left_up.geometry.coordinates, 
-                //                                     pt_right_up.geometry.coordinates]);
-                //         line_down = lineString([line_in_poly.geometry.coordinates[0], 
-                //                                     line_in_poly.geometry.coordinates[1]]);
-                //     }
-                //     else if (left_line_in_poly == false && right_line_in_poly == true) {
-                //         line_left_up = lineString([check_line_for_table.geometry.coordinates[0], 
-                //                                             pt_left_down.geometry.coordinates]);
-                //         line_right_up = lineString([line_in_poly.geometry.coordinates[1], 
-                //                                             pt_right_up.geometry.coordinates]);
-                //         line_up = lineString([check_line_for_table.geometry.coordinates[0], 
-                //                                 pt_right_up.geometry.coordinates]);
-                //         line_down = lineString([pt_left_down.geometry.coordinates, 
-                //                                     line_in_poly.geometry.coordinates[1]]);
-                //     }
-                //     else if (left_line_in_poly == true && right_line_in_poly == false) {
-                //         line_left_up = lineString([line_in_poly.geometry.coordinates[0], 
-                //                                             pt_left_up.geometry.coordinates]);
-                //         line_right_up = lineString([check_line_for_table.geometry.coordinates[1], 
-                //                                             pt_right_down.geometry.coordinates]);
-                //         line_up = lineString([pt_left_up.geometry.coordinates, 
-                //                                 check_line_for_table.geometry.coordinates[1]]);
-                //         line_down = lineString([line_in_poly.geometry.coordinates[0], 
-                //                                     pt_right_down.geometry.coordinates]); 
-                //     }
-                //     else {
-                //         line_left_up = lineString([check_line_for_table.geometry.coordinates[0], 
-                //                                             pt_left_down.geometry.coordinates]);    
-                //         line_right_up = lineString([check_line_for_table.geometry.coordinates[1], 
-                //                                             pt_right_down.geometry.coordinates]); 
-                //         line_up = lineString([pt_left_down.geometry.coordinates, 
-                //                                 pt_right_down.geometry.coordinates]);
-                //         line_down = lineString([check_line_for_table.geometry.coordinates[0], 
-                //                                     check_line_for_table.geometry.coordinates[1]]);       
-                //     }
-                //     lines_for_PV.push(line_up);
-                //     lines_for_PV.push(line_down);
-                //     lines_for_PV.push(line_left_up);
-                //     lines_for_PV.push(line_right_up);
+                    if (left_line_in_poly == true && right_line_in_poly == true ) {
+                        line_left_up = lineString([line_in_poly.geometry.coordinates[0], 
+                                                            pt_left_up.geometry.coordinates]);
+                        line_right_up = lineString([line_in_poly.geometry.coordinates[1], 
+                                                            pt_right_up.geometry.coordinates]);
+                        line_up = lineString([pt_left_up.geometry.coordinates, 
+                                                    pt_right_up.geometry.coordinates]);
+                        line_down = lineString([line_in_poly.geometry.coordinates[0], 
+                                                    line_in_poly.geometry.coordinates[1]]);
+                    }
+                    else if (left_line_in_poly == false && right_line_in_poly == true) {
+                        line_left_up = lineString([check_line_for_table.geometry.coordinates[0], 
+                                                            pt_left_down.geometry.coordinates]);
+                        line_right_up = lineString([line_in_poly.geometry.coordinates[1], 
+                                                            pt_right_up.geometry.coordinates]);
+                        line_up = lineString([check_line_for_table.geometry.coordinates[0], 
+                                                pt_right_up.geometry.coordinates]);
+                        line_down = lineString([pt_left_down.geometry.coordinates, 
+                                                    line_in_poly.geometry.coordinates[1]]);
+                    }
+                    else if (left_line_in_poly == true && right_line_in_poly == false) {
+                        line_left_up = lineString([line_in_poly.geometry.coordinates[0], 
+                                                            pt_left_up.geometry.coordinates]);
+                        line_right_up = lineString([check_line_for_table.geometry.coordinates[1], 
+                                                            pt_right_down.geometry.coordinates]);
+                        line_up = lineString([pt_left_up.geometry.coordinates, 
+                                                check_line_for_table.geometry.coordinates[1]]);
+                        line_down = lineString([line_in_poly.geometry.coordinates[0], 
+                                                    pt_right_down.geometry.coordinates]); 
+                    }
+                    else {
+                        line_left_up = lineString([check_line_for_table.geometry.coordinates[0], 
+                                                            pt_left_down.geometry.coordinates]);    
+                        line_right_up = lineString([check_line_for_table.geometry.coordinates[1], 
+                                                            pt_right_down.geometry.coordinates]); 
+                        line_up = lineString([pt_left_down.geometry.coordinates, 
+                                                pt_right_down.geometry.coordinates]);
+                        line_down = lineString([check_line_for_table.geometry.coordinates[0], 
+                                                    check_line_for_table.geometry.coordinates[1]]);       
+                    }
+                    lines_for_PV.push(line_up);
+                    lines_for_PV.push(line_down);
+                    lines_for_PV.push(line_left_up);
+                    lines_for_PV.push(line_right_up);
                     
-                //     const [poly_pv, tables] = createPolyPV(line_down, line_up, height_table, width_table, angle_from_azimut, angle_90_for_pv, width_offset_tables)
-                //     all_tables += tables
-                //     // lines_for_PV = [...lines_for_PV, ...poly_pv]
-                // }
+                    const [poly_pv, tables] = createPolyPV(line_down, line_up, height_table, width_table, angle_from_azimut, angle_90_for_pv, width_offset_tables)
+                    all_tables += tables
+                    // lines_for_PV = [...lines_for_PV, ...poly_pv]
+                }
             }
             else if (count_top_lines > count_bottom_lines) {
-                // for (let i = 0; i < count_top_lines; i++) {
-                //     const check_line_for_table = top_lines[i];   
+                for (let i = 0; i < count_top_lines; i++) {
+                    const check_line_for_table = top_lines[i];   
 
-                //     const pt_left_down = rhumbDestination(check_line_for_table.geometry.coordinates[0], height_table, angle_90_for_pv, options);
-                //     const pt_right_down = rhumbDestination(check_line_for_table.geometry.coordinates[1], height_table, angle_90_for_pv, options);
+                    const pt_left_down = rhumbDestination(check_line_for_table.geometry.coordinates[0], height_table, angle_90_for_pv, options);
+                    const pt_right_down = rhumbDestination(check_line_for_table.geometry.coordinates[1], height_table, angle_90_for_pv, options);
 
-                //     const left_line_in_poly = checkWithin(poly_for_pv, [check_line_for_table.geometry.coordinates[0], pt_left_down], angle_90_for_pv );
-                //     const right_line_in_poly = checkWithin(poly_for_pv, [check_line_for_table.geometry.coordinates[1], pt_right_down], angle_90_for_pv );
+                    const left_line_in_poly = checkWithin(poly_for_pv, [check_line_for_table.geometry.coordinates[0], pt_left_down], angle_90_for_pv );
+                    const right_line_in_poly = checkWithin(poly_for_pv, [check_line_for_table.geometry.coordinates[1], pt_right_down], angle_90_for_pv );
                     
-                //     let line_left_up, line_right_up, line_up, line_down
+                    let line_left_up, line_right_up, line_up, line_down
                     
                     
-                //     if (left_line_in_poly == true && right_line_in_poly == true ) {
-                //         line_left_up = lineString([check_line_for_table.geometry.coordinates[0], 
-                //             pt_left_down.geometry.coordinates]);    
-                //         line_right_up = lineString([check_line_for_table.geometry.coordinates[1], 
-                //                                 pt_right_down.geometry.coordinates]); 
-                //         line_down = lineString([pt_left_down.geometry.coordinates, 
-                //                                     pt_right_down.geometry.coordinates]);
-                //         line_up = lineString([check_line_for_table.geometry.coordinates[0], 
-                //                                         check_line_for_table.geometry.coordinates[1]]);
-                //     }
-                //     else if (left_line_in_poly == false && right_line_in_poly == true) {
-                //         line_right_up = lineString([check_line_for_table.geometry.coordinates[1], 
-                //             pt_right_down.geometry.coordinates]); 
-                //         line_down = lineString([pt_left_down.geometry.coordinates, 
-                //             pt_right_down.geometry.coordinates]);
-                //         const inter_points = lineIntersect(poly_for_pv, line_down).features;
-                //         line_down = lineString([inter_points[0].geometry.coordinates, 
-                //             pt_right_down.geometry.coordinates]);
-                //         const pt_left_up = rhumbDestination(inter_points[0].geometry.coordinates, -height_table, angle_90_for_pv, options);   
-                //         line_left_up = lineString([inter_points[0].geometry.coordinates, 
-                //             pt_left_up.geometry.coordinates]); 
-                //         line_up = lineString([pt_left_up.geometry.coordinates, 
-                //             check_line_for_table.geometry.coordinates[1]]);
-                //         }
-                //     else if (left_line_in_poly == true && right_line_in_poly == false) {
-                //         line_left_up = lineString([check_line_for_table.geometry.coordinates[0], 
-                //             pt_left_down.geometry.coordinates]);
-                //         line_down = lineString([pt_left_down.geometry.coordinates, 
-                //             pt_right_down.geometry.coordinates]);
-                //         const inter_points = lineIntersect(poly_for_pv, line_down).features;
-                //         line_down = lineString([pt_left_down.geometry.coordinates, inter_points[0].geometry.coordinates]);
-                //         const pt_right_up = rhumbDestination(inter_points[0].geometry.coordinates, -height_table, angle_90_for_pv, options);   
-                //         line_right_up = lineString([inter_points[0].geometry.coordinates, 
-                //             pt_right_up.geometry.coordinates]); 
-                //         line_up = lineString([check_line_for_table.geometry.coordinates[0], 
-                //             pt_right_up.geometry.coordinates]);
+                    if (left_line_in_poly == true && right_line_in_poly == true ) {
+                        line_left_up = lineString([check_line_for_table.geometry.coordinates[0], 
+                            pt_left_down.geometry.coordinates]);    
+                        line_right_up = lineString([check_line_for_table.geometry.coordinates[1], 
+                                                pt_right_down.geometry.coordinates]); 
+                        line_down = lineString([pt_left_down.geometry.coordinates, 
+                                                    pt_right_down.geometry.coordinates]);
+                        line_up = lineString([check_line_for_table.geometry.coordinates[0], 
+                                                        check_line_for_table.geometry.coordinates[1]]);
+                    }
+                    else if (left_line_in_poly == false && right_line_in_poly == true) {
+                        line_right_up = lineString([check_line_for_table.geometry.coordinates[1], 
+                            pt_right_down.geometry.coordinates]); 
+                        line_down = lineString([pt_left_down.geometry.coordinates, 
+                            pt_right_down.geometry.coordinates]);
+                        const inter_points = lineIntersect(poly_for_pv, line_down).features;
+                        line_down = lineString([inter_points[0].geometry.coordinates, 
+                            pt_right_down.geometry.coordinates]);
+                        const pt_left_up = rhumbDestination(inter_points[0].geometry.coordinates, -height_table, angle_90_for_pv, options);   
+                        line_left_up = lineString([inter_points[0].geometry.coordinates, 
+                            pt_left_up.geometry.coordinates]); 
+                        line_up = lineString([pt_left_up.geometry.coordinates, 
+                            check_line_for_table.geometry.coordinates[1]]);
+                        }
+                    else if (left_line_in_poly == true && right_line_in_poly == false) {
+                        line_left_up = lineString([check_line_for_table.geometry.coordinates[0], 
+                            pt_left_down.geometry.coordinates]);
+                        line_down = lineString([pt_left_down.geometry.coordinates, 
+                            pt_right_down.geometry.coordinates]);
+                        const inter_points = lineIntersect(poly_for_pv, line_down).features;
+                        line_down = lineString([pt_left_down.geometry.coordinates, inter_points[0].geometry.coordinates]);
+                        const pt_right_up = rhumbDestination(inter_points[0].geometry.coordinates, -height_table, angle_90_for_pv, options);   
+                        line_right_up = lineString([inter_points[0].geometry.coordinates, 
+                            pt_right_up.geometry.coordinates]); 
+                        line_up = lineString([check_line_for_table.geometry.coordinates[0], 
+                            pt_right_up.geometry.coordinates]);
   
-                //         }
-                //     else {
-                //         line_down = lineString([pt_left_down.geometry.coordinates, 
-                //             pt_right_down.geometry.coordinates]);
-                //         const inter_points = lineIntersect(poly_for_pv, line_down).features;
-                //         line_down = lineString([inter_points[0].geometry.coordinates, inter_points[1].geometry.coordinates]);
-                //         const pt_left_up = rhumbDestination(inter_points[0].geometry.coordinates, -height_table, angle_90_for_pv, options);
-                //         const pt_right_up = rhumbDestination(inter_points[1].geometry.coordinates, -height_table, angle_90_for_pv, options);   
-                //         line_right_up = lineString([inter_points[1].geometry.coordinates, 
-                //             pt_right_up.geometry.coordinates]); 
-                //         line_left_up = lineString([inter_points[0].geometry.coordinates, 
-                //             pt_left_up.geometry.coordinates]);
-                //         line_up = lineString([pt_left_up.geometry.coordinates, 
-                //             pt_right_up.geometry.coordinates]);  
+                        }
+                    else {
+                        line_down = lineString([pt_left_down.geometry.coordinates, 
+                            pt_right_down.geometry.coordinates]);
+                        const inter_points = lineIntersect(poly_for_pv, line_down).features;
+                        line_down = lineString([inter_points[0].geometry.coordinates, inter_points[1].geometry.coordinates]);
+                        const pt_left_up = rhumbDestination(inter_points[0].geometry.coordinates, -height_table, angle_90_for_pv, options);
+                        const pt_right_up = rhumbDestination(inter_points[1].geometry.coordinates, -height_table, angle_90_for_pv, options);   
+                        line_right_up = lineString([inter_points[1].geometry.coordinates, 
+                            pt_right_up.geometry.coordinates]); 
+                        line_left_up = lineString([inter_points[0].geometry.coordinates, 
+                            pt_left_up.geometry.coordinates]);
+                        line_up = lineString([pt_left_up.geometry.coordinates, 
+                            pt_right_up.geometry.coordinates]);  
 
-                //     }
-                //     if (length(line_up, options) >= width_table && length(line_down, options) >= width_table) {
-                //         lines_for_PV.push(line_up);
-                //         lines_for_PV.push(line_down);
-                //         lines_for_PV.push(line_left_up);
-                //         lines_for_PV.push(line_right_up);
-                //     }
-                // }  
+                    }
+                    if (length(line_up, options) >= width_table && length(line_down, options) >= width_table) {
+                        lines_for_PV.push(line_up);
+                        lines_for_PV.push(line_down);
+                        lines_for_PV.push(line_left_up);
+                        lines_for_PV.push(line_right_up);
+                    }
+                }  
             }
             else if (count_top_lines < count_bottom_lines) {
                 for (let i = 0; i < count_bottom_lines; i++) {
