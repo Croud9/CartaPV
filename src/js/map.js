@@ -5,7 +5,7 @@ import MapboxElevationControl from "@watergis/mapbox-gl-elevation";
 import MaplibreGeocoder from '@maplibre/maplibre-gl-geocoder';
 import { calcAreaForPV, calcPVs } from "./pv-calc.js";
 import mask from '@turf/mask';
-import { multiLineString, lineString, polygon, point } from '@turf/helpers';
+import { multiLineString, lineString, polygon, point, multiPolygon } from '@turf/helpers';
 
 // import { MapboxStyleDefinition, MapboxStyleSwitcherControl } from "mapbox-gl-style-switcher";
 // import { style } from "./switcher";
@@ -46,71 +46,88 @@ map.on('draw.delete', updateArea);
 map.on('draw.update', updateArea);
 map.on('draw.combine', combineArea);
 
-function createHole(){}
+
+function createPolyWithHole(l_area_for_pv, l_area, union_areas){
+    const xy_poly_with_holes = [l_area_for_pv[0]] 
+    union_areas.forEach((item) => { if (l_area.toString() !== item.toString()) xy_poly_with_holes.push(item[0]) });
+    let poly_for_pv
+    poly_for_pv = polygon(xy_poly_with_holes)
+    return poly_for_pv
+}
+
 function combineArea(e){
-    console.log('e.createdFeatures -- >', e.createdFeatures)
     const id_union_area = e.createdFeatures[0].id
-    let union_area = e.createdFeatures[0].geometry.coordinates
-    // const id_deleted_area = e.deletedFeatures[0].id
-    let l_area_for_pv, l_area 
+    let union_areas = e.createdFeatures[0].geometry.coordinates
+    let l_area_for_pv, l_area
     let square = 0
     e.deletedFeatures.forEach((item) => { 
-        console.log('item-- ', item)
-        console.log('square-- ', area(item))
         const id = `poly_for_pv${item.id}`
-        if (area(item) > square)
+        const id_pvs = `pvs${item.id}`
+        const id_pvs_poly = `pvs_poly${item.id}`
+        const id_pvs_line = `pvs_line${item.id}`
+
+        if (area(item) > square) {
             square = area(item)
             l_area = item.geometry.coordinates
             l_area_for_pv = map.getSource(id)["_data"].geometry.coordinates
+        }
         if (map.getLayer(id)) {
             map.removeLayer(id);
         }
         if (map.getSource(id)) {
         map.removeSource(id);
         }
+        if (map.getLayer(id_pvs_poly)) {
+            map.removeLayer(id_pvs_poly);
+        }
+        if (map.getLayer(id_pvs_line)) {
+            map.removeLayer(id_pvs_line);
+        }
+        if (map.getSource(id_pvs)) {
+        map.removeSource(id_pvs);
+        }
     });
-
-    for(var i=0; i<union_area.length; i++) {
-        if(l_area.toString() === union_area[i].toString()) break;
-    }
-    const myIndex = (i >= union_area.length) ? -1 : i;
-    if (myIndex !== -1) union_area.splice(myIndex, 1);
-    
-
-    let poly_for_pv = polygon(l_area_for_pv)
-    union_area.forEach((item) => {
-        poly_for_pv = mask(poly_for_pv, polygon(item))
-    });
-
-    console.log(poly_for_pv)
+    let poly_for_pv = createPolyWithHole(l_area_for_pv, l_area, union_areas)
     map.addSource(`poly_for_pv${id_union_area}`, { 'type': 'geojson', 'data': poly_for_pv });
     map.addLayer({
         'id': `poly_for_pv${id_union_area}`,
         'type': 'fill',
         'source': `poly_for_pv${id_union_area}`,
-        // 'layout': {},
+        'layout': {},
         'paint': {
             'fill-color': '#00cc55',
             'fill-opacity': 0.7
         }
     });
-
-
-    // const all_data = draw.getAll();
-    // console.log('id_area-- ', id_area)
-    // console.log('all_data--', all_data)
-    
-    // const area = draw.get(id_area)
-    // const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(area)
-    // const square = area(draw.get(id_area));              
-    // drawPVs(id_area, square_text, answer);
 }
 
-function drawPVs(id_area, square_text, answer) {
-    // var bearing_peling = rhumbBearing(rotateLine.geometry['coordinates'][0], rotateLine.geometry['coordinates'][1]);
-    // console.log('угол от севера ' + bearing1 + ' / ' + bearing_peling);
-    const area = draw.get(id_area)
-    const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(area)
+function drawPVs(e, id_area, square_text, answer) {
+    let poly_for_pv, top_coord, lower_coord, left_coord, right_coord, large_area
+    const start_area = draw.get(id_area)
+
+    const all_areas = start_area.geometry.coordinates
+    if (all_areas.length > 1) {
+        let square = 0
+        all_areas.forEach((item) => { 
+            if (area(polygon(item)) > square) {
+                square = area(polygon(item))
+                large_area = item
+            }
+        });
+        large_area = polygon(large_area)
+        const area_params = calcAreaForPV(large_area)
+        poly_for_pv = area_params[0]
+        top_coord = area_params[1]
+        lower_coord = area_params[2]
+        left_coord = area_params[3]
+        right_coord = area_params[4]
+
+        poly_for_pv = createPolyWithHole(poly_for_pv.geometry.coordinates, large_area, all_areas)
+
+    }
+    else if (all_areas.length == 1) {
+        [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(start_area)
+    }
 
     const current_source_poly = map.getSource(`poly_for_pv${id_area}`)
     if (current_source_poly === undefined) {
@@ -119,7 +136,7 @@ function drawPVs(id_area, square_text, answer) {
             'id': `poly_for_pv${id_area}`,
             'type': 'fill',
             'source': `poly_for_pv${id_area}`,
-            // 'layout': {},
+            'layout': {},
             'paint': {
                 'fill-color': '#00cc55',
                 'fill-opacity': 0.7
@@ -129,59 +146,59 @@ function drawPVs(id_area, square_text, answer) {
     else {
         current_source_poly.setData(poly_for_pv);
     }
-    
-    // const [lines_for_PV , all_tables] = calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord)
-    // const current_source_pvs = map.getSource(`pvs${id_area}`)
-    // if (current_source_pvs === undefined) {
-    //     map.addSource(`pvs${id_area}`, {
-    //         'type': 'geojson',
-    //         'data': {
-    //             'type': 'FeatureCollection',
-    //             'features': lines_for_PV
-    //         }
-    //     });
-    //     map.addLayer({
-    //         'id': `pvs_line${id_area}`,
-    //         'type': 'line',
-    //         'source': `pvs${id_area}`,
-    //         'layout': {
-    //             'line-join': 'round',
-    //             'line-cap': 'round'
-    //         },
-    //         'paint': {
-    //             'line-color': '#fff', // '#B42222'
-    //             'line-width': 1
-    //         },
-    //         'filter': ['==', '$type', 'LineString']
-    //     });
-    //     map.addLayer({
-    //         'id': `pvs_poly${id_area}`,
-    //         'type': 'fill',
-    //         'source': `pvs${id_area}`,
-    //         'paint': {
-    //             'fill-color': '#3333ff',
-    //             'fill-opacity': 0.4
-    //         },
-    //         'filter': ['==', '$type', 'Polygon']
-    //     });
-    //     map.addLayer({
-    //         'id': `pvs_point${id_area}`,
-    //         'type': 'circle',
-    //         'source': `pvs${id_area}`,
-    //         'paint': {
-    //             'circle-radius': 3,
-    //             'circle-color': '#B42222'
-    //         },
-    //         'filter': ['==', '$type', 'Point']
-    //     });
-    // }
-    // else {
-    //     current_source_pvs.setData({
-    //         'type': 'FeatureCollection',
-    //         'features': lines_for_PV
-    //     });
-    // }
-    // answer.innerHTML = square_text + '<p>Столов: <strong>' + all_tables + ' </strong>шт.</p>'
+    console.log('pered modylzmi ', poly_for_pv, top_coord, lower_coord, left_coord, right_coord)
+    const [lines_for_PV , all_tables] = calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord)
+    const current_source_pvs = map.getSource(`pvs${id_area}`)
+    if (current_source_pvs === undefined) {
+        map.addSource(`pvs${id_area}`, {
+            'type': 'geojson',
+            'data': {
+                'type': 'FeatureCollection',
+                'features': lines_for_PV
+            }
+        });
+        map.addLayer({
+            'id': `pvs_line${id_area}`,
+            'type': 'line',
+            'source': `pvs${id_area}`,
+            'layout': {
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            'paint': {
+                'line-color': '#fff', // '#B42222'
+                'line-width': 1
+            },
+            'filter': ['==', '$type', 'LineString']
+        });
+        map.addLayer({
+            'id': `pvs_poly${id_area}`,
+            'type': 'fill',
+            'source': `pvs${id_area}`,
+            'paint': {
+                'fill-color': '#3333ff',
+                'fill-opacity': 0.4
+            },
+            'filter': ['==', '$type', 'Polygon']
+        });
+        // map.addLayer({
+        //     'id': `pvs_point${id_area}`,
+        //     'type': 'circle',
+        //     'source': `pvs${id_area}`,
+        //     'paint': {
+        //         'circle-radius': 3,
+        //         'circle-color': '#B42222'
+        //     },
+        //     'filter': ['==', '$type', 'Point']
+        // });
+    }
+    else {
+        current_source_pvs.setData({
+            'type': 'FeatureCollection',
+            'features': lines_for_PV
+        });
+    }
+    answer.innerHTML = square_text + '<p>Столов: <strong>' + all_tables + ' </strong>шт.</p>'
 }
 
 function updateArea(e) {
@@ -199,7 +216,7 @@ function updateArea(e) {
                                 rounded_area_m + 
                                 '</strong> м²';
         answer.innerHTML = square_text                       
-        drawPVs(id_area, square_text, answer);
+        drawPVs(e, id_area, square_text, answer);
     } else {
         answer.innerHTML = '';
         if (e.type !== 'draw.delete')

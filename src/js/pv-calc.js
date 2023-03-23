@@ -53,7 +53,7 @@ function offsetPoints(pt_area_start, pt_area_end, offset_border) {
 function calcAreaForPV(area) {
     const border_lines = []
     const points_intersect = []
-    const coordinates_area = area.geometry['coordinates'][0]
+    const coordinates_area = area.geometry.coordinates[0]
     let offset_border = 0.02
 
     let [pt_start, pt_end] = offsetPoints(coordinates_area[0], coordinates_area[1], offset_border)
@@ -483,6 +483,7 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
             lower_left_point = rhumbDestination(lower_left_point, -scan_dist, angle_90_for_pv, options);
         }
     }
+    console.log([lines_for_PV , all_tables])
     return [lines_for_PV , all_tables]
 }
 
