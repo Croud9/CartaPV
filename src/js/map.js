@@ -48,6 +48,8 @@ map.on('draw.combine', combineArea);
 
 
 function createPolyWithHole(l_area_for_pv, l_area, union_areas){
+    console.log('l_area_for_pv -- >', l_area_for_pv)
+    console.log('l_area -- >', l_area)
     const xy_poly_with_holes = [l_area_for_pv[0]] 
     union_areas.forEach((item) => { if (l_area.toString() !== item.toString()) xy_poly_with_holes.push(item[0]) });
     let poly_for_pv
@@ -58,7 +60,7 @@ function createPolyWithHole(l_area_for_pv, l_area, union_areas){
 function combineArea(e){
     const id_union_area = e.createdFeatures[0].id
     let union_areas = e.createdFeatures[0].geometry.coordinates
-    let l_area_for_pv, l_area
+    let l_area_for_pv, l_area, large_area
     let square = 0
     e.deletedFeatures.forEach((item) => { 
         const id = `poly_for_pv${item.id}`
@@ -87,7 +89,20 @@ function combineArea(e){
         map.removeSource(id_pvs);
         }
     });
-    let poly_for_pv = createPolyWithHole(l_area_for_pv, l_area, union_areas)
+    if (l_area.length > 1) {
+        square = 0
+        l_area.forEach((item) => { 
+            if (area(polygon(item)) > square) {
+                square = area(polygon(item))
+                large_area = item
+            }
+        });
+    }
+    else {
+        large_area = l_area
+    }
+    let poly_for_pv = createPolyWithHole(l_area_for_pv, large_area, union_areas)
+
     map.addSource(`poly_for_pv${id_union_area}`, { 'type': 'geojson', 'data': poly_for_pv });
     map.addLayer({
         'id': `poly_for_pv${id_union_area}`,
@@ -121,14 +136,12 @@ function drawPVs(e, id_area, square_text, answer) {
         lower_coord = area_params[2]
         left_coord = area_params[3]
         right_coord = area_params[4]
-
-        poly_for_pv = createPolyWithHole(poly_for_pv.geometry.coordinates, large_area, all_areas)
+        poly_for_pv = createPolyWithHole(poly_for_pv.geometry.coordinates, large_area.geometry.coordinates, all_areas)
 
     }
     else if (all_areas.length == 1) {
         [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(start_area)
     }
-
     const current_source_poly = map.getSource(`poly_for_pv${id_area}`)
     if (current_source_poly === undefined) {
         map.addSource(`poly_for_pv${id_area}`, { 'type': 'geojson', 'data': poly_for_pv });
@@ -166,7 +179,7 @@ function drawPVs(e, id_area, square_text, answer) {
                 'line-cap': 'round'
             },
             'paint': {
-                'line-color': '#fff', // '#B42222'
+                'line-color': '#fff', //'#B42222'
                 'line-width': 1
             },
             'filter': ['==', '$type', 'LineString']
@@ -186,8 +199,8 @@ function drawPVs(e, id_area, square_text, answer) {
         //     'type': 'circle',
         //     'source': `pvs${id_area}`,
         //     'paint': {
-        //         'circle-radius': 3,
-        //         'circle-color': '#B42222'
+        //         'circle-radius': 6,
+        //         'circle-color': '#fff'
         //     },
         //     'filter': ['==', '$type', 'Point']
         // });
