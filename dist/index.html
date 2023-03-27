@@ -16,8 +16,83 @@
     <div class="main">
         <div id="map"></div>
         <div id="distance" class="distance-container"></div>
-        <div class="calculation-box">
-            <div id="calculated-area"></div>
+        <div class="container-config-area">
+            <h2>Конфигурация площадки</h2>
+            <div class="left-right-config">
+                <div class="left-config">
+                    <form class="form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Расстояние до забора, м</label>
+                                <input type="number">
+                            </div>
+                            <div class="form-group">
+                                <label>Расстояние до полезной площади, м:</label>
+                                <input type="number">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn">Сохранить</button>
+                    </form>
+                </div>
+                <div class="calculation-box">
+                    <div id="calculated-area"></div>
+                </div>
+            </div>
+        </div>
+        <div class="container-config-table">
+            <h2>Конфигурация ФЭМ</h2>
+            <div class="left-right-config">
+                <div class="left-config">
+                    <form class="form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">Название</label>
+                                <input type="text" id="name">
+                            </div>
+                            <div class="form-group">
+                                <label>Количество</label>
+                                <input type="number">
+                            </div>
+                            <div class="form-group">
+                                <label>Высота</label>
+                                <input type="number">
+                            </div>
+                            <div class="form-group">
+                                <label>Ширина</label>
+                                <input type="number">
+                            </div>
+                            <div class="form-group">
+                                <label>Отступ между модулями</label>
+                                <input type="number">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn">Сохранить</button>
+                    </form>                
+                </div>
+                <div class="right-config">
+                    <img src="https://oporasolar.ru/wp-content/uploads/2022/04/280-24p.png" alt="Аватарка" class="avatar">
+                </div>
+            </div>
+        </div>
+        <div class="container-config-set">
+            <h2>Конфигурация размещения</h2>
+            <form class="form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Расстояние между рядами (крайние точки столов), м</label>
+                        <input type="number">
+                    </div>
+                    <div class="form-group">
+                        <label>Расстояние между столами, м:</label>
+                        <input type="number">
+                    </div>
+                    <div class="form-group">
+                        <label>Угол поворота столов относительно азимута</label>
+                        <input type="range" min="0" max="180" step="1">
+                    </div>
+                </div>
+                <button type="submit" class="btn">Сохранить</button>
+            </form>
         </div>
     </div>
     <footer>. . .</footer>

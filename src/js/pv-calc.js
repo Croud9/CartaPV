@@ -249,7 +249,7 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
     const width_table = 10 / 1000
     const width_offset_tables = 20 / 1e5 //20см
     const height_offset_tables = 10 / 1000 //10m 
-    let angle_from_azimut = 0// 0 - 180
+    let angle_from_azimut = 90// 0 - 180
     angle_from_azimut = (angle_from_azimut == 0) ? 180 : angle_from_azimut;
     const angle_90_for_pv = angle_from_azimut + 90
     const start_point = (angle_from_azimut < 90) ? point([right_coord[0], lower_coord[1]]) : point([left_coord[0], lower_coord[1]]);

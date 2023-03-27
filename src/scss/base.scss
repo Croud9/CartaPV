@@ -27,14 +27,11 @@ header, footer {
   text-align: center;
 }
 
-a {
-  text-decoration: none;
-  color: black;
-  font-weight: 500;
-}
+a:hover  {
+    opacity: 0.6;
+    padding-bottom: 10px;
+    /* text-decoration: underline 2px solid rgb(119, 119, 119); */
 
-a:hover {
-  color: rgb(97, 97, 97);
 }
 
 table {
@@ -82,22 +79,29 @@ table {
 }
 
 .btn:hover, .submit:hover  {
-  background: rgb(233, 233, 98);
+  background: rgb(0, 168, 56);
+}
+
+.btn:hover  {
+    cursor: pointer;
+    opacity: 0.8;
+    
+}
+
+.avatar {
+    width: 400px;
+    border-radius: 25px;
+    margin: 0 0 0 20%;
 }
 
 .main {
   flex: 1;
-  text-align: center;
+//   text-align: center;
   /* height: 80vh; */
   /* padding: 2em; */
 }
 
 .calculation-box {
-  position: absolute;
-  height: 10vh;
-  width: 400px;
-  bottom: 0vh;
-  right: 0vh;
   background-color: rgba(255, 255, 255, 0);
   padding: 15px;
   text-align: center;
@@ -108,22 +112,23 @@ table {
 }
 
 #map { 
-  /* flex: 1; */
+  flex: 1;
   height: 80vh;
-  width: 100%; 
+  border: none;
+  padding: 0.5em;
+  border-radius: 15px;
+  margin: 1% 4% 4% 4%;
+  box-shadow: 2px 2px 7px rgba(0, 0, 0, 0.25);
 }
 
-.maplibregl-ctrl-geocoder {
-    font-size: 18px;
-    line-height: 24px;
-    font-family: "Open Sans", "Helvetica Neue", Arial, Helvetica, sans-serif;
-    position: relative;
-    background-color: #fff;
-    width: 100%;
-    min-width: 240px;
-    z-index: 1;
-    border-radius: 4px;
-    transition: width 0.25s, min-width 0.25s;
+.container-config-area, .container-config-table, .container-config-set { 
+  background-color: whitesmoke;
+  border: none;
+  border-radius: 15px;
+  margin: 2% 4% 0 4%;
+  box-shadow: 2px 2px 7px rgba(0, 0, 0, 0.25);
+  padding: 10px 20px;
+  font-weight: bold;
 }
 
 .distance-container {
@@ -131,6 +136,83 @@ table {
     top: 10px;
     left: 10px;
     z-index: 1;
+}
+
+.left-right-config {
+    display: flex;
+    
+}
+
+.left-config {
+    width: 50%;
+    flex-direction: column;
+}
+
+.right-config, .calculation-box  {
+    width: 50%; 
+}
+
+.form h2 {
+    text-align: center;
+}
+
+.form-group label {
+    display: block;
+    color:#525252f8;
+    margin-bottom: 5px;
+}
+.form-row {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-row .form-group {
+    width: 50%;
+    margin-right: 20px;
+}
+
+.form-row .form-group:last-child {
+    margin-right: 0;
+}
+
+.form-group input, .form-group textarea{
+    width: 100%;
+    border: none;
+    border-radius: 5px;
+    outline: none;
+    padding: 15px 0 10px 10px;
+    background: #c4c4c4;
+    font-weight: bold;
+}
+
+.btn {
+    background: rgb(69, 69, 69);
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    font-family: inherit;
+    transition: all 0.25s;
+    margin: 1% 1% 0 0 ;
+}
+
+a {
+    color: rgb(0, 0, 0);
+    text-decoration: dotted;
+    transition: all 0.25s;
+}
+
+.maplibregl-ctrl-geocoder {
+    // font-size: 18px;
+    // line-height: 24px;
+    position: relative;
+    margin: 0 0 0 1%;
+    background-color: #fff;
+    width: 100%;
+    min-width: 240px;
+    // z-index: 1;
+    border-radius: 4px;
+    transition: width 0.25s, min-width 0.25s; 
 }
 
 .distance-container > * {

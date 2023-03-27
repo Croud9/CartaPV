@@ -5,6 +5,9 @@ import MapboxElevationControl from "@watergis/mapbox-gl-elevation";
 import MaplibreGeocoder from '@maplibre/maplibre-gl-geocoder';
 import { calcAreaForPV, calcPVs } from "./pv-calc.js";
 import mask from '@turf/mask';
+import difference from '@turf/difference';
+import intersect from '@turf/intersect';
+import booleanWithin from '@turf/boolean-within';
 import { multiLineString, lineString, polygon, point, multiPolygon } from '@turf/helpers';
 
 // import { MapboxStyleDefinition, MapboxStyleSwitcherControl } from "mapbox-gl-style-switcher";
@@ -26,12 +29,59 @@ var draw = new MapboxDraw({
     displayControlsDefault: false,
     controls: {
         polygon: true,
-        trash: true,
         combine_features: true,
         uncombine_features: true,
+        // trash: true,
     }
 });
 
+var geocoder_api = {
+    forwardGeocode: async (config) => {
+        const features = [];
+        try {
+            let request =
+                'https://nominatim.openstreetmap.org/search?q=' +
+                config.query +
+                '&format=geojson&polygon_geojson=1&addressdetails=1';
+            const response = await fetch(request);
+            const geojson = await response.json();
+            for (let feature of geojson.features) {
+                let center = [
+                    feature.bbox[0] +
+                        (feature.bbox[2] - feature.bbox[0]) / 2,
+                    feature.bbox[1] +
+                        (feature.bbox[3] - feature.bbox[1]) / 2
+                ];
+                let point = {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                        coordinates: center
+                    },
+                    place_name: feature.properties.display_name,
+                    properties: feature.properties,
+                    text: feature.properties.display_name,
+                    place_type: ['place'],
+                    center: center
+                };
+                features.push(point);
+            }
+        } catch (e) {
+            console.error(`Failed to forwardGeocode with error: ${e}`);
+        }
+
+        return {
+            features: features
+        };
+    }
+};
+
+map.addControl(
+    new MaplibreGeocoder(geocoder_api, {
+        maplibregl: maplibregl
+    })
+);
+map.addControl(new maplibregl.FullscreenControl());
 map.addControl(
     new maplibregl.NavigationControl({
         visualizePitch: true,
@@ -39,19 +89,25 @@ map.addControl(
         showCompass: true
     })
 );
-map.addControl(new maplibregl.FullscreenControl());
 map.addControl(draw);
 map.on('draw.create', updateArea);
 map.on('draw.delete', updateArea);
 map.on('draw.update', updateArea);
 map.on('draw.combine', combineArea);
 
-
 function createPolyWithHole(l_area_for_pv, l_area, union_areas){
     console.log('l_area_for_pv -- >', l_area_for_pv)
     console.log('l_area -- >', l_area)
     const xy_poly_with_holes = [l_area_for_pv[0]] 
-    union_areas.forEach((item) => { if (l_area.toString() !== item.toString()) xy_poly_with_holes.push(item[0]) });
+    union_areas.forEach((item) => { 
+        if (l_area.toString() !== item.toString()) {
+            const hole_intersect = intersect(polygon(item), polygon(l_area_for_pv));
+            if (hole_intersect != null) {
+                console.log('hole_intersect', hole_intersect.geometry.coordinates[0])
+                xy_poly_with_holes.push(hole_intersect.geometry.coordinates[0]) 
+            }
+        };
+    });
     let poly_for_pv
     poly_for_pv = polygon(xy_poly_with_holes)
     return poly_for_pv
@@ -159,7 +215,6 @@ function drawPVs(e, id_area, square_text, answer) {
     else {
         current_source_poly.setData(poly_for_pv);
     }
-    console.log('pered modylzmi ', poly_for_pv, top_coord, lower_coord, left_coord, right_coord)
     const [lines_for_PV , all_tables] = calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord)
     const current_source_pvs = map.getSource(`pvs${id_area}`)
     if (current_source_pvs === undefined) {
@@ -308,51 +363,7 @@ function updateArea(e) {
 //     );
 // });
 
-// var geocoder_api = {
-//     forwardGeocode: async (config) => {
-//         const features = [];
-//         try {
-//             let request =
-//                 'https://nominatim.openstreetmap.org/search?q=' +
-//                 config.query +
-//                 '&format=geojson&polygon_geojson=1&addressdetails=1';
-//             const response = await fetch(request);
-//             const geojson = await response.json();
-//             for (let feature of geojson.features) {
-//                 let center = [
-//                     feature.bbox[0] +
-//                         (feature.bbox[2] - feature.bbox[0]) / 2,
-//                     feature.bbox[1] +
-//                         (feature.bbox[3] - feature.bbox[1]) / 2
-//                 ];
-//                 let point = {
-//                     type: 'Feature',
-//                     geometry: {
-//                         type: 'Point',
-//                         coordinates: center
-//                     },
-//                     place_name: feature.properties.display_name,
-//                     properties: feature.properties,
-//                     text: feature.properties.display_name,
-//                     place_type: ['place'],
-//                     center: center
-//                 };
-//                 features.push(point);
-//             }
-//         } catch (e) {
-//             console.error(`Failed to forwardGeocode with error: ${e}`);
-//         }
 
-//         return {
-//             features: features
-//         };
-//     }
-// };
-// map.addControl(
-//     new MaplibreGeocoder(geocoder_api, {
-//         maplibregl: maplibregl
-//     })
-// );
 
 
 
