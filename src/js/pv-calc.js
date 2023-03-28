@@ -12,12 +12,28 @@ import booleanWithin from '@turf/boolean-within';
 import booleanContains from '@turf/boolean-contains';
 import lineOverlap from '@turf/line-overlap';
 import bearing from '@turf/bearing';
+import rewind from '@turf/rewind';
+import intersect from '@turf/intersect';
 import rhumbBearing from '@turf/rhumb-bearing';
 import distance from '@turf/distance';
 import { multiLineString, lineString, polygon, point } from '@turf/helpers';
 import transformScale from '@turf/transform-scale';
 import lineOffset from '@turf/line-offset';
 
+function createPolyWithHole(l_area_for_pv, l_area, union_areas){
+    const xy_poly_with_holes = [l_area_for_pv[0]] 
+    union_areas.forEach((item) => { 
+        if (l_area.toString() !== item.toString()) {
+            const hole_intersect = intersect(polygon(item), polygon(l_area_for_pv));
+            if (hole_intersect != null) {
+                xy_poly_with_holes.push(hole_intersect.geometry.coordinates[0]) 
+            }
+        };
+    });
+    let poly_for_pv
+    poly_for_pv = polygon(xy_poly_with_holes)
+    return poly_for_pv
+}
 
 function checkInterPoints(lower_left_point, poly_for_pv, diagonal_area, angle_from_azimut) {
     const pt_direct = rhumbDestination(lower_left_point, diagonal_area, angle_from_azimut, {units: 'kilometers'});
@@ -50,9 +66,10 @@ function offsetPoints(pt_area_start, pt_area_end, offset_border) {
     return [pt_start, pt_end]
 };
 
-function calcAreaForPV(area) {
+function calcAreaForPV(area_initial) {
     const border_lines = []
     const points_intersect = []
+    const area = rewind(area_initial)
     const coordinates_area = area.geometry.coordinates[0]
     let offset_border = 0.02
 
@@ -355,7 +372,6 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
                     
                     let line_left_up, line_right_up, line_up, line_down
                     
-                    
                     if (left_line_in_poly == true && right_line_in_poly == true ) {
                         line_left_up = lineString([check_line_for_table.geometry.coordinates[0], 
                             pt_left_down.geometry.coordinates]);    
@@ -468,28 +484,33 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
                             pt_right_down.geometry.coordinates]);
                     }
                     else {
-                        line_up = lineString([pt_left_up.geometry.coordinates, 
-                            pt_right_up.geometry.coordinates]);
+                        line_up = lineString([pt_left_up.geometry.coordinates, pt_right_up.geometry.coordinates]);
                         const inter_points = lineIntersect(poly_for_pv, line_up).features;
-                        line_up = lineString([inter_points[0].geometry.coordinates, inter_points[1].geometry.coordinates]);
-                        const pt_left_down = rhumbDestination(inter_points[0].geometry.coordinates, height_table, angle_90_for_pv, options);
-                        const pt_right_down = rhumbDestination(inter_points[1].geometry.coordinates, height_table, angle_90_for_pv, options);   
-                        line_right_up = lineString([inter_points[1].geometry.coordinates, 
-                            pt_right_down.geometry.coordinates]); 
-                        line_left_up = lineString([inter_points[0].geometry.coordinates, 
-                            pt_left_down.geometry.coordinates]);
-                        line_down = lineString([pt_left_down.geometry.coordinates, 
-                            pt_right_down.geometry.coordinates]);  
-                    }
-                    if (length(line_up, options) >= width_table && length(line_down, options) >= width_table) {
-                        lines_for_PV.push(line_up);
-                        lines_for_PV.push(line_down);
-                        lines_for_PV.push(line_left_up);
-                        lines_for_PV.push(line_right_up);
+                        line_up = null
+                        if (inter_points.length != 0) {
+                            line_up = lineString([inter_points[0].geometry.coordinates, inter_points[1].geometry.coordinates]);
+                            const pt_left_down = rhumbDestination(inter_points[0].geometry.coordinates, height_table, angle_90_for_pv, options);
+                            const pt_right_down = rhumbDestination(inter_points[1].geometry.coordinates, height_table, angle_90_for_pv, options);   
+                            line_right_up = lineString([inter_points[1].geometry.coordinates, 
+                                pt_right_down.geometry.coordinates]); 
+                            line_left_up = lineString([inter_points[0].geometry.coordinates, 
+                                pt_left_down.geometry.coordinates]);
+                            line_down = lineString([pt_left_down.geometry.coordinates, 
+                                pt_right_down.geometry.coordinates]);  
 
-                        const [poly_pv, tables] = createPolyPV(line_down, line_up, height_table, width_table, angle_from_azimut, angle_90_for_pv, width_offset_tables)
-                        all_tables += tables
-                        lines_for_PV = [...lines_for_PV, ...poly_pv]
+                        }
+                    }
+                    if (line_up != null) {
+                        if (length(line_up, options) >= width_table && length(line_down, options) >= width_table) {
+                            lines_for_PV.push(line_up);
+                            lines_for_PV.push(line_down);
+                            lines_for_PV.push(line_left_up);
+                            lines_for_PV.push(line_right_up);
+    
+                            const [poly_pv, tables] = createPolyPV(line_down, line_up, height_table, width_table, angle_from_azimut, angle_90_for_pv, width_offset_tables)
+                            all_tables += tables
+                            lines_for_PV = [...lines_for_PV, ...poly_pv]
+                        }
                     }
                 }
             }
@@ -499,8 +520,7 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
             lower_left_point = rhumbDestination(lower_left_point, -scan_dist, angle_90_for_pv, options);
         }
     }
-    console.log([lines_for_PV , all_tables])
     return [lines_for_PV , all_tables]
 }
 
-export { calcAreaForPV, calcPVs }
+export { calcAreaForPV, calcPVs, createPolyWithHole }

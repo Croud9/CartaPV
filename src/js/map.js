@@ -1,17 +1,24 @@
 import area from '@turf/area';
+import mask from '@turf/mask';
+import difference from '@turf/difference';
+import booleanWithin from '@turf/boolean-within';
+import { multiLineString, lineString, polygon, point, multiPolygon } from '@turf/helpers';
 import maplibregl from 'maplibre-gl';
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import MapboxElevationControl from "@watergis/mapbox-gl-elevation";
 import MaplibreGeocoder from '@maplibre/maplibre-gl-geocoder';
-import { calcAreaForPV, calcPVs } from "./pv-calc.js";
-import mask from '@turf/mask';
-import difference from '@turf/difference';
-import intersect from '@turf/intersect';
-import booleanWithin from '@turf/boolean-within';
-import { multiLineString, lineString, polygon, point, multiPolygon } from '@turf/helpers';
+import { calcAreaForPV, calcPVs, createPolyWithHole } from "./pv-calc.js";
 
 // import { MapboxStyleDefinition, MapboxStyleSwitcherControl } from "mapbox-gl-style-switcher";
 // import { style } from "./switcher";
+
+function handleFormSubmit(event) {
+    event.preventDefault()
+    console.log('Отправка!')
+}
+  
+const applicantForm = document.getElementById('config-area')
+applicantForm.addEventListener('submit', handleFormSubmit)
 
 var map = new maplibregl.Map({
         container: 'map',
@@ -31,7 +38,7 @@ var draw = new MapboxDraw({
         polygon: true,
         combine_features: true,
         uncombine_features: true,
-        // trash: true,
+        trash: true,
     }
 });
 
@@ -94,41 +101,15 @@ map.on('draw.create', updateArea);
 map.on('draw.delete', updateArea);
 map.on('draw.update', updateArea);
 map.on('draw.combine', combineArea);
+map.on('draw.uncombine', uncombineAreas);
 
-function createPolyWithHole(l_area_for_pv, l_area, union_areas){
-    console.log('l_area_for_pv -- >', l_area_for_pv)
-    console.log('l_area -- >', l_area)
-    const xy_poly_with_holes = [l_area_for_pv[0]] 
-    union_areas.forEach((item) => { 
-        if (l_area.toString() !== item.toString()) {
-            const hole_intersect = intersect(polygon(item), polygon(l_area_for_pv));
-            if (hole_intersect != null) {
-                console.log('hole_intersect', hole_intersect.geometry.coordinates[0])
-                xy_poly_with_holes.push(hole_intersect.geometry.coordinates[0]) 
-            }
-        };
-    });
-    let poly_for_pv
-    poly_for_pv = polygon(xy_poly_with_holes)
-    return poly_for_pv
-}
-
-function combineArea(e){
-    const id_union_area = e.createdFeatures[0].id
-    let union_areas = e.createdFeatures[0].geometry.coordinates
-    let l_area_for_pv, l_area, large_area
-    let square = 0
-    e.deletedFeatures.forEach((item) => { 
+function deleteAreas(features) {
+    features.forEach((item) => { 
         const id = `poly_for_pv${item.id}`
         const id_pvs = `pvs${item.id}`
         const id_pvs_poly = `pvs_poly${item.id}`
         const id_pvs_line = `pvs_line${item.id}`
 
-        if (area(item) > square) {
-            square = area(item)
-            l_area = item.geometry.coordinates
-            l_area_for_pv = map.getSource(id)["_data"].geometry.coordinates
-        }
         if (map.getLayer(id)) {
             map.removeLayer(id);
         }
@@ -145,59 +126,40 @@ function combineArea(e){
         map.removeSource(id_pvs);
         }
     });
-    if (l_area.length > 1) {
-        square = 0
-        l_area.forEach((item) => { 
-            if (area(polygon(item)) > square) {
-                square = area(polygon(item))
-                large_area = item
-            }
-        });
-    }
-    else {
-        large_area = l_area
-    }
-    let poly_for_pv = createPolyWithHole(l_area_for_pv, large_area, union_areas)
-
-    map.addSource(`poly_for_pv${id_union_area}`, { 'type': 'geojson', 'data': poly_for_pv });
-    map.addLayer({
-        'id': `poly_for_pv${id_union_area}`,
-        'type': 'fill',
-        'source': `poly_for_pv${id_union_area}`,
-        'layout': {},
-        'paint': {
-            'fill-color': '#00cc55',
-            'fill-opacity': 0.7
-        }
-    });
 }
 
-function drawPVs(e, id_area, square_text, answer) {
+function uncombineAreas(e){
+    deleteAreas(e.deletedFeatures)
+}
+
+function combineArea(e){
+    const id_union_area = e.createdFeatures[0].id
+    deleteAreas(e.deletedFeatures)
+    const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_union_area);
+    drawPVs(id_union_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+}
+
+function drawAreaForPV(id_area) {
     let poly_for_pv, top_coord, lower_coord, left_coord, right_coord, large_area
     const start_area = draw.get(id_area)
-
     const all_areas = start_area.geometry.coordinates
+
     if (all_areas.length > 1) {
         let square = 0
         all_areas.forEach((item) => { 
             if (area(polygon(item)) > square) {
                 square = area(polygon(item))
-                large_area = item
+                large_area = polygon(item)
             }
         });
-        large_area = polygon(large_area)
-        const area_params = calcAreaForPV(large_area)
-        poly_for_pv = area_params[0]
-        top_coord = area_params[1]
-        lower_coord = area_params[2]
-        left_coord = area_params[3]
-        right_coord = area_params[4]
+        [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(large_area)
         poly_for_pv = createPolyWithHole(poly_for_pv.geometry.coordinates, large_area.geometry.coordinates, all_areas)
-
+    
     }
     else if (all_areas.length == 1) {
         [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(start_area)
     }
+
     const current_source_poly = map.getSource(`poly_for_pv${id_area}`)
     if (current_source_poly === undefined) {
         map.addSource(`poly_for_pv${id_area}`, { 'type': 'geojson', 'data': poly_for_pv });
@@ -215,8 +177,12 @@ function drawPVs(e, id_area, square_text, answer) {
     else {
         current_source_poly.setData(poly_for_pv);
     }
-    const [lines_for_PV , all_tables] = calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord)
-    const current_source_pvs = map.getSource(`pvs${id_area}`)
+    return [poly_for_pv, top_coord, lower_coord, left_coord, right_coord]
+}
+
+function drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
+    const [lines_for_PV , all_tables] = calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+    const current_source_pvs = map.getSource(`pvs${id_area}`);
     if (current_source_pvs === undefined) {
         map.addSource(`pvs${id_area}`, {
             'type': 'geojson',
@@ -266,7 +232,7 @@ function drawPVs(e, id_area, square_text, answer) {
             'features': lines_for_PV
         });
     }
-    answer.innerHTML = square_text + '<p>Столов: <strong>' + all_tables + ' </strong>шт.</p>'
+    return all_tables
 }
 
 function updateArea(e) {
@@ -283,12 +249,18 @@ function updateArea(e) {
                                 '</strong> га / <strong>' + 
                                 rounded_area_m + 
                                 '</strong> м²';
-        answer.innerHTML = square_text                       
-        drawPVs(e, id_area, square_text, answer);
+        answer.innerHTML = square_text       
+        const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_area);               
+        const all_tables = drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+        answer.innerHTML = square_text + '<p>Столов: <strong>' + all_tables + ' </strong>шт.</p>'
     } else {
         answer.innerHTML = '';
-        if (e.type !== 'draw.delete')
-        alert('Use the draw tools to draw a polygon!');
+        if (e.type !== 'draw.delete') {
+            alert('Use the draw tools to draw a polygon!');
+        }
+        else {
+            deleteAreas(e.features)
+        }
     }
 }
 

@@ -14,7 +14,6 @@
 
 body {
   background: linear-gradient(45deg, #EECFBA, #C5DDE8);
-//   background: whitesmoke;
   display: flex;
   min-height: 100vh;
   flex-direction: column;
@@ -22,9 +21,15 @@ body {
 }
 
 header, footer {
+    display: flex;
   height: 10vh;
   padding: 1em;
-  text-align: center;
+}
+
+a {
+    color: rgb(0, 0, 0);
+    text-decoration: dotted;
+    transition: all 0.25s;
 }
 
 a:hover  {
@@ -72,20 +77,20 @@ table {
 }
 
 .btn, .input_field, .submit {
+  background: rgb(69, 69, 69);
+  color: #fff;
+  padding: 10px 20px;
   border: none;
-  padding: 0.5em;
-  border-radius: 5px;
-  margin: 5px 0 5px 0;
+  border-radius: 10px;
+  font-family: inherit;
+  transition: all 0.25s;
+  margin: 1% 1% 0 0 ;
 }
 
 .btn:hover, .submit:hover  {
   background: rgb(0, 168, 56);
-}
-
-.btn:hover  {
-    cursor: pointer;
-    opacity: 0.8;
-    
+  cursor: pointer;
+  opacity: 0.8;
 }
 
 .avatar {
@@ -96,9 +101,6 @@ table {
 
 .main {
   flex: 1;
-//   text-align: center;
-  /* height: 80vh; */
-  /* padding: 2em; */
 }
 
 .calculation-box {
@@ -139,8 +141,7 @@ table {
 }
 
 .left-right-config {
-    display: flex;
-    
+    display: flex;   
 }
 
 .left-config {
@@ -152,30 +153,19 @@ table {
     width: 50%; 
 }
 
-.form h2 {
-    text-align: center;
-}
-
-.form-group label {
-    display: block;
-    color:#525252f8;
-    margin-bottom: 5px;
-}
 .form-row {
     display: flex;
     flex-direction: column;
-}
-
-.form-row .form-group {
-    width: 50%;
     margin-right: 20px;
 }
 
-.form-row .form-group:last-child {
-    margin-right: 0;
+label {
+    display: block;
+    color:#525252f8;
+    margin-bottom: 5px;   
 }
 
-.form-group input, .form-group textarea{
+select, input {
     width: 100%;
     border: none;
     border-radius: 5px;
@@ -183,23 +173,6 @@ table {
     padding: 15px 0 10px 10px;
     background: #c4c4c4;
     font-weight: bold;
-}
-
-.btn {
-    background: rgb(69, 69, 69);
-    color: #fff;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 10px;
-    font-family: inherit;
-    transition: all 0.25s;
-    margin: 1% 1% 0 0 ;
-}
-
-a {
-    color: rgb(0, 0, 0);
-    text-decoration: dotted;
-    transition: all 0.25s;
 }
 
 .maplibregl-ctrl-geocoder {

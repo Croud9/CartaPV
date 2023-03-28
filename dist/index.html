@@ -20,16 +20,16 @@
             <h2>Конфигурация площадки</h2>
             <div class="left-right-config">
                 <div class="left-config">
-                    <form class="form">
+                    <form class="form", id="config-area">
                         <div class="form-row">
-                            <div class="form-group">
-                                <label>Расстояние до забора, м</label>
-                                <input type="number">
-                            </div>
-                            <div class="form-group">
-                                <label>Расстояние до полезной площади, м:</label>
-                                <input type="number">
-                            </div>
+                            <label>
+                                Расстояние до забора, м
+                                <input type="number" name="distance-to-barrier" value="20" required>
+                            </label>
+                            <label>
+                                Расстояние до полезной площади, м:
+                                <input type="number" name="distance-to-pv-area" value="20" required>
+                            </label>
                         </div>
                         <button type="submit" class="btn">Сохранить</button>
                     </form>
@@ -45,26 +45,33 @@
                 <div class="left-config">
                     <form class="form">
                         <div class="form-row">
-                            <div class="form-group">
-                                <label for="name">Название</label>
-                                <input type="text" id="name">
-                            </div>
-                            <div class="form-group">
-                                <label>Количество</label>
+                            <form id="mars-once" action="/apply/" method="POST">                              
+                            <label for="name-module">
+                                Название
+                                <select name="name-module" required>
+                                    <option value="engineer" selected>HJT</option>
+                                    <option value="scientist">Jinco</option>
+                                    <option value="psychologist">Solar System</option>
+                                    <option value="other">Другое</option>
+                                </select>
+                            </label>
+                            <label>
+                                Количество
                                 <input type="number">
-                            </div>
-                            <div class="form-group">
-                                <label>Высота</label>
+                            </label>
+                            <label>
+                                Высота
                                 <input type="number">
-                            </div>
-                            <div class="form-group">
-                                <label>Ширина</label>
+                            </label>
+                            <label>
+                                Ширина
                                 <input type="number">
-                            </div>
-                            <div class="form-group">
-                                <label>Отступ между модулями</label>
+                            </label>
+
+                            <label>
+                                Отступ между модулями
                                 <input type="number">
-                            </div>
+                            </label>
                         </div>
                         <button type="submit" class="btn">Сохранить</button>
                     </form>                
@@ -78,18 +85,18 @@
             <h2>Конфигурация размещения</h2>
             <form class="form">
                 <div class="form-row">
-                    <div class="form-group">
-                        <label>Расстояние между рядами (крайние точки столов), м</label>
+                    <label>
+                        Расстояние между рядами (крайние точки столов), м
                         <input type="number">
-                    </div>
-                    <div class="form-group">
-                        <label>Расстояние между столами, м:</label>
+                    </label>
+                    <label>
+                        Расстояние между столами, м:
                         <input type="number">
-                    </div>
-                    <div class="form-group">
-                        <label>Угол поворота столов относительно азимута</label>
+                    </label>
+                    <label>
+                        Угол поворота столов относительно азимута
                         <input type="range" min="0" max="180" step="1">
-                    </div>
+                    </label>
                 </div>
                 <button type="submit" class="btn">Сохранить</button>
             </form>
