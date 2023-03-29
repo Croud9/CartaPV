@@ -14,91 +14,121 @@
         <a href="">Регистрация</a>
     </header>
     <div class="main">
-        <div id="map"></div>
-        <div id="distance" class="distance-container"></div>
-        <div class="container-config-area">
-            <h2>Конфигурация площадки</h2>
-            <div class="left-right-config">
-                <div class="left-config">
-                    <form class="form", id="config-area">
-                        <div class="form-row">
-                            <label>
-                                Расстояние до забора, м
-                                <input type="number" name="distance-to-barrier" value="20" required>
-                            </label>
-                            <label>
-                                Расстояние до полезной площади, м:
-                                <input type="number" name="distance-to-pv-area" value="20" required>
-                            </label>
-                        </div>
-                        <button type="submit" class="btn">Сохранить</button>
-                    </form>
-                </div>
+        <!-- <div id="distance" class="distance-container"></div> -->
+        <div id="map">
+            <div class="container-config">
+                <h2>Конфигурация площадки</h2>
+                <form class="form" id="data-area">
+                    <div class="form-row">
+                        <label>
+                            Расстояние до забора, м
+                            <input type="number" name="distance-to-barrier" value="20" required>
+                        </label>
+                        <label>
+                            Расстояние до полезной площади, м:
+                            <input type="number" name="distance-to-pv-area" value="20" required>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn">Сохранить</button>
+                </form>
                 <div class="calculation-box">
                     <div id="calculated-area"></div>
                 </div>
-            </div>
-        </div>
-        <div class="container-config-table">
-            <h2>Конфигурация ФЭМ</h2>
-            <div class="left-right-config">
-                <div class="left-config">
-                    <form class="form">
-                        <div class="form-row">
-                            <form id="mars-once" action="/apply/" method="POST">                              
-                            <label for="name-module">
-                                Название
-                                <select name="name-module" required>
-                                    <option value="engineer" selected>HJT</option>
-                                    <option value="scientist">Jinco</option>
-                                    <option value="psychologist">Solar System</option>
-                                    <option value="other">Другое</option>
-                                </select>
-                            </label>
-                            <label>
-                                Количество
-                                <input type="number">
-                            </label>
-                            <label>
-                                Высота
-                                <input type="number">
-                            </label>
-                            <label>
-                                Ширина
-                                <input type="number">
-                            </label>
-
-                            <label>
-                                Отступ между модулями
-                                <input type="number">
-                            </label>
-                        </div>
-                        <button type="submit" class="btn">Сохранить</button>
-                    </form>                
-                </div>
+    
+                <h2>Конфигурация опорной конструкции</h2>
+                <form class="form" id="data-pv">
+                    <div class="form-row">
+                        <label for="name-module">
+                            Название модуля
+                            <select name="name-module" required>
+                                <option value="engineer" selected>HJT</option>
+                                <option value="scientist">Jinco</option>
+                                <option value="psychologist">Solar System</option>
+                                <option value="other">Другое</option>
+                            </select>
+                        </label>
+                        <label>
+                            Количество модулей в ряде
+                            <input type="number">
+                        </label>
+                        <label>
+                            Количество рядов
+                            <input type="number">
+                        </label>
+                        <!-- <label>
+                            Высота, м
+                            <input type="number" name="height-table" value="5" required>
+                        </label>
+                        <label>
+                            Ширина, м
+                            <input type="number" name="width-table" value="10" required>
+                        </label> -->
+                        <label>
+                            Ориентация
+                            <select name="name-module" required>
+                                <option value="engineer" selected>Книжная</option>
+                                <option value="other">Альбомная</option>
+                            </select>
+                        </label>
+                        <label>
+                            Тип стола
+                            <select name="name-module" required>
+                                <option value="engineer" selected>Трекер</option>
+                                <option value="other">Фикс</option>
+                            </select>
+                        </label>
+                        <label>
+                            Угол наклона (при фикс показывать, при трекере скрывать)
+                            <input type="number">
+                        </label>
+                        <label>
+                            Отступ между модулями, см
+                            <input type="number">
+                        </label>
+                    </div>
+                    <button type="submit" class="btn">Сохранить</button>
+                </form>                
                 <div class="right-config">
                     <img src="https://oporasolar.ru/wp-content/uploads/2022/04/280-24p.png" alt="Аватарка" class="avatar">
                 </div>
+                <h2>Конфигурация размещения</h2>
+                <form class="form" id="data-set-pv">
+                    <div class="form-row">
+                        <label>
+                            Расстояние между рядами + высота стола, м
+                            <input type="number" name="height-offset-tables"  value="10" required>
+                        </label>
+                        <label>
+                            Расстояние между столами, см
+                            <input type="number" name="width-offset-tables" value="20" required>
+                        </label>
+                        <label>
+                            Выравнивание столов относительно границ площадки
+                            <select name="align-table" required>
+                                <option value="center" selected>По центру</option>
+                                <option value="left">По левой границе</option>
+                                <option value="right">По правой границе</option>
+                            </select>
+                        </label>
+                        <label>
+                            Угол поворота столов относительно азимута
+                            <input type="range" name="angle-from-azimut" min="0" max="180" step="1">
+                        </label>
+                    </div>
+                    <button type="submit" class="btn">Сохранить</button>
+                </form>
             </div>
         </div>
-        <div class="container-config-set">
-            <h2>Конфигурация размещения</h2>
-            <form class="form">
+        <div class="container-result">
+            <h2>Отчет</h2>
+            <form class="form" id="data-set-pv">
                 <div class="form-row">
                     <label>
-                        Расстояние между рядами (крайние точки столов), м
-                        <input type="number">
-                    </label>
-                    <label>
-                        Расстояние между столами, м:
-                        <input type="number">
-                    </label>
-                    <label>
-                        Угол поворота столов относительно азимута
-                        <input type="range" min="0" max="180" step="1">
+                        Параметр
+                        <input type="text" required>
                     </label>
                 </div>
-                <button type="submit" class="btn">Сохранить</button>
+                <button type="submit" class="btn">Сформировать</button>
             </form>
         </div>
     </div>

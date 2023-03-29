@@ -11,14 +11,82 @@ import { calcAreaForPV, calcPVs, createPolyWithHole } from "./pv-calc.js";
 
 // import { MapboxStyleDefinition, MapboxStyleSwitcherControl } from "mapbox-gl-style-switcher";
 // import { style } from "./switcher";
+const answer = document.getElementById('calculated-area');
 
-function handleFormSubmit(event) {
-    event.preventDefault()
-    console.log('Отправка!')
+let params = {
+    distance_to_barrier: 40,
+    distance_to_pv_area: 20,
+    height_table: 5,
+    width_table: 10,
+    height_offset_tables: 10,
+    width_offset_tables: 20,
+    angle_from_azimut: 90,
+}
+
+function serializeForm(formNode) {
+    return new FormData(formNode)
+}
+
+function calcSquareArea(poly_area) {
+    const square = area(poly_area);
+    const rounded_area_ga = Math.round((square / 10000) * 100) / 100;
+    const rounded_area_m = Math.round(square * 100) / 100;
+    return [rounded_area_ga, rounded_area_m]
+}
+
+function outputAreaData(id_area_initial, poly_for_pv, all_tables) {
+    let [rounded_area_ga, rounded_area_m] = calcSquareArea(draw.get(id_area_initial));
+    const square_text = 'Площадь области: <strong>' + 
+    rounded_area_ga + 
+    '</strong> га / <strong>' + 
+    rounded_area_m + 
+    '</strong> м²';
+      
+    [rounded_area_ga, rounded_area_m] = calcSquareArea(poly_for_pv);
+    const square_pv_area = 'Полезная площадь: <strong>' + 
+                            rounded_area_ga + 
+                            '</strong> га / <strong>' + 
+                            rounded_area_m + 
+                            '</strong> м²';           
+    answer.innerHTML = square_text + '<p> ' + square_pv_area + '</p>' + '<p>Столов: <strong>' + all_tables + ' </strong>шт.</p>'
 }
   
-const applicantForm = document.getElementById('config-area')
-applicantForm.addEventListener('submit', handleFormSubmit)
+function handleFormSubmit(event) {
+    event.preventDefault()
+    const form_id = event.target.id;
+    const dataForm = serializeForm(event.target);
+    if (form_id == 'data-area'){
+        params.distance_to_barrier = +dataForm.get("distance-to-barrier");
+        params.distance_to_pv_area = +dataForm.get("distance-to-pv-area");
+    }
+    else if (form_id == 'data-pv') {
+        params.height_table = +dataForm.get("height-table");
+        params.width_table = +dataForm.get("width-table");
+    }
+    else if (form_id == 'data-set-pv') {
+        params.height_offset_tables = +dataForm.get("height-offset-tables");
+        params.width_offset_tables = +dataForm.get("width-offset-tables");
+        params.angle_from_azimut = +dataForm.get("angle-from-azimut");
+        if (params.height_offset_tables < params.height_table) 
+        alert('Расстояние меньше высоты стола, измените');
+    };
+
+    const selected_ids = draw.getSelectedIds();
+    if (selected_ids.length != 0) {
+        selected_ids.forEach((item) => {
+            const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(item);  
+            const all_tables = drawPVs(item, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+            outputAreaData(item, poly_for_pv, all_tables);
+        });
+    };
+}
+  
+const form_area = document.getElementById('data-area')
+const form_pv = document.getElementById('data-pv')
+const form_set_pv = document.getElementById('data-set-pv')
+form_area.addEventListener('submit', handleFormSubmit)
+form_pv.addEventListener('submit', handleFormSubmit)
+form_set_pv.addEventListener('submit', handleFormSubmit)
 
 var map = new maplibregl.Map({
         container: 'map',
@@ -136,7 +204,8 @@ function combineArea(e){
     const id_union_area = e.createdFeatures[0].id
     deleteAreas(e.deletedFeatures)
     const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_union_area);
-    drawPVs(id_union_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+    const all_tables = drawPVs(id_union_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+    outputAreaData(id_union_area, poly_for_pv, all_tables);
 }
 
 function drawAreaForPV(id_area) {
@@ -152,12 +221,12 @@ function drawAreaForPV(id_area) {
                 large_area = polygon(item)
             }
         });
-        [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(large_area)
+        [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(large_area, params)
         poly_for_pv = createPolyWithHole(poly_for_pv.geometry.coordinates, large_area.geometry.coordinates, all_areas)
     
     }
     else if (all_areas.length == 1) {
-        [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(start_area)
+        [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(start_area, params)
     }
 
     const current_source_poly = map.getSource(`poly_for_pv${id_area}`)
@@ -181,7 +250,7 @@ function drawAreaForPV(id_area) {
 }
 
 function drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
-    const [lines_for_PV , all_tables] = calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+    const [lines_for_PV , all_tables] = calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, params);
     const current_source_pvs = map.getSource(`pvs${id_area}`);
     if (current_source_pvs === undefined) {
         map.addSource(`pvs${id_area}`, {
@@ -238,21 +307,11 @@ function drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right
 function updateArea(e) {
     const id_area = e.features[0].id
     const all_data = draw.getAll();
-    const answer = document.getElementById('calculated-area');
-
+    
     if (all_data.features.length > 0) {
-        const square = area(draw.get(id_area));
-        const rounded_area_ga = Math.round((square / 10000) * 100) / 100;
-        const rounded_area_m = Math.round(square * 100) / 100;
-        const square_text = 'Площадь области: <strong>' + 
-                                rounded_area_ga + 
-                                '</strong> га / <strong>' + 
-                                rounded_area_m + 
-                                '</strong> м²';
-        answer.innerHTML = square_text       
-        const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_area);               
+        const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_area);    
         const all_tables = drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
-        answer.innerHTML = square_text + '<p>Столов: <strong>' + all_tables + ' </strong>шт.</p>'
+        outputAreaData(id_area, poly_for_pv, all_tables);
     } else {
         answer.innerHTML = '';
         if (e.type !== 'draw.delete') {

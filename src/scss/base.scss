@@ -94,9 +94,8 @@ table {
 }
 
 .avatar {
-    width: 400px;
+    width: 200px;
     border-radius: 25px;
-    margin: 0 0 0 20%;
 }
 
 .main {
@@ -123,7 +122,21 @@ table {
   box-shadow: 2px 2px 7px rgba(0, 0, 0, 0.25);
 }
 
-.container-config-area, .container-config-table, .container-config-set { 
+.container-config{ 
+    position: relative;
+  background-color: whitesmoke;
+  border: none;
+  border-radius: 15px;
+  width: 30%;
+  height: 100%;
+//   margin: 2% 50% 0 4%;
+  box-shadow: 2px 2px 7px rgba(0, 0, 0, 0.25);
+  padding: 10px 20px;
+  font-weight: bold;
+  z-index: 1;
+  overflow: auto;
+}
+.container-result { 
   background-color: whitesmoke;
   border: none;
   border-radius: 15px;
@@ -138,19 +151,6 @@ table {
     top: 10px;
     left: 10px;
     z-index: 1;
-}
-
-.left-right-config {
-    display: flex;   
-}
-
-.left-config {
-    width: 50%;
-    flex-direction: column;
-}
-
-.right-config, .calculation-box  {
-    width: 50%; 
 }
 
 .form-row {

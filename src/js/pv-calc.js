@@ -66,12 +66,12 @@ function offsetPoints(pt_area_start, pt_area_end, offset_border) {
     return [pt_start, pt_end]
 };
 
-function calcAreaForPV(area_initial) {
+function calcAreaForPV(area_initial, params) {
     const border_lines = []
     const points_intersect = []
     const area = rewind(area_initial)
     const coordinates_area = area.geometry.coordinates[0]
-    let offset_border = 0.02
+    let offset_border = (params.distance_to_barrier + params.distance_to_pv_area) / 1000
 
     let [pt_start, pt_end] = offsetPoints(coordinates_area[0], coordinates_area[1], offset_border)
     for (let i = 1; i < coordinates_area.length - 1; i++) {
@@ -258,15 +258,16 @@ function createPolyPV(line_down, line_up, height_table, width_table, angle_from_
     return [poly_pv, count_tables]
 };
 
-function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
+function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, params) {
     let lines_for_PV = []
     const options = {units: 'kilometers'}
     const scan_dist = 0.25 / 1000
-    const height_table = 5 / 1000 //5m
-    const width_table = 10 / 1000
-    const width_offset_tables = 20 / 1e5 //20см
-    const height_offset_tables = 10 / 1000 //10m 
-    let angle_from_azimut = 90// 0 - 180
+    const height_table = params.height_table / 1000 //5m
+    const width_table = params.width_table / 1000
+    const height_offset_tables = (params.height_offset_tables - params.height_table) / 1000 //10m 
+    const width_offset_tables = params.width_offset_tables / 1e5 //20см
+    let angle_from_azimut = params.angle_from_azimut // 0 - 180
+    
     angle_from_azimut = (angle_from_azimut == 0) ? 180 : angle_from_azimut;
     const angle_90_for_pv = angle_from_azimut + 90
     const start_point = (angle_from_azimut < 90) ? point([right_coord[0], lower_coord[1]]) : point([left_coord[0], lower_coord[1]]);
