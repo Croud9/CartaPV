@@ -12,6 +12,34 @@ import { calcAreaForPV, calcPVs, createPolyWithHole } from "./pv-calc.js";
 // import { MapboxStyleDefinition, MapboxStyleSwitcherControl } from "mapbox-gl-style-switcher";
 // import { style } from "./switcher";
 const answer = document.getElementById('calculated-area');
+const config_show = document.getElementById('btn-config-show');
+const config_hide = document.getElementById('btn-config-hide');
+const config = document.getElementById('config');
+
+const form_config = document.getElementById('data')
+form_config.addEventListener('submit', handleFormSubmit)
+
+const check_type_trecker = document.getElementById('type-table1')
+const check_type_fix = document.getElementById('type-table2')
+const range_fix = document.getElementById('angle-fix');
+// check_type_fix.addEventListener('change', function (e) {
+//     console.log('cjcnjzybt')
+//     if (this.checked) {
+//         range_fix.style.display = 'block';
+//     }
+//     else {
+//         range_fix.style.display = 'none';
+//     }
+// });
+
+check_type_fix.onclick = (e) => {
+    range_fix.style.display = 'block';
+}
+check_type_trecker.onclick = (e) => {
+    range_fix.style.display = 'none';
+}
+
+
 
 let params = {
     distance_to_barrier: 40,
@@ -21,6 +49,20 @@ let params = {
     height_offset_tables: 10,
     width_offset_tables: 20,
     angle_from_azimut: 90,
+}
+
+config_show.onclick = function() {
+    if (config.classList.contains('hide-slide')) {
+        config.classList.remove('hide-slide');
+        config.classList.add('show-slide' );
+    }
+}
+
+config_hide.onclick = function() {
+    if (config.classList.contains('show-slide')) {
+        config.classList.add('hide-slide');
+        config.classList.remove('show-slide');
+    }
 }
 
 function serializeForm(formNode) {
@@ -48,28 +90,21 @@ function outputAreaData(id_area_initial, poly_for_pv, all_tables) {
                             '</strong> га / <strong>' + 
                             rounded_area_m + 
                             '</strong> м²';           
-    answer.innerHTML = square_text + '<p> ' + square_pv_area + '</p>' + '<p>Столов: <strong>' + all_tables + ' </strong>шт.</p>'
+    answer.innerHTML = square_text + '<p> ' + square_pv_area + '</p>' // + '<p>Столов: <strong>' + all_tables + ' </strong>шт.</p>'
 }
   
 function handleFormSubmit(event) {
     event.preventDefault()
-    const form_id = event.target.id;
     const dataForm = serializeForm(event.target);
-    if (form_id == 'data-area'){
-        params.distance_to_barrier = +dataForm.get("distance-to-barrier");
-        params.distance_to_pv_area = +dataForm.get("distance-to-pv-area");
-    }
-    else if (form_id == 'data-pv') {
-        params.height_table = +dataForm.get("height-table");
-        params.width_table = +dataForm.get("width-table");
-    }
-    else if (form_id == 'data-set-pv') {
-        params.height_offset_tables = +dataForm.get("height-offset-tables");
-        params.width_offset_tables = +dataForm.get("width-offset-tables");
-        params.angle_from_azimut = +dataForm.get("angle-from-azimut");
-        if (params.height_offset_tables < params.height_table) 
-        alert('Расстояние меньше высоты стола, измените');
-    };
+
+    params.distance_to_barrier = +dataForm.get("distance-to-barrier");
+    params.distance_to_pv_area = +dataForm.get("distance-to-pv-area");
+    params.height_offset_tables = +dataForm.get("height-offset-tables");
+    params.width_offset_tables = +dataForm.get("width-offset-tables");
+    params.angle_from_azimut = +dataForm.get("angle-from-azimut");
+    if (params.height_offset_tables < params.height_table) 
+    alert('Расстояние меньше высоты стола, измените');
+
 
     const selected_ids = draw.getSelectedIds();
     if (selected_ids.length != 0) {
@@ -81,12 +116,7 @@ function handleFormSubmit(event) {
     };
 }
   
-const form_area = document.getElementById('data-area')
-const form_pv = document.getElementById('data-pv')
-const form_set_pv = document.getElementById('data-set-pv')
-form_area.addEventListener('submit', handleFormSubmit)
-form_pv.addEventListener('submit', handleFormSubmit)
-form_set_pv.addEventListener('submit', handleFormSubmit)
+
 
 var map = new maplibregl.Map({
         container: 'map',
@@ -325,19 +355,26 @@ function updateArea(e) {
 
 
 
+const rangeInputs = document.querySelectorAll('input[type="range"]')
+const numberInput = document.querySelector('input[type="number"]')
 
+function handleInputChange(e) {
+  let target = e.target
+  if (e.target.type !== 'range') {
+    target = document.getElementById('range')
+  } 
+  const min = target.min
+  const max = target.max
+  const val = target.value
+  
+  target.style.backgroundSize = (val - min) * 100 / (max - min) + '% 100%'
+}
 
+rangeInputs.forEach(input => {
+  input.addEventListener('input', handleInputChange)
+})
 
-
-
-
-
-
-
-
-
-
-
+numberInput.addEventListener('input', handleInputChange)
 
 
 
