@@ -11,62 +11,93 @@ import { calcAreaForPV, calcPVs, createPolyWithHole } from "./pv-calc.js";
 
 // import { MapboxStyleDefinition, MapboxStyleSwitcherControl } from "mapbox-gl-style-switcher";
 // import { style } from "./switcher";
+
 const answer = document.getElementById('calculated-area');
-const config_show = document.getElementById('btn-config-show');
-const config_hide = document.getElementById('btn-config-hide');
-const config = document.getElementById('config');
-
-const form_config = document.getElementById('data')
-form_config.addEventListener('submit', handleFormSubmit)
-
-const check_type_trecker = document.getElementById('type-table1')
-const check_type_fix = document.getElementById('type-table2')
-const range_fix = document.getElementById('angle-fix');
-// check_type_fix.addEventListener('change', function (e) {
-//     console.log('cjcnjzybt')
-//     if (this.checked) {
-//         range_fix.style.display = 'block';
-//     }
-//     else {
-//         range_fix.style.display = 'none';
-//     }
-// });
-
-check_type_fix.onclick = (e) => {
-    range_fix.style.display = 'block';
-}
-check_type_trecker.onclick = (e) => {
-    range_fix.style.display = 'none';
-}
-
-
+const draw_area = document.getElementById('btn-draw-area');
+const draw_pv = document.getElementById('btn-draw-pv');
+const form_config = document.getElementById('data');
+form_config.addEventListener('submit', handleFormSubmit);
+draw_area.addEventListener('click', clickDrawArea);
+draw_pv.addEventListener('click', clickDrawPV);
 
 let params = {
     distance_to_barrier: 40,
     distance_to_pv_area: 20,
-    height_table: 5,
-    width_table: 10,
+    height_table: 1.640,
+    width_table: 9.920,
     height_offset_tables: 10,
     width_offset_tables: 20,
     angle_from_azimut: 90,
+    align_row_tables: 'center',
+    type_table: 'trecker',
+    angle_fix: 0,
 }
 
-config_show.onclick = function() {
-    if (config.classList.contains('hide-slide')) {
-        config.classList.remove('hide-slide');
-        config.classList.add('show-slide' );
-    }
-}
+function clickDrawArea(event) { 
+    const selected_ids = draw.getSelectedIds();
+    if (selected_ids.length != 0) {
+        selected_ids.forEach((item) => {
+            const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(item);  
+            // const all_tables = drawPVs(item, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+            // outputAreaData(item, poly_for_pv, all_tables);
+        });
+    };
+};
 
-config_hide.onclick = function() {
-    if (config.classList.contains('show-slide')) {
-        config.classList.add('hide-slide');
-        config.classList.remove('show-slide');
-    }
-}
+function clickDrawPV(event) {
+    const selected_ids = draw.getSelectedIds();
+    if (selected_ids.length != 0) {
+        selected_ids.forEach((item) => {
+            const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(item);  
+            const all_tables = drawPVs(item, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+            outputAreaData(item, poly_for_pv, all_tables);
+        });
+    };
+};
 
 function serializeForm(formNode) {
     return new FormData(formNode)
+}
+
+function handleFormSubmit(event) {
+    event.preventDefault()
+    const width_pv = 9.920 //AST-245Multi-4BB в метрах
+    const height_pv = 1.640
+    const dataForm = serializeForm(event.target);
+
+    console.log('dataForm --- >>> ', dataForm.get("align-tables"))
+    for (let [key, value] of dataForm) {
+        console.log(`${key} - ${value}`)
+    }
+
+    const count_column_pv = +dataForm.get("count-column-pv")
+    const count_row_pv = +dataForm.get("count-row-pv")
+    const offset_pv = +dataForm.get("offset-pv") / 100
+    params.height_table = count_column_pv * height_pv + offset_pv * (count_column_pv - 1)
+    params.width_table = count_row_pv * width_pv + offset_pv * (count_row_pv - 1)
+
+    params.distance_to_barrier = +dataForm.get("distance-to-barrier");
+    params.distance_to_pv_area = +dataForm.get("distance-to-pv-area");
+    params.height_offset_tables = +dataForm.get("height-offset-tables");
+    params.width_offset_tables = +dataForm.get("width-offset-tables");
+    params.angle_from_azimut = +dataForm.get("angle-from-azimut");
+    params.align_row_tables = dataForm.get("align-tables");
+    params.type_table = dataForm.get("type-table");
+    params.angle_fix = +dataForm.get("angle-fix");
+
+    console.log('params --- >>> ', params)
+
+    if (params.height_offset_tables < params.height_table) 
+    alert('Расстояние меньше высоты стола, измените');
+
+    const selected_ids = draw.getSelectedIds();
+    if (selected_ids.length != 0) {
+        selected_ids.forEach((item) => {
+            const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(item);  
+            const all_tables = drawPVs(item, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+            outputAreaData(item, poly_for_pv, all_tables);
+        });
+    };
 }
 
 function calcSquareArea(poly_area) {
@@ -76,7 +107,7 @@ function calcSquareArea(poly_area) {
     return [rounded_area_ga, rounded_area_m]
 }
 
-function outputAreaData(id_area_initial, poly_for_pv, all_tables) {
+function outputAreaData(id_area_initial, poly_for_pv) {
     let [rounded_area_ga, rounded_area_m] = calcSquareArea(draw.get(id_area_initial));
     const square_text = 'Площадь области: <strong>' + 
     rounded_area_ga + 
@@ -93,31 +124,6 @@ function outputAreaData(id_area_initial, poly_for_pv, all_tables) {
     answer.innerHTML = square_text + '<p> ' + square_pv_area + '</p>' // + '<p>Столов: <strong>' + all_tables + ' </strong>шт.</p>'
 }
   
-function handleFormSubmit(event) {
-    event.preventDefault()
-    const dataForm = serializeForm(event.target);
-
-    params.distance_to_barrier = +dataForm.get("distance-to-barrier");
-    params.distance_to_pv_area = +dataForm.get("distance-to-pv-area");
-    params.height_offset_tables = +dataForm.get("height-offset-tables");
-    params.width_offset_tables = +dataForm.get("width-offset-tables");
-    params.angle_from_azimut = +dataForm.get("angle-from-azimut");
-    if (params.height_offset_tables < params.height_table) 
-    alert('Расстояние меньше высоты стола, измените');
-
-
-    const selected_ids = draw.getSelectedIds();
-    if (selected_ids.length != 0) {
-        selected_ids.forEach((item) => {
-            const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(item);  
-            const all_tables = drawPVs(item, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
-            outputAreaData(item, poly_for_pv, all_tables);
-        });
-    };
-}
-  
-
-
 var map = new maplibregl.Map({
         container: 'map',
         zoom: 12,
@@ -128,7 +134,7 @@ var map = new maplibregl.Map({
         // 'https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd' // Идеальная базовая карта местности с контурами и заштрихованным рельефом.
         
         // antialias: true // create the gl context with MSAA antialiasing, so custom layers are antialiased
-    }); 
+}); 
 
 var draw = new MapboxDraw({
     displayControlsDefault: false,
@@ -195,7 +201,7 @@ map.addControl(
     })
 );
 map.addControl(draw);
-map.on('draw.create', updateArea);
+// map.on('draw.create', updateArea);
 map.on('draw.delete', updateArea);
 map.on('draw.update', updateArea);
 map.on('draw.combine', combineArea);
@@ -234,8 +240,8 @@ function combineArea(e){
     const id_union_area = e.createdFeatures[0].id
     deleteAreas(e.deletedFeatures)
     const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_union_area);
-    const all_tables = drawPVs(id_union_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
-    outputAreaData(id_union_area, poly_for_pv, all_tables);
+    outputAreaData(id_union_area, poly_for_pv);
+    // const all_tables = drawPVs(id_union_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
 }
 
 function drawAreaForPV(id_area) {
@@ -282,6 +288,7 @@ function drawAreaForPV(id_area) {
 function drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
     const [lines_for_PV , all_tables] = calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, params);
     const current_source_pvs = map.getSource(`pvs${id_area}`);
+
     if (current_source_pvs === undefined) {
         map.addSource(`pvs${id_area}`, {
             'type': 'geojson',
@@ -310,10 +317,32 @@ function drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right
             'source': `pvs${id_area}`,
             'paint': {
                 'fill-color': '#3333ff',
-                'fill-opacity': 0.4
+                'fill-opacity': 0.4,
+                // 'fill-pattern': 'pattern'
             },
             'filter': ['==', '$type', 'Polygon']
         });
+
+        // map.loadImage(
+        //     'images/pv_module.jpg',
+        //     function (err, image) {
+        //         // Throw an error if something went wrong
+        //         if (err) throw err;
+                
+        //         // Declare the image
+        //         map.addImage('pattern', image);
+                
+        //         // Use it
+        //         map.addLayer({
+        //             'id': 'pattern-layer',
+        //             'type': 'fill',
+        //             'source': `pvs${id_area}`,
+        //             'paint': {
+        //                 'fill-pattern': 'pattern'
+        //             }
+        //         });
+        //     }
+        // );
         // map.addLayer({
         //     'id': `pvs_point${id_area}`,
         //     'type': 'circle',
@@ -340,8 +369,8 @@ function updateArea(e) {
     
     if (all_data.features.length > 0) {
         const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_area);    
-        const all_tables = drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
-        outputAreaData(id_area, poly_for_pv, all_tables);
+        outputAreaData(id_area, poly_for_pv);
+        // const all_tables = drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
     } else {
         answer.innerHTML = '';
         if (e.type !== 'draw.delete') {
@@ -352,29 +381,6 @@ function updateArea(e) {
         }
     }
 }
-
-
-
-const rangeInputs = document.querySelectorAll('input[type="range"]')
-const numberInput = document.querySelector('input[type="number"]')
-
-function handleInputChange(e) {
-  let target = e.target
-  if (e.target.type !== 'range') {
-    target = document.getElementById('range')
-  } 
-  const min = target.min
-  const max = target.max
-  const val = target.value
-  
-  target.style.backgroundSize = (val - min) * 100 / (max - min) + '% 100%'
-}
-
-rangeInputs.forEach(input => {
-  input.addEventListener('input', handleInputChange)
-})
-
-numberInput.addEventListener('input', handleInputChange)
 
 
 

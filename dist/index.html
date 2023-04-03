@@ -29,11 +29,11 @@
                 <form class="form" id="data">
                     <h3>Конфигурация площадки</h3>
                     <label>
-                        Расстояние до забора, м
+                        Расстояние от границ участка до ограждения, м
                         <input type="number" name="distance-to-barrier" value="20" required>
                     </label>
                     <label>
-                        Расстояние до полезной площади, м:
+                        Расстояние от ограждения до полезной площади, м:
                         <input type="number" name="distance-to-pv-area" value="20" required>
                     </label>
                     <div class="calculation-box">
@@ -44,23 +44,27 @@
                     <label for="name-module">
                         Название модуля
                         <select name="name-module" required>
-                            <option value="engineer" selected>HJT</option>
+                            <option value="engineer" selected>AST-250Multi-4BB</option>
                             <option value="scientist">Jinco</option>
                             <option value="psychologist">Solar System</option>
                             <option value="other">Другое</option>
                         </select>
                     </label>
+                    <!-- <label>
+                        Загрузить файл параметров модуля
+                        <input type="file" accept=".PAN">
+                    </label> -->
                     <label>
-                        Количество модулей в ряде
-                        <input type="number">
+                        Количество модулей в ряду
+                        <input type="number" name="count-row-pv" value="1">
                     </label>
                     <label>
                         Количество рядов
-                        <input type="number">
+                        <input type="number" name="count-column-pv" value="1">
                     </label>
                     <label>
                         Отступ между модулями, см
-                        <input type="number">
+                        <input type="number" name="offset-pv" value="2">
                     </label>
                     <label>
                         <p>Ориентация</p> 
@@ -126,7 +130,7 @@
                     <label>
                         Угол поворота столов относительно азимута
                         <div>
-                            <input type="range" value="0" min="0" max="180" name="angle-fix" oninput="rangevalue2.value=value"/>
+                            <input type="range" value="0" min="0" max="180" name="angle-from-azimut" id="angle-from-azimut" oninput="rangevalue2.value=value"/>
                             <output id="rangevalue2">0</output>
                         </div>
                     </label>
