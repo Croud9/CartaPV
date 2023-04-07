@@ -12,6 +12,9 @@ import { calcAreaForPV, calcPVs, createPolyWithHole } from "./pv-calc.js";
 // import { MapboxStyleDefinition, MapboxStyleSwitcherControl } from "mapbox-gl-style-switcher";
 // import { style } from "./switcher";
 
+const check_border_lines = document.getElementById('check-visible-border-lines');
+const check_dash_lines = document.getElementById('check-visible-dash-lines');
+const check_pv_polygons = document.getElementById('check-visible-pv-polygons');
 const answer = document.getElementById('calculated-area');
 const draw_area = document.getElementById('btn-draw-area');
 const draw_pv = document.getElementById('btn-draw-pv');
@@ -19,6 +22,9 @@ const form_config = document.getElementById('data');
 form_config.addEventListener('submit', handleFormSubmit);
 draw_area.addEventListener('click', clickDrawArea);
 draw_pv.addEventListener('click', clickDrawPV);
+check_border_lines.addEventListener('change', visibilityLayout);
+check_dash_lines.addEventListener('change', visibilityLayout);
+check_pv_polygons.addEventListener('change', visibilityLayout);
 
 let params = {
     distance_to_barrier: 40,
@@ -31,7 +37,32 @@ let params = {
     align_row_tables: 'center',
     type_table: 'trecker',
     angle_fix: 0,
+    column_pv_in_table: 1,
+    row_pv_in_table: 1,
 }
+
+function visibilityLayout(event) {
+    const layers_ids = {
+        'check-visible-border-lines': 'pvs_line',
+        'check-visible-dash-lines': 'pvs_dash_line',
+        'check-visible-pv-polygons': 'pvs_poly',
+    };
+    const all_ids = [];
+    const all_data = draw.getAll();
+
+    if (all_data.features.length > 0) { all_data.features.forEach((item) => { all_ids.push(item.id) })};
+    
+    all_ids.forEach((item) => {
+        const id_layer = layers_ids[event.target.id] + item
+        if (map.getLayer(id_layer)) {
+            map.setLayoutProperty(
+                id_layer,
+                'visibility',
+                event.target.checked ? 'visible' : 'none'
+            );
+        }
+    });
+};
 
 function clickDrawArea(event) { 
     const selected_ids = draw.getSelectedIds();
@@ -61,6 +92,8 @@ function serializeForm(formNode) {
 
 function handleFormSubmit(event) {
     event.preventDefault()
+    // const width_pv = 9.920 //AST-245Multi-4BB в метрах
+    // const height_pv = 1.640
     const width_pv = 9.920 //AST-245Multi-4BB в метрах
     const height_pv = 1.640
     const dataForm = serializeForm(event.target);
@@ -70,11 +103,13 @@ function handleFormSubmit(event) {
         console.log(`${key} - ${value}`)
     }
 
-    const count_column_pv = +dataForm.get("count-column-pv")
-    const count_row_pv = +dataForm.get("count-row-pv")
-    const offset_pv = +dataForm.get("offset-pv") / 100
-    params.height_table = count_column_pv * height_pv + offset_pv * (count_column_pv - 1)
-    params.width_table = count_row_pv * width_pv + offset_pv * (count_row_pv - 1)
+    const count_column_pv = +dataForm.get("count-column-pv");
+    const count_row_pv = +dataForm.get("count-row-pv");
+    const offset_pv = +dataForm.get("offset-pv") / 100;
+    params.column_pv_in_table = count_column_pv;
+    params.row_pv_in_table = count_row_pv;
+    params.height_table = count_column_pv * height_pv + offset_pv * (count_column_pv - 1);
+    params.width_table = count_row_pv * width_pv + offset_pv * (count_row_pv - 1);
 
     params.distance_to_barrier = +dataForm.get("distance-to-barrier");
     params.distance_to_pv_area = +dataForm.get("distance-to-pv-area");
@@ -218,7 +253,7 @@ function deleteAreas(features) {
             map.removeLayer(id);
         }
         if (map.getSource(id)) {
-        map.removeSource(id);
+            map.removeSource(id);
         }
         if (map.getLayer(id_pvs_poly)) {
             map.removeLayer(id_pvs_poly);
@@ -227,7 +262,7 @@ function deleteAreas(features) {
             map.removeLayer(id_pvs_line);
         }
         if (map.getSource(id_pvs)) {
-        map.removeSource(id_pvs);
+            map.removeSource(id_pvs);
         }
     });
 }
@@ -264,7 +299,7 @@ function drawAreaForPV(id_area) {
     else if (all_areas.length == 1) {
         [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(start_area, params)
     }
-
+    if (area(poly_for_pv) < 0) alert('Полезная площадь слишком мала')
     const current_source_poly = map.getSource(`poly_for_pv${id_area}`)
     if (current_source_poly === undefined) {
         map.addSource(`poly_for_pv${id_area}`, { 'type': 'geojson', 'data': poly_for_pv });
@@ -303,18 +338,38 @@ function drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right
             'source': `pvs${id_area}`,
             'layout': {
                 'line-join': 'round',
-                'line-cap': 'round'
+                'line-cap': 'round',
+                'visibility': 'none'
             },
             'paint': {
                 'line-color': '#fff', //'#B42222'
                 'line-width': 1
             },
-            'filter': ['==', '$type', 'LineString']
+            'filter': ['==', 'name', 'borderline']
+        });
+        map.addLayer({
+            'id': `pvs_dash_line${id_area}`,
+            'type': 'line',
+            'source': `pvs${id_area}`,
+            'layout': {
+                'line-join': 'round',
+                'line-cap': 'round',
+                'visibility': 'visible'
+            },
+            'paint': {
+                'line-dasharray': [3, 3],
+                'line-color': '#fff', //'#B42222'
+                'line-width': 1
+            },
+            'filter': ['==', 'name', 'dashline']
         });
         map.addLayer({
             'id': `pvs_poly${id_area}`,
             'type': 'fill',
             'source': `pvs${id_area}`,
+            'layout': {
+                'visibility': 'visible'
+            },
             'paint': {
                 'fill-color': '#3333ff',
                 'fill-opacity': 0.4,
@@ -322,37 +377,6 @@ function drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right
             },
             'filter': ['==', '$type', 'Polygon']
         });
-
-        // map.loadImage(
-        //     'images/pv_module.jpg',
-        //     function (err, image) {
-        //         // Throw an error if something went wrong
-        //         if (err) throw err;
-                
-        //         // Declare the image
-        //         map.addImage('pattern', image);
-                
-        //         // Use it
-        //         map.addLayer({
-        //             'id': 'pattern-layer',
-        //             'type': 'fill',
-        //             'source': `pvs${id_area}`,
-        //             'paint': {
-        //                 'fill-pattern': 'pattern'
-        //             }
-        //         });
-        //     }
-        // );
-        // map.addLayer({
-        //     'id': `pvs_point${id_area}`,
-        //     'type': 'circle',
-        //     'source': `pvs${id_area}`,
-        //     'paint': {
-        //         'circle-radius': 6,
-        //         'circle-color': '#fff'
-        //     },
-        //     'filter': ['==', '$type', 'Point']
-        // });
     }
     else {
         current_source_pvs.setData({
