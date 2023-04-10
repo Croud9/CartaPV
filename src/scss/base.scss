@@ -150,6 +150,11 @@ select, input {
     width: 30px;
 }
 
+.row-group {
+    display: flex;
+    justify-content: space-between;
+}
+
 #btn-config-show {
     position: absolute;
     z-index: 1;

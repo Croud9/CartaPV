@@ -11,31 +11,50 @@ import mask from '@turf/mask';
 import booleanWithin from '@turf/boolean-within';
 import booleanContains from '@turf/boolean-contains';
 import lineOverlap from '@turf/line-overlap';
+import lineToPolygon from '@turf/line-to-polygon';
 import bearing from '@turf/bearing';
 import rewind from '@turf/rewind';
 import intersect from '@turf/intersect';
+import flatten from '@turf/flatten'; //разделяет мультиполигон полигоны на отдельные
+import dissolve from '@turf/dissolve';
+import difference from '@turf/difference';
 import rhumbBearing from '@turf/rhumb-bearing';
 import distance from '@turf/distance';
-import { multiLineString, lineString, polygon, point } from '@turf/helpers';
+import { featureCollection, multiPolygon, multiLineString, lineString, polygon, point } from '@turf/helpers';
 import transformScale from '@turf/transform-scale';
 import lineOffset from '@turf/line-offset';
 
 function toRadians(degrees) { return degrees * (Math.PI/180) };
 
 function createPolyWithHole(l_area_for_pv, l_area, union_areas){
-    const xy_poly_with_holes = [l_area_for_pv[0]] 
+    let poly_for_pv, polygons_within;
+    polygons_within = [];
+    console.log('l_area_for_pv --> ', l_area_for_pv)
     union_areas.forEach((item) => { 
         if (l_area.toString() !== item.toString()) {
+            const hole_within = booleanWithin(polygon(item), polygon(l_area_for_pv));
             const hole_intersect = intersect(polygon(item), polygon(l_area_for_pv));
-            if (hole_intersect != null) {
-                xy_poly_with_holes.push(hole_intersect.geometry.coordinates[0]) 
+            if (hole_within == false && hole_intersect != null) {
+                l_area_for_pv = difference(polygon(l_area_for_pv), polygon(item)).geometry.coordinates;
+            }
+            else if (hole_within == true){
+                polygons_within.push(item);
+            }
+            else if (hole_within == false && hole_intersect == null){
+                console.log('item --> ', item)
             }
         };
     });
-    let poly_for_pv
+    
+    console.log('polygons_within --> ', polygons_within)
+    const xy_poly_with_holes = [l_area_for_pv[0]] 
+    polygons_within.forEach((item) => { 
+        xy_poly_with_holes.push(item[0]) 
+    });
+    console.log('xy_poly_with_holes --> ', xy_poly_with_holes)
     poly_for_pv = polygon(xy_poly_with_holes)
     return poly_for_pv
-}
+};
 
 function checkInterPoints(lower_left_point, poly_for_pv, diagonal_area, angle_from_azimut) {
     const pt_direct = rhumbDestination(lower_left_point, diagonal_area, angle_from_azimut, {units: 'kilometers'});
@@ -74,6 +93,15 @@ function calcAreaForPV(area_initial, params) {
     const area = rewind(area_initial)
     const coordinates_area = area.geometry.coordinates[0]
     let offset_border = (params.distance_to_barrier + params.distance_to_pv_area) / 1000
+
+    // var line = [[125, -30], [145, -30]];
+    // var line2 = [[145, -30], [145, -20]];
+    // var line3 = [[145, -20], [125, -20]];
+    // var line4 = [[125, -20], [125, -30]];
+    // let lines = multiLineString([line2, line4, line, line3])
+    // console.log('lines -- > ', lines)
+    // var polygonix = polygon(lines);
+    // console.log('polygon -- > ', polygonix)
 
     let [pt_start, pt_end] = offsetPoints(coordinates_area[0], coordinates_area[1], offset_border)
     for (let i = 1; i < coordinates_area.length - 1; i++) {
@@ -291,20 +319,17 @@ function createPolyPV(line_down, line_up, height_table, width_table, angle_from_
 };
 
 function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, params) {
-    let lines_for_PV = []
-    let height_offset_tables
+    let lines_for_PV, height_offset_tables, angle_from_azimut, lower_left_point, all_tables
+    lines_for_PV = []
     const options = {units: 'kilometers'}
     const scan_dist = 0.25 / 1000
-    // Width=9.920
-    // Height=1.640
     const height_table = params.height_table / 1000 //5m
     const width_table = params.width_table / 1000
     const width_offset_tables = params.width_offset_tables / 1e5 //20см
     height_offset_tables = (params.type_table == 'fix') ? 
                             (params.height_offset_tables - (params.height_table * Math.cos(toRadians(params.angle_fix)))) / 1000 :
                             (params.height_offset_tables - params.height_table) / 1000
-    let angle_from_azimut = params.angle_from_azimut // 0 - 180
-    
+    angle_from_azimut = params.angle_from_azimut // 0 - 180
     angle_from_azimut = (angle_from_azimut == 0) ? 180 : angle_from_azimut;
     const angle_90_for_pv = angle_from_azimut + 90
     const start_point = (angle_from_azimut < 90) ? point([right_coord[0], lower_coord[1]]) : point([left_coord[0], lower_coord[1]]);
@@ -314,8 +339,8 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, p
     const end_point = (angle_from_azimut == 180) ? right_coord[0] : top_loc_diagonal.geometry.coordinates[1]
     const x_or_y = (angle_from_azimut == 180) ? 0 : 1
     const x_or_y_sort = (angle_from_azimut == 180) ? 1 : 0
-    let lower_left_point = start_point;
-    let all_tables = 0
+    lower_left_point = start_point;
+    all_tables = 0
 
     while (lower_left_point.geometry.coordinates[x_or_y] <= end_point) {
         let top_in_points = [];
@@ -435,7 +460,7 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, p
                         line_up = [pt_left_up.geometry.coordinates, pt_right_up.geometry.coordinates];  
 
                     }
-                    if (length(line_up, options) >= width_table && length(line_down, options) >= width_table) {
+                    if (length(lineString(line_up), options) >= width_table && length(lineString(line_down), options) >= width_table) {
                         line_up = lineString(line_up, {name: 'borderline'});
                         line_down = lineString(line_down, {name: 'borderline'});
                         line_left_up = lineString(line_left_up, {name: 'borderline'});
@@ -502,7 +527,7 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, p
                         }
                     }
                     if (line_up != null) {
-                        if (length(line_up, options) >= width_table && length(line_down, options) >= width_table) {
+                        if (length(lineString(line_up), options) >= width_table && length(lineString(line_down), options) >= width_table) {
                             line_up = lineString(line_up, {name: 'borderline'});
                             line_down = lineString(line_down, {name: 'borderline'});
                             line_left_up = lineString(line_left_up, {name: 'borderline'});

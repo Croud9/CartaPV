@@ -248,6 +248,7 @@ function deleteAreas(features) {
         const id_pvs = `pvs${item.id}`
         const id_pvs_poly = `pvs_poly${item.id}`
         const id_pvs_line = `pvs_line${item.id}`
+        const id_pvs_dash_line = `pvs_dash_line${item.id}`
 
         if (map.getLayer(id)) {
             map.removeLayer(id);
@@ -260,6 +261,9 @@ function deleteAreas(features) {
         }
         if (map.getLayer(id_pvs_line)) {
             map.removeLayer(id_pvs_line);
+        }
+        if (map.getLayer(id_pvs_dash_line)) {
+            map.removeLayer(id_pvs_dash_line);
         }
         if (map.getSource(id_pvs)) {
             map.removeSource(id_pvs);
@@ -294,7 +298,6 @@ function drawAreaForPV(id_area) {
         });
         [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(large_area, params)
         poly_for_pv = createPolyWithHole(poly_for_pv.geometry.coordinates, large_area.geometry.coordinates, all_areas)
-    
     }
     else if (all_areas.length == 1) {
         [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(start_area, params)
