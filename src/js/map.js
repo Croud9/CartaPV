@@ -27,7 +27,7 @@ check_dash_lines.addEventListener('change', visibilityLayout);
 check_pv_polygons.addEventListener('change', visibilityLayout);
 
 let params = {
-    distance_to_barrier: 40,
+    distance_to_barrier: 20,
     distance_to_pv_area: 20,
     height_table: 1.640,
     width_table: 9.920,
@@ -395,8 +395,8 @@ function updateArea(e) {
     const all_data = draw.getAll();
     
     if (all_data.features.length > 0) {
-        const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_area);    
-        outputAreaData(id_area, poly_for_pv);
+        // const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_area);    
+        // outputAreaData(id_area, poly_for_pv);
         // const all_tables = drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
     } else {
         answer.innerHTML = '';

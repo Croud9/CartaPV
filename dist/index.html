@@ -24,7 +24,7 @@
             <div id="btn-draw-area"><img src="images/icons/area_icon.png" class="icon-draw"></div>
             <div id="btn-draw-pv"><img src="images/icons/pv_icon.png" class="icon-draw"></div>
             
-            <div class="container-config hide-slide" id="config">
+            <div class="container-config hideToUser" id="config">
                 <div id="btn-config-hide"><img src="images/icons/close_icon.png" class="icon"></div>
                 <form class="form" id="data">
                     <h3>Конфигурация площадки</h3>
@@ -56,15 +56,15 @@
                     </label> -->
                     <label>
                         Количество модулей в ряду
-                        <input type="number" name="count-row-pv" value="1">
+                        <input type="number" id="count-row-pv" name="count-row-pv" value="1" min="1">
                     </label>
                     <label>
                         Количество рядов
-                        <input type="number" name="count-column-pv" value="1">
+                        <input type="number" id="count-column-pv" name="count-column-pv" value="1" min="1">
                     </label>
                     <label>
                         Отступ между модулями, см
-                        <input type="number" name="offset-pv" value="2">
+                        <input type="number" id="offset-pv" name="offset-pv" value="2">
                     </label>
                     <label>
                         <p>Ориентация</p> 
@@ -99,8 +99,8 @@
                             <output id="rangevalue">0</output>
                         </div>
                     </label>
-                    <img src="https://sv-synergy.ru/thumb/2/7Dl1SSkTFH-EGTArIZpE9A/r/d/hop__ground__mount.jpg" alt="стол" class="draw-table">
-                
+                    <!-- <img src="https://sv-synergy.ru/thumb/2/7Dl1SSkTFH-EGTArIZpE9A/r/d/hop__ground__mount.jpg" alt="стол" class="draw-table"> -->
+                    <canvas id="canvas"></canvas>
                     <h3>Конфигурация размещения</h3>
                     <label>
                         Шаг, м
@@ -136,22 +136,36 @@
                     </label>
                     <label >
                         Слои:
-                        <div class="row-group">
-                            <div>
-                              <input type="checkbox" id="check-visible-border-lines">
-                              <label>Рамка столов</label>
+                        <div class="column-group">
+                            <div class="row-group">
+                                <label class="toggler-wrapper">
+                                    <input type="checkbox" id="check-visible-border-lines">
+                                    <div class="toggler-slider">
+                                      <div class="toggler-knob"></div>
+                                    </div>
+                                </label>
+                                <label class="checkbox-title">Рамка столов</label>
                             </div>
-                            <div>
-                              <input type="checkbox" id="check-visible-dash-lines" checked>
-                              <label >ФЭМ</label>
+                            <div class="row-group">
+                                <label class="toggler-wrapper">
+                                    <input type="checkbox" id="check-visible-dash-lines" checked>
+                                    <div class="toggler-slider">
+                                      <div class="toggler-knob"></div>
+                                    </div>
+                                </label>
+                                <label class="checkbox-title">ФЭМ</label>
                             </div>
-                            <div>
-                              <input type="checkbox" id="check-visible-pv-polygons" checked>
-                              <label >Столы</label>
+                            <div class="row-group">
+                                <label class="toggler-wrapper">
+                                    <input type="checkbox" id="check-visible-pv-polygons" checked>
+                                    <div class="toggler-slider">
+                                      <div class="toggler-knob"></div>
+                                    </div>
+                                </label>
+                                <label class="checkbox-title">Столы</label>
                             </div>
                         </div>
                     </label>
-
                     <button type="submit" class="btn">Сохранить</button>
                 </form>
             </div>

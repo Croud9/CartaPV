@@ -27,6 +27,12 @@ header, footer {
     padding: 2% 4% 0 4%;;
 }
 
+#canvas {
+    width: 100%;
+    // background-color: rgb(253, 248, 232);
+    // border: 1px solid #333;
+}
+
 
 a {
     color: rgb(0, 0, 0);
@@ -92,22 +98,23 @@ select, input {
 }
 
 .hide-slide {
-    left: -400px;
+    left: -800px;
     animation: l_direct 1s;
 }
 
 @keyframes l_direct {
     from { left: 0;}
-    to {left: -400px;}
+    to {left: -800px;}
 }
 
 .show-slide {
+    
     left: 0;
     animation:r_direct 1s;
 }
 
 @keyframes r_direct {
-    from { left: -400px;}
+    from {left: -800px}
     to {left: 0;}
 }
 
@@ -150,9 +157,14 @@ select, input {
     width: 30px;
 }
 
+.column-group {
+    display: flex;
+    flex-direction: column;
+    // justify-content: space-between;
+}
 .row-group {
     display: flex;
-    justify-content: space-between;
+    // flex-direction: column;
 }
 
 #btn-config-show {
@@ -249,15 +261,21 @@ select, input {
     flex-direction: column;
 }
 
-.container-config{ 
+.checkbox-title {
+    margin: 0 0 0 8px;
+}
+
+.hideToUser {
+    display: none; 
+}
+
+.container-config{
     position: absolute;
     background-color: whitesmoke;
     border: none;
-    // border-radius: 15px;
     max-width: 26.5%;
     max-height: 100%;
     padding: 30px 30px;
-    //   font-weight: bold;
     z-index: 1;
     overflow: auto;
 }
@@ -387,4 +405,53 @@ border-radius: 5px;
 background-image: linear-gradient(#ff4500, #ff4500);
 background-size: 70% 100%;
 background-repeat: no-repeat;
+}
+
+.toggler-wrapper {
+  display: block;
+  width: 45px;
+  height: 25px;
+  cursor: pointer;
+  position: relative;
+}
+
+.toggler-wrapper input[type="checkbox"] {
+  display: none;
+}
+
+.toggler-wrapper input[type="checkbox"]:checked+.toggler-slider {
+  background-color: #44cc66;
+}
+
+.toggler-wrapper .toggler-slider {
+  background-color: #ccc;
+  position: absolute;
+  border-radius: 100px;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-transition: all 300ms ease;
+  transition: all 300ms ease;
+}
+
+.toggler-wrapper .toggler-knob {
+  position: absolute;
+  -webkit-transition: all 300ms ease;
+  transition: all 300ms ease;
+}
+
+.toggler-wrapper input[type="checkbox"]:checked+.toggler-slider .toggler-knob {
+    left: calc(100% - 18.75px);
+}
+  
+.toggler-wrapper .toggler-knob {
+width: 12.5px;
+height: 12.5px;
+top: 50%;
+left: 6.25px;
+-webkit-transform: translateY(-50%);
+transform: translateY(-50%);
+border-radius: 50%;
+background-color: #fff;
 }

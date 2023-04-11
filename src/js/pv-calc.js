@@ -29,7 +29,6 @@ function toRadians(degrees) { return degrees * (Math.PI/180) };
 function createPolyWithHole(l_area_for_pv, l_area, union_areas){
     let poly_for_pv, polygons_within;
     polygons_within = [];
-    console.log('l_area_for_pv --> ', l_area_for_pv)
     union_areas.forEach((item) => { 
         if (l_area.toString() !== item.toString()) {
             const hole_within = booleanWithin(polygon(item), polygon(l_area_for_pv));
@@ -46,12 +45,10 @@ function createPolyWithHole(l_area_for_pv, l_area, union_areas){
         };
     });
     
-    console.log('polygons_within --> ', polygons_within)
     const xy_poly_with_holes = [l_area_for_pv[0]] 
     polygons_within.forEach((item) => { 
         xy_poly_with_holes.push(item[0]) 
     });
-    console.log('xy_poly_with_holes --> ', xy_poly_with_holes)
     poly_for_pv = polygon(xy_poly_with_holes)
     return poly_for_pv
 };
@@ -93,15 +90,6 @@ function calcAreaForPV(area_initial, params) {
     const area = rewind(area_initial)
     const coordinates_area = area.geometry.coordinates[0]
     let offset_border = (params.distance_to_barrier + params.distance_to_pv_area) / 1000
-
-    // var line = [[125, -30], [145, -30]];
-    // var line2 = [[145, -30], [145, -20]];
-    // var line3 = [[145, -20], [125, -20]];
-    // var line4 = [[125, -20], [125, -30]];
-    // let lines = multiLineString([line2, line4, line, line3])
-    // console.log('lines -- > ', lines)
-    // var polygonix = polygon(lines);
-    // console.log('polygon -- > ', polygonix)
 
     let [pt_start, pt_end] = offsetPoints(coordinates_area[0], coordinates_area[1], offset_border)
     for (let i = 1; i < coordinates_area.length - 1; i++) {
@@ -205,7 +193,7 @@ function getPointMerger(poly, points, angle, width_table) {
         const within = checkWithin(poly, [points[0], points[1]], angle);
         if (within == true) {
             const line = lineString([points[0], points[1]])
-            if (length(line, options) >= width_table) lines_within.push(line)
+            if (length(line, options) >= width_table) lines_within.push(line);
         };
     }
     else if (count_points > 2) {
@@ -216,19 +204,19 @@ function getPointMerger(poly, points, angle, width_table) {
                     const line = lineString([points[id - 1], points[id + 1]])
                     if (length(line, options) >= width_table) lines_within.push(line)
                 }
-                else if (check_within[id - 1] == true && within == false) {
+                else if (check_within[id - 1] == false && within == true) {
                     check_within.push(within)
-                    const line = lineString([points[id - 1], points[id]])
+                    const line = lineString([points[id], points[id + 1]])
                     if (length(line, options) >= width_table) lines_within.push(line)
                 }
                 else {
                     check_within.push(within)
-                    const line = lineString([points[id], points[id + 1]])
-                    if (length(line, options) >= width_table) lines_within.push(line)
                 };
             }
             else {
                 check_within.push(within)
+                const line = lineString([points[id], points[id + 1]])
+                if (length(line, options) >= width_table) lines_within.push(line)
             }
             id++
         };
@@ -238,13 +226,36 @@ function getPointMerger(poly, points, angle, width_table) {
     return [lines_within, count_within_lines]
 };
 
+function createDashLines(params, left_line_table, angle_90_for_pv, angle_from_azimut, width_table, height_table, options) {
+    let right_point_dash, up_point_dash, dash_line;
+    const dash_lines = [];
+    const row_pv = params.row_pv_in_table;
+    const column_pv = params.column_pv_in_table;
+    const offset_row = width_table / row_pv;
+    const offset_column = height_table / column_pv;
+
+    for (let i = 1; i <= row_pv - 1; i++) {
+        right_point_dash = rhumbDestination(left_line_table.geometry.coordinates[0], offset_row * i, angle_from_azimut, options);
+        up_point_dash = rhumbDestination(right_point_dash, -height_table, angle_90_for_pv, options);
+        dash_line = lineString([right_point_dash.geometry.coordinates, up_point_dash.geometry.coordinates], {name: 'dashline'});
+        dash_lines.push(dash_line);
+    };
+
+    for (let i = 1; i <= column_pv - 1; i++) {
+        up_point_dash = rhumbDestination(left_line_table.geometry.coordinates[0], -offset_column * i, angle_90_for_pv, options);
+        right_point_dash = rhumbDestination(up_point_dash, width_table, angle_from_azimut, options);
+        dash_line = lineString([up_point_dash.geometry.coordinates, right_point_dash.geometry.coordinates], {name: 'dashline'});
+        dash_lines.push(dash_line);
+    };
+    return dash_lines
+};
+
 function createPolyPV(line_down, line_up, height_table, width_table, angle_from_azimut, angle_90_for_pv, width_offset_tables, params) {
-    let poly_pv, left_down_point_loc, align_row_tables, dash_line_in_table, right_point_dash, up_point_dash, dash_line;
+    let poly_pv, left_down_point_loc, align_row_tables, dash_line_in_table, offset_point;
     poly_pv = [];
     dash_line_in_table = []
     align_row_tables = params.align_row_tables;
-    const row_pv = params.row_pv_in_table;
-    const column_pv = params.column_pv_in_table;
+
     const options = {units: 'kilometers'}
     const len_down_line = length(line_down, options);
     const coord_place_for_tables = [line_down.geometry.coordinates[0], line_down.geometry.coordinates[1], line_up.geometry.coordinates[0], line_up.geometry.coordinates[1]]
@@ -278,7 +289,6 @@ function createPolyPV(line_down, line_up, height_table, width_table, angle_from_
     else if (align_row_tables == 'right') {
         align_row_tables = offset_border; 
     };
-    let offset_point;
 
     offset_point = rhumbDestination(left_down_point_loc, align_row_tables, angle_from_azimut, options);
     for (let i = 1; i <= count_tables; i++ ) {
@@ -298,37 +308,41 @@ function createPolyPV(line_down, line_up, height_table, width_table, angle_from_
             left_line_table.geometry.coordinates[0]
         ]
         const poly_table = polygon([coords_poly])
-        
-        const offset_row = width_table / row_pv;
-        const offset_column = height_table / column_pv;
-        for (let i = 1; i <= row_pv - 1; i++) {
-            right_point_dash = rhumbDestination(left_line_table.geometry.coordinates[0], offset_row * i, angle_from_azimut, options);
-            up_point_dash = rhumbDestination(right_point_dash, -height_table, angle_90_for_pv, options);
-            dash_line = lineString([right_point_dash.geometry.coordinates, up_point_dash.geometry.coordinates], {name: 'dashline'});
-            dash_line_in_table.push(dash_line);
-        };
-        for (let i = 1; i <= column_pv - 1; i++) {
-            up_point_dash = rhumbDestination(left_line_table.geometry.coordinates[0], -offset_column * i, angle_90_for_pv, options);
-            right_point_dash = rhumbDestination(up_point_dash, width_table, angle_from_azimut, options);
-            dash_line = lineString([up_point_dash.geometry.coordinates, right_point_dash.geometry.coordinates], {name: 'dashline'});
-            dash_line_in_table.push(dash_line);
-        };
+    
+        dash_line_in_table.push(...createDashLines(params, left_line_table, angle_90_for_pv, angle_from_azimut, width_table, height_table, options));
         poly_pv.push(poly_table)
     }
     return [poly_pv, count_tables, dash_line_in_table]
 };
 
+function createLinesAndPolyPV(line_up, line_down, line_left_up, line_right_up, source_PV, 
+                                height_table, width_table, angle_from_azimut, angle_90_for_pv, width_offset_tables, params) {
+    line_up = lineString(line_up, {name: 'borderline'});
+    line_down = lineString(line_down, {name: 'borderline'});
+    line_left_up = lineString(line_left_up, {name: 'borderline'});
+    line_right_up = lineString(line_right_up, {name: 'borderline'});
+
+    source_PV.push(line_up);
+    source_PV.push(line_down);
+    source_PV.push(line_left_up);
+    source_PV.push(line_right_up);
+    
+    const [poly_pv, tables, dash_line_in_table] = createPolyPV(line_down, line_up, height_table, width_table, angle_from_azimut, angle_90_for_pv, width_offset_tables, params);
+    source_PV = [...source_PV, ...poly_pv, ...dash_line_in_table];
+    return {'tables':  tables, 'source_PV': source_PV}    
+};
+
 function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, params) {
-    let lines_for_PV, height_offset_tables, angle_from_azimut, lower_left_point, all_tables
+    let lines_for_PV, angle_from_azimut, lower_left_point, all_tables
     lines_for_PV = []
     const options = {units: 'kilometers'}
     const scan_dist = 0.25 / 1000
-    const height_table = params.height_table / 1000 //5m
     const width_table = params.width_table / 1000
     const width_offset_tables = params.width_offset_tables / 1e5 //20см
-    height_offset_tables = (params.type_table == 'fix') ? 
-                            (params.height_offset_tables - (params.height_table * Math.cos(toRadians(params.angle_fix)))) / 1000 :
-                            (params.height_offset_tables - params.height_table) / 1000
+    const height_table = (params.type_table == 'fix') ? 
+                            (params.height_table * Math.cos(toRadians(params.angle_fix))) / 1000 :
+                            (params.height_table) / 1000;
+    const height_offset_tables = (params.height_offset_tables / 1000 - height_table);
     angle_from_azimut = params.angle_from_azimut // 0 - 180
     angle_from_azimut = (angle_from_azimut == 0) ? 180 : angle_from_azimut;
     const angle_90_for_pv = angle_from_azimut + 90
@@ -397,19 +411,10 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, p
                         line_up = [pt_left_down.geometry.coordinates, pt_right_down.geometry.coordinates];
                         line_down = [check_line_for_table.geometry.coordinates[0], check_line_for_table.geometry.coordinates[1]];       
                     }
-                    line_up = lineString(line_up, {name: 'borderline'});
-                    line_down = lineString(line_down, {name: 'borderline'});
-                    line_left_up = lineString(line_left_up, {name: 'borderline'});
-                    line_right_up = lineString(line_right_up, {name: 'borderline'});
-
-                    lines_for_PV.push(line_up);
-                    lines_for_PV.push(line_down);
-                    lines_for_PV.push(line_left_up);
-                    lines_for_PV.push(line_right_up);
-                    
-                    const [poly_pv, tables, dash_line_in_table] = createPolyPV(line_down, line_up, height_table, width_table, angle_from_azimut, angle_90_for_pv, width_offset_tables, params)
-                    all_tables += tables
-                    lines_for_PV = [...lines_for_PV, ...poly_pv, ...dash_line_in_table]
+                    const created_pv = createLinesAndPolyPV(line_up, line_down, line_left_up, line_right_up, lines_for_PV,
+                        height_table, width_table, angle_from_azimut, angle_90_for_pv, width_offset_tables, params);
+                    lines_for_PV = created_pv.source_PV
+                    all_tables += created_pv.tables
                 }
             }
             else if (count_top_lines > count_bottom_lines) {
@@ -461,19 +466,10 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, p
 
                     }
                     if (length(lineString(line_up), options) >= width_table && length(lineString(line_down), options) >= width_table) {
-                        line_up = lineString(line_up, {name: 'borderline'});
-                        line_down = lineString(line_down, {name: 'borderline'});
-                        line_left_up = lineString(line_left_up, {name: 'borderline'});
-                        line_right_up = lineString(line_right_up, {name: 'borderline'});
-
-                        lines_for_PV.push(line_up);
-                        lines_for_PV.push(line_down);
-                        lines_for_PV.push(line_left_up);
-                        lines_for_PV.push(line_right_up);
-
-                        const [poly_pv, tables, dash_line_in_table] = createPolyPV(line_down, line_up, height_table, width_table, angle_from_azimut, angle_90_for_pv, width_offset_tables, params)
-                        all_tables += tables
-                        lines_for_PV = [...lines_for_PV, ...poly_pv, ...dash_line_in_table]
+                        const created_pv = createLinesAndPolyPV(line_up, line_down, line_left_up, line_right_up, lines_for_PV,
+                            height_table, width_table, angle_from_azimut, angle_90_for_pv, width_offset_tables, params);
+                        lines_for_PV = created_pv.source_PV
+                        all_tables += created_pv.tables
                     }
                 }  
             }
@@ -528,19 +524,10 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, p
                     }
                     if (line_up != null) {
                         if (length(lineString(line_up), options) >= width_table && length(lineString(line_down), options) >= width_table) {
-                            line_up = lineString(line_up, {name: 'borderline'});
-                            line_down = lineString(line_down, {name: 'borderline'});
-                            line_left_up = lineString(line_left_up, {name: 'borderline'});
-                            line_right_up = lineString(line_right_up, {name: 'borderline'});
-
-                            lines_for_PV.push(line_up);
-                            lines_for_PV.push(line_down);
-                            lines_for_PV.push(line_left_up);
-                            lines_for_PV.push(line_right_up);
-    
-                            const [poly_pv, tables, dash_line_in_table] = createPolyPV(line_down, line_up, height_table, width_table, angle_from_azimut, angle_90_for_pv, width_offset_tables, params)
-                            all_tables += tables
-                            lines_for_PV = [...lines_for_PV, ...poly_pv, ...dash_line_in_table]
+                            const created_pv = createLinesAndPolyPV(line_up, line_down, line_left_up, line_right_up, lines_for_PV,
+                                height_table, width_table, angle_from_azimut, angle_90_for_pv, width_offset_tables, params);
+                            lines_for_PV = created_pv.source_PV
+                            all_tables += created_pv.tables
                         }
                     }
                 }
@@ -552,6 +539,6 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, p
         }
     }
     return [lines_for_PV , all_tables]
-}
+};
 
 export { calcAreaForPV, calcPVs, createPolyWithHole }

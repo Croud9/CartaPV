@@ -17,17 +17,15 @@ check_type_trecker.onclick = (e) => {
 }
 
 config_show.onclick = function() {
-    if (config.classList.contains('hide-slide')) {
-        config.classList.remove('hide-slide');
-        config.classList.add('show-slide' );
-    }
+    if (config.classList.contains('hideToUser')) config.classList.remove('hideToUser' );
+    config.classList.remove('hide-slide');
+    config.classList.add('show-slide' );
 }
 
 config_hide.onclick = function() {
-    if (config.classList.contains('show-slide')) {
-        config.classList.add('hide-slide');
-        config.classList.remove('show-slide');
-    }
+    if (config.classList.contains('hideToUser')) config.classList.remove('hideToUser');
+    config.classList.add('hide-slide');
+    config.classList.remove('show-slide');
 }
 
 const rangeInputs = document.querySelectorAll('input[type="range"]')
