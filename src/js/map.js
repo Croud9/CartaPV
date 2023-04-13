@@ -35,7 +35,8 @@ let params = {
     width_offset_tables: 20,
     angle_from_azimut: 90,
     align_row_tables: 'center',
-    type_table: 'trecker',
+    type_table: 'tracker',
+    orientation: 'vertical',
     angle_fix: 0,
     column_pv_in_table: 1,
     row_pv_in_table: 1,
@@ -92,10 +93,8 @@ function serializeForm(formNode) {
 
 function handleFormSubmit(event) {
     event.preventDefault()
-    // const width_pv = 9.920 //AST-245Multi-4BB в метрах
-    // const height_pv = 1.640
-    const width_pv = 9.920 //AST-245Multi-4BB в метрах
-    const height_pv = 1.640
+    let width_pv = 2 
+    let height_pv = 1
     const dataForm = serializeForm(event.target);
 
     console.log('dataForm --- >>> ', dataForm.get("align-tables"))
@@ -103,13 +102,9 @@ function handleFormSubmit(event) {
         console.log(`${key} - ${value}`)
     }
 
-    const count_column_pv = +dataForm.get("count-column-pv");
-    const count_row_pv = +dataForm.get("count-row-pv");
+    let count_column_pv = +dataForm.get("count-column-pv");
+    let count_row_pv = +dataForm.get("count-row-pv");
     const offset_pv = +dataForm.get("offset-pv") / 100;
-    params.column_pv_in_table = count_column_pv;
-    params.row_pv_in_table = count_row_pv;
-    params.height_table = count_column_pv * height_pv + offset_pv * (count_column_pv - 1);
-    params.width_table = count_row_pv * width_pv + offset_pv * (count_row_pv - 1);
 
     params.distance_to_barrier = +dataForm.get("distance-to-barrier");
     params.distance_to_pv_area = +dataForm.get("distance-to-pv-area");
@@ -119,6 +114,15 @@ function handleFormSubmit(event) {
     params.align_row_tables = dataForm.get("align-tables");
     params.type_table = dataForm.get("type-table");
     params.angle_fix = +dataForm.get("angle-fix");
+    params.orientation = dataForm.get("orientation");
+
+    if (params.type_table == 'fix') [count_column_pv, count_row_pv] = [count_row_pv, count_column_pv]
+    if (params.orientation == 'horizontal') [width_pv, height_pv] = [height_pv, width_pv]
+    
+    params.column_pv_in_table = count_column_pv;
+    params.row_pv_in_table = count_row_pv;
+    params.height_table = count_row_pv * height_pv + offset_pv * (count_row_pv - 1);
+    params.width_table = count_column_pv * width_pv + offset_pv * (count_column_pv - 1);
 
     console.log('params --- >>> ', params)
 

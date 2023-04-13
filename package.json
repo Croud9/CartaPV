@@ -46,6 +46,8 @@
     "mini-css-extract-plugin": "^2.7.2",
     "node-sass": "^8.0.0",
     "sass-loader": "^13.2.0",
+    "snapsvg": "^0.5.1",
+    "snapsvg-cjs": "^0.0.6",
     "style-loader": "^3.3.1",
     "webpack": "^5.75.0",
     "webpack-cli": "^5.0.1",

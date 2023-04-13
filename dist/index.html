@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAPO</title>
+    <title>CARTA</title>
     <link rel='stylesheet' href='style.css'>
 </head>
 <body>
     <header>
         <div>
-            <h2>LOGO</h2>
+            <h2>CARTA PV </h2>
         </div>
         <div class="head-options">
             <a href="" ><img src="https://cdn-icons-png.flaticon.com/512/56/56763.png" class="icon-header"></a>
@@ -38,8 +38,7 @@
                     </label>
                     <div class="calculation-box">
                         <div id="calculated-area"></div>
-                    </div>
-                    
+                    </div>    
                     <h3>Конфигурация опорной конструкции</h3>
                     <label for="name-module">
                         Название модуля
@@ -50,17 +49,13 @@
                             <option value="other">Другое</option>
                         </select>
                     </label>
-                    <!-- <label>
-                        Загрузить файл параметров модуля
-                        <input type="file" accept=".PAN">
-                    </label> -->
-                    <label>
-                        Количество модулей в ряду
-                        <input type="number" id="count-row-pv" name="count-row-pv" value="1" min="1">
-                    </label>
                     <label>
                         Количество рядов
                         <input type="number" id="count-column-pv" name="count-column-pv" value="1" min="1">
+                    </label>
+                    <label>
+                        Количество модулей в ряду
+                        <input type="number" id="count-row-pv" name="count-row-pv" value="1" min="1">
                     </label>
                     <label>
                         Отступ между модулями, см
@@ -70,12 +65,12 @@
                         <p>Ориентация</p> 
                         <div class="form_radio_group">
                             <div class="form_radio_group-item">
-                                <input type="radio" id="orien1" name="orientation" value="vertical" checked>
-                                <label for="orien1">Книжная</label>
+                                <input type="radio" id="orient-v" name="orientation" value="vertical" checked>
+                                <label for="orient-v">Книжная</label>
                             </div>
                             <div class="form_radio_group-item">
-                                <input type="radio" id="orien2" name="orientation" value="horizontal">
-                                <label for="orien2">Альбомная</label>
+                                <input type="radio" id="orient-h" name="orientation" value="horizontal">
+                                <label for="orient-h">Альбомная</label>
                             </div>
                         </div>
                     </label>
@@ -83,7 +78,7 @@
                         <p>Тип стола</p> 
                         <div class="form_radio_group">
                             <div class="form_radio_group-item">
-                                <input type="radio" id="type-table1" name="type-table" value="trecker" checked>
+                                <input type="radio" id="type-table1" name="type-table" value="tracker" checked>
                                 <label for="type-table1">Трекер</label>
                             </div>
                             <div class="form_radio_group-item">
@@ -99,8 +94,8 @@
                             <output id="rangevalue">0</output>
                         </div>
                     </label>
-                    <!-- <img src="https://sv-synergy.ru/thumb/2/7Dl1SSkTFH-EGTArIZpE9A/r/d/hop__ground__mount.jpg" alt="стол" class="draw-table"> -->
-                    <canvas id="canvas"></canvas>
+                    <div class="btn" id="btn-svg-area-show"> Показать стол</div>
+                    
                     <h3>Конфигурация размещения</h3>
                     <label>
                         Шаг, м
@@ -168,6 +163,9 @@
                     </label>
                     <button type="submit" class="btn">Сохранить</button>
                 </form>
+            </div>
+            <div class="container-svg" id="svg-area" style="display: none;">
+                <svg id="svg" ></svg>
             </div>
         </div>
         <div class="container-result">

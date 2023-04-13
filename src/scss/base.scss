@@ -27,13 +27,6 @@ header, footer {
     padding: 2% 4% 0 4%;;
 }
 
-#canvas {
-    width: 100%;
-    // background-color: rgb(253, 248, 232);
-    // border: 1px solid #333;
-}
-
-
 a {
     color: rgb(0, 0, 0);
     text-decoration: dotted;
@@ -108,7 +101,6 @@ select, input {
 }
 
 .show-slide {
-    
     left: 0;
     animation:r_direct 1s;
 }
@@ -118,31 +110,35 @@ select, input {
     to {left: 0;}
 }
 
-.container-config::-webkit-scrollbar {
-  width: 5px;
-  background-color: transparent;
-  border-radius: 15px;
-}
+.container-config, .container-svg {
+    h3 {
+        margin: 15px 0 0 0;
+    }
+    &::-webkit-scrollbar {
+        width: 5px;
+        background-color: transparent;
+        border-radius: 15px; 
+    }
 
-.container-config::-webkit-scrollbar-thumb {
-  border-radius: 15px;
-//   -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
-  background-color: rgba(0, 168, 56, 0.8);
+    &::-webkit-scrollbar-thumb {
+        border-radius: 15px;
+        //   -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+          background-color: rgba(0, 168, 56, 0.8);
+    }
 
-}
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
 
-.container-config::-webkit-scrollbar-track {
-    background: transparent;
-}
+    &::-webkit-scrollbar-track-piece:end {
+        background: transparent;
+        margin-bottom: 10px; 
+    }
 
-.container-config::-webkit-scrollbar-track-piece:end {
-    background: transparent;
-    margin-bottom: 10px; 
-}
-
-.container-config::-webkit-scrollbar-track-piece:start {
-    background: transparent;
-    margin-top: 10px;
+    &::-webkit-scrollbar-track-piece:start {
+        background: transparent;
+        margin-top: 10px;
+    }
 }
 
 .icon {
@@ -269,7 +265,7 @@ select, input {
     display: none; 
 }
 
-.container-config{
+.container-config {
     position: absolute;
     background-color: whitesmoke;
     border: none;
@@ -278,6 +274,29 @@ select, input {
     padding: 30px 30px;
     z-index: 1;
     overflow: auto;
+}
+
+#svg {
+    width: 100%;
+    height: 100%;
+
+    // background-color: rgb(82, 82, 82);
+    // border: 1px solid #333;
+}
+
+.container-svg {
+    position: absolute;
+    background-color: rgba(245, 245, 245, 1);
+    // backdrop-filter: blur(8px);
+    border: none;
+    // border: 1px solid #333;
+    left: 26.5%;
+    width: 73.5%;
+    height: 100%;
+    // width: 100%;
+    padding: 3% 3%;
+    z-index: 3;
+    overflow: hidden;
 }
 
 .container-result { 

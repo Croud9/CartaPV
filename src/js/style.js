@@ -1,16 +1,30 @@
+const btn_svg_show = document.getElementById('btn-svg-area-show');
+const svg_area = document.getElementById('svg-area');
 const config_show = document.getElementById('btn-config-show');
 const config_hide = document.getElementById('btn-config-hide');
 const config = document.getElementById('config');
-const check_type_trecker = document.getElementById('type-table1')
+const check_type_tracker = document.getElementById('type-table1')
 const check_type_fix = document.getElementById('type-table2')
 const range_fix = document.getElementById('angle-fix');
 const range_azimut = document.getElementById('angle-from-azimut');
 const range_azimut_output = document.getElementById('rangevalue2');
 
+btn_svg_show.addEventListener('click', svgArea)
+
+function svgArea(e) {
+    if (svg_area.style.display == 'none') {
+        svg_area.style.display = 'block';
+        btn_svg_show.innerHTML = 'Скрыть стол';
+    }
+    else {
+        svg_area.style.display = 'none';
+        btn_svg_show.innerHTML = 'Показать стол';
+    }
+};
 check_type_fix.onclick = (e) => {
     range_fix.style.display = 'block';
 }
-check_type_trecker.onclick = (e) => {
+check_type_tracker.onclick = (e) => {
     range_fix.style.display = 'none';
     range_azimut.value = '0';
     range_azimut_output.innerHTML = '0';
@@ -23,6 +37,8 @@ config_show.onclick = function() {
 }
 
 config_hide.onclick = function() {
+    svg_area.style.display = 'none';
+    btn_svg_show.innerHTML = 'Показать стол';
     if (config.classList.contains('hideToUser')) config.classList.remove('hideToUser');
     config.classList.add('hide-slide');
     config.classList.remove('show-slide');
