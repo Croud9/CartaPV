@@ -1,6 +1,7 @@
 import Snap from "snapsvg-cjs";
 
-// document.addEventListener('DOMContentLoaded', drawTable);
+const svg_area = document.getElementById('svg-area');
+
 const btn_svg_show = document.getElementById('btn-svg-area-show');
 const btn_orient_v = document.getElementById('orient-v');
 const btn_orient_h = document.getElementById('orient-h');
@@ -19,7 +20,6 @@ btn_orient_h.addEventListener('click', drawTable);
 check_type_tracker.addEventListener('click', drawTable);
 check_type_fix.addEventListener('click', drawTable);
 btn_svg_show.addEventListener('click', drawTable);
-
 const svg = Snap("#svg");
 
 function getOrientationPV() {
@@ -34,7 +34,12 @@ function getTypeTable() {
 	}
 };
 
+function visibleArea(e) { 
+    return (svg_area.style.display == 'none') ? false : true
+};
+
 function drawTable(e) {
+    
     var height = svg.node.clientHeight;
     var width = svg.node.clientWidth;
     svg.attr({ viewBox: '0 0' + ' ' + width + ' ' +  height});
@@ -92,20 +97,22 @@ function drawTable(e) {
         params.scale = h_scale
     }
 
-    const frame_table = svg.rect(x_start, y_start, width_table, height_table);
-    frame_table.attr({
-        fillOpacity: 0.1,
-        fill: '#3d3d3d',
-    });
-    params.table.add(frame_table)
-
-    for (let col = 0; col < col_tables; col++) {
-        for (let row = 0; row < row_tables; row++) {
-            drawPV(x_start + (params.width_pv + offset_tables) * col, 
-                    y_start + (params.height_pv + offset_tables) * row, params);
+    if (visibleArea() == true) {
+        const frame_table = svg.rect(x_start, y_start, width_table, height_table);
+        frame_table.attr({
+            fillOpacity: 0.1,
+            fill: '#3d3d3d',
+        });
+        params.table.add(frame_table)
+    
+        for (let col = 0; col < col_tables; col++) {
+            for (let row = 0; row < row_tables; row++) {
+                drawPV(x_start + (params.width_pv + offset_tables) * col, 
+                        y_start + (params.height_pv + offset_tables) * row, params);
+            };
         };
-    };
-    params.table.transform('s' + params.scale +  ' 0 0');
+        params.table.transform('s' + params.scale +  ' 0 0');
+    }
 };
 
 function drawPV(x_start, y_start, params) {

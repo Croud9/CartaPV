@@ -97,10 +97,10 @@ function handleFormSubmit(event) {
     let height_pv = 1
     const dataForm = serializeForm(event.target);
 
-    console.log('dataForm --- >>> ', dataForm.get("align-tables"))
-    for (let [key, value] of dataForm) {
-        console.log(`${key} - ${value}`)
-    }
+    // console.log('dataForm --- >>> ', dataForm.get("align-tables"))
+    // for (let [key, value] of dataForm) {
+    //     console.log(`${key} - ${value}`)
+    // }
 
     let count_column_pv = +dataForm.get("count-column-pv");
     let count_row_pv = +dataForm.get("count-row-pv");
@@ -116,27 +116,33 @@ function handleFormSubmit(event) {
     params.angle_fix = +dataForm.get("angle-fix");
     params.orientation = dataForm.get("orientation");
 
-    if (params.type_table == 'fix') [count_column_pv, count_row_pv] = [count_row_pv, count_column_pv]
-    if (params.orientation == 'horizontal') [width_pv, height_pv] = [height_pv, width_pv]
+    [count_column_pv, count_row_pv] = [count_row_pv, count_column_pv];
+
+    if (params.type_table == 'tracker') {
+        params.orientation =  (params.orientation == 'vertical') ? 'horizontal' : 'vertical'
+    };
+
+    if (params.orientation == 'vertical') {
+        [width_pv, height_pv] = [height_pv, width_pv];
+    };
     
     params.column_pv_in_table = count_column_pv;
     params.row_pv_in_table = count_row_pv;
-    params.height_table = count_row_pv * height_pv + offset_pv * (count_row_pv - 1);
-    params.width_table = count_column_pv * width_pv + offset_pv * (count_column_pv - 1);
 
-    console.log('params --- >>> ', params)
+    params.width_table = count_column_pv * width_pv + offset_pv * (count_column_pv - 1);
+    params.height_table = count_row_pv * height_pv + offset_pv * (count_row_pv - 1);
 
     if (params.height_offset_tables < params.height_table) 
     alert('Расстояние меньше высоты стола, измените');
 
-    const selected_ids = draw.getSelectedIds();
-    if (selected_ids.length != 0) {
-        selected_ids.forEach((item) => {
-            const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(item);  
-            const all_tables = drawPVs(item, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
-            outputAreaData(item, poly_for_pv, all_tables);
-        });
-    };
+    // const selected_ids = draw.getSelectedIds();
+    // if (selected_ids.length != 0) {
+    //     selected_ids.forEach((item) => {
+    //         const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(item);  
+    //         const all_tables = drawPVs(item, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+    //         outputAreaData(item, poly_for_pv, all_tables);
+    //     });
+    // };
 }
 
 function calcSquareArea(poly_area) {

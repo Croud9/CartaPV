@@ -231,18 +231,18 @@ function createDashLines(params, left_line_table, angle_90_for_pv, angle_from_az
     const dash_lines = [];
     const row_pv = params.row_pv_in_table;
     const column_pv = params.column_pv_in_table;
-    const offset_row = width_table / row_pv;
-    const offset_column = height_table / column_pv;
+    const offset_row = height_table / row_pv;
+    const offset_column = width_table / column_pv;
 
-    for (let i = 1; i <= row_pv - 1; i++) {
-        right_point_dash = rhumbDestination(left_line_table.geometry.coordinates[0], offset_row * i, angle_from_azimut, options);
+    for (let i = 1; i <= column_pv - 1; i++) {
+        right_point_dash = rhumbDestination(left_line_table.geometry.coordinates[0], offset_column * i, angle_from_azimut, options);
         up_point_dash = rhumbDestination(right_point_dash, -height_table, angle_90_for_pv, options);
         dash_line = lineString([right_point_dash.geometry.coordinates, up_point_dash.geometry.coordinates], {name: 'dashline'});
         dash_lines.push(dash_line);
     };
 
-    for (let i = 1; i <= column_pv - 1; i++) {
-        up_point_dash = rhumbDestination(left_line_table.geometry.coordinates[0], -offset_column * i, angle_90_for_pv, options);
+    for (let i = 1; i <= row_pv - 1; i++) {
+        up_point_dash = rhumbDestination(left_line_table.geometry.coordinates[0], -offset_row * i, angle_90_for_pv, options);
         right_point_dash = rhumbDestination(up_point_dash, width_table, angle_from_azimut, options);
         dash_line = lineString([up_point_dash.geometry.coordinates, right_point_dash.geometry.coordinates], {name: 'dashline'});
         dash_lines.push(dash_line);
