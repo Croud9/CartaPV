@@ -1,26 +1,26 @@
 import length from '@turf/length';
-import centroid from '@turf/centroid';
 import rhumbDestination from '@turf/rhumb-destination';
 import booleanParallel from '@turf/boolean-parallel';
 import booleanIntersects from '@turf/boolean-intersects';
 import transformRotate from '@turf/transform-rotate';
 import lineIntersect from '@turf/line-intersect';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
-import booleanClockwise from '@turf/boolean-clockwise';
-import mask from '@turf/mask';
 import booleanWithin from '@turf/boolean-within';
-import booleanContains from '@turf/boolean-contains';
-import lineOverlap from '@turf/line-overlap';
-import lineToPolygon from '@turf/line-to-polygon';
 import bearing from '@turf/bearing';
 import rewind from '@turf/rewind';
 import intersect from '@turf/intersect';
+import difference from '@turf/difference';
+import { featureCollection, multiPolygon, multiLineString, lineString, polygon, point } from '@turf/helpers';
+import centroid from '@turf/centroid';
+import booleanClockwise from '@turf/boolean-clockwise';
+import mask from '@turf/mask';
+import booleanContains from '@turf/boolean-contains';
+import lineOverlap from '@turf/line-overlap';
+import lineToPolygon from '@turf/line-to-polygon';
 import flatten from '@turf/flatten'; //разделяет мультиполигон полигоны на отдельные
 import dissolve from '@turf/dissolve';
-import difference from '@turf/difference';
 import rhumbBearing from '@turf/rhumb-bearing';
 import distance from '@turf/distance';
-import { featureCollection, multiPolygon, multiLineString, lineString, polygon, point } from '@turf/helpers';
 import transformScale from '@turf/transform-scale';
 import lineOffset from '@turf/line-offset';
 
