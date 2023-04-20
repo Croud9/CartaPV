@@ -11,6 +11,22 @@
   </head>
 
   <body>
-    <%= yield %>
+    <header>
+        <div>
+            <h2><%= link_to 'CARTA PV', pv_maps_path %></h2>
+        </div>
+        <div class="head-options">
+            <%# <button class="btn">Модули</button> %>
+            <%= link_to 'Модули', pv_modules_path, class: "btn"%>
+            <%# <a href="" ><img src="https://cdn-icons-png.flaticon.com/512/56/56763.png" class="icon-header"></a>
+            <a href="" ><img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="icon-header"></a>  %>
+        </div>
+    </header>
+    <div class="main"> 
+        <%= yield %>
+    </div>
+    <footer>
+        <h2>Contacts</h2>
+    </footer>
   </body>
 </html>

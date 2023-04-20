@@ -1,0 +1,21 @@
+<h2>PV Modules</h2>
+<%= form_tag import_pv_modules_path, :multipart => true do %>
+   <label for="file">Загрузить файл модуля</label> 
+   <%= file_field_tag "file", accept: ".PAN" %>
+   <%= submit_tag "Обработать" %>
+<% end %>
+
+<table>
+  <tr>
+    <th>Производитель</th>
+    <th>Модель</th>
+    <th>Ширина, м</th>
+    <th>Высота, м</th>
+  </tr>
+  <tr>
+    <td>Hevel</td>
+    <td>2</td>
+    <td>1</td>
+    <td>...</td>
+  </tr>
+</table>
