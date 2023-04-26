@@ -23,12 +23,9 @@
             <h3>Конфигурация опорной конструкции</h3>
             <label for="name-module">
                 Название модуля
-                <select name="name-module" required>
-                    <option value="engineer" selected>AST-250Multi-4BB</option>
-                    <option value="scientist">Jinco</option>
-                    <option value="psychologist">Solar System</option>
-                    <option value="other">Другое</option>
-                </select>
+                <%= select_tag "select-pv-modules", options_from_collection_for_select(@pv_modules, :id, :model), prompt: 'Выберите'  %>
+                <%= content_tag :div, id: "params_modules", data: {temp: @pv_modules} do %>
+                <% end %>
             </label>
             <label>
                 Количество рядов

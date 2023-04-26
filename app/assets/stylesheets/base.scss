@@ -32,14 +32,14 @@ header, footer {
 table {
   width: 100%;
   border: none;
-  margin-bottom: 20px;
+  margin: 20px 0;
 
   thead th {
     font-weight: bold;
     text-align: left;
     border: none;
     padding: 10px 15px;
-    background: #d8d8d8;
+    background: #b1b1b1;
     font-size: 14px;
   }
   thead tr th:first-child {

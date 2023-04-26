@@ -88,56 +88,63 @@ document.addEventListener("turbo:load", function() {
 
         function handleFormSubmit(event) {
             event.preventDefault()
-            let width_pv = 2 
-            let height_pv = 1
+
             const dataForm = serializeForm(event.target);
-
-            // console.log('dataForm --- >>> ', dataForm.get("align-tables"))
-            // for (let [key, value] of dataForm) {
-            //     console.log(`${key} - ${value}`)
-            // }
-
-            let count_column_pv = +dataForm.get("count-column-pv");
-            let count_row_pv = +dataForm.get("count-row-pv");
-            const offset_pv = +dataForm.get("offset-pv") / 100;
-
-            params.distance_to_barrier = +dataForm.get("distance-to-barrier");
-            params.distance_to_pv_area = +dataForm.get("distance-to-pv-area");
-            params.height_offset_tables = +dataForm.get("height-offset-tables");
-            params.width_offset_tables = +dataForm.get("width-offset-tables");
-            params.angle_from_azimut = +dataForm.get("angle-from-azimut");
-            params.align_row_tables = dataForm.get("align-tables");
-            params.type_table = dataForm.get("type-table");
-            params.angle_fix = +dataForm.get("angle-fix");
-            params.orientation = dataForm.get("orientation");
-
-            [count_column_pv, count_row_pv] = [count_row_pv, count_column_pv];
-
-            if (params.type_table == 'tracker') {
-                params.orientation =  (params.orientation == 'vertical') ? 'horizontal' : 'vertical'
-            };
-
-            if (params.orientation == 'vertical') {
-                [width_pv, height_pv] = [height_pv, width_pv];
-            };
             
-            params.column_pv_in_table = count_column_pv;
-            params.row_pv_in_table = count_row_pv;
+            let current_module_params
+            const selected_id = +dataForm.get("select-pv-modules");
+            if (selected_id != 0) {
+              const modules_params = $('#params_modules').data('temp')
+              
+              for(let i = 0; i < modules_params.length; i++) {
+                if(modules_params[i].id == selected_id) 
+                  current_module_params = modules_params[i]
+              };
+              console.log(selected_id)
+              console.log(current_module_params)
+              console.log(current_module_params.width)
+              console.log(current_module_params.height)
+  
+              let width_pv = current_module_params.width
+              let height_pv = current_module_params.height
+  
+              let count_column_pv = +dataForm.get("count-column-pv");
+              let count_row_pv = +dataForm.get("count-row-pv");
+              const offset_pv = +dataForm.get("offset-pv") / 100;
+  
+              params.distance_to_barrier = +dataForm.get("distance-to-barrier");
+              params.distance_to_pv_area = +dataForm.get("distance-to-pv-area");
+              params.height_offset_tables = +dataForm.get("height-offset-tables");
+              params.width_offset_tables = +dataForm.get("width-offset-tables");
+              params.angle_from_azimut = +dataForm.get("angle-from-azimut");
+              params.align_row_tables = dataForm.get("align-tables");
+              params.type_table = dataForm.get("type-table");
+              params.angle_fix = +dataForm.get("angle-fix");
+              params.orientation = dataForm.get("orientation");
+  
+              [count_column_pv, count_row_pv] = [count_row_pv, count_column_pv];
+  
+              if (params.type_table == 'tracker') {
+                  params.orientation =  (params.orientation == 'vertical') ? 'horizontal' : 'vertical'
+              };
+  
+              if (params.orientation == 'vertical') {
+                  [width_pv, height_pv] = [height_pv, width_pv];
+              };
+              
+              params.column_pv_in_table = count_column_pv;
+              params.row_pv_in_table = count_row_pv;
+  
+              params.width_table = count_column_pv * width_pv + offset_pv * (count_column_pv - 1);
+              params.height_table = count_row_pv * height_pv + offset_pv * (count_row_pv - 1);
+  
+              if (params.height_offset_tables < params.height_table) 
+              alert('Расстояние меньше высоты стола, измените');
 
-            params.width_table = count_column_pv * width_pv + offset_pv * (count_column_pv - 1);
-            params.height_table = count_row_pv * height_pv + offset_pv * (count_row_pv - 1);
-
-            if (params.height_offset_tables < params.height_table) 
-            alert('Расстояние меньше высоты стола, измените');
-
-            // const selected_ids = draw.getSelectedIds();
-            // if (selected_ids.length != 0) {
-            //     selected_ids.forEach((item) => {
-            //         const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(item);  
-            //         const all_tables = drawPVs(item, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
-            //         outputAreaData(item, poly_for_pv, all_tables);
-            //     });
-            // };
+            }
+            else {
+              alert('Не выбран фотоэлектрический модуль');
+            }
         }
 
         function calcSquareArea(poly_area) {

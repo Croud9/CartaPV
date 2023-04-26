@@ -68,3 +68,4 @@ pin "@turf/intersect", to: "https://ga.jspm.io/npm:@turf/intersect@6.5.0/dist/es
 pin "polygon-clipping", to: "https://ga.jspm.io/npm:polygon-clipping@0.15.3/dist/polygon-clipping.umd.js"
 pin "process", to: "https://ga.jspm.io/npm:@jspm/core@2.0.1/nodelibs/browser/process-production.js"
 pin "@turf/difference", to: "https://ga.jspm.io/npm:@turf/difference@6.5.0/dist/es/index.js"
+pin "jquery", to: "https://ga.jspm.io/npm:jquery@3.6.4/dist/jquery.js", preload: true

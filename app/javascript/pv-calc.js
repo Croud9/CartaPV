@@ -12,7 +12,6 @@ import intersect from '@turf/intersect';
 import difference from '@turf/difference';
 import { lineString, polygon, point } from '@turf/helpers';
 
-
 function toRadians(degrees) { return degrees * (Math.PI/180) };
 
 function createPolyWithHole(l_area_for_pv, l_area, union_areas){
