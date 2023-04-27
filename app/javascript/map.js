@@ -100,13 +100,9 @@ document.addEventListener("turbo:load", function() {
                 if(modules_params[i].id == selected_id) 
                   current_module_params = modules_params[i]
               };
-              console.log(selected_id)
-              console.log(current_module_params)
-              console.log(current_module_params.width)
-              console.log(current_module_params.height)
   
-              let width_pv = current_module_params.width
-              let height_pv = current_module_params.height
+              let width_pv = current_module_params.height // длинная сторона
+              let height_pv = current_module_params.width // короткая сторона
   
               let count_column_pv = +dataForm.get("count-column-pv");
               let count_row_pv = +dataForm.get("count-row-pv");

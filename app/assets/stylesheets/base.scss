@@ -53,7 +53,7 @@ table {
     border: none;
     padding: 10px 15px;
     font-size: 14px;
-    vertical-align: top;
+    vertical-align: center;
   }
   tbody tr:nth-child(even){
     background: #f3f3f3;
@@ -236,6 +236,11 @@ label {
 	border-radius: 4px;
 	transition: width 0.25s, min-width 0.25s; 
 }
+.flash__message {
+	color: rgb(55, 55, 214);
+  margin: 10px 0;
+  text-align: center;
+}
 
 #notice {
 	color: rgb(55, 55, 214);
@@ -254,4 +259,8 @@ label {
 #svg {
 	width: 100%;
 	height: 100%;
+}
+
+#input_pv_model {
+  width: 82%;
 }

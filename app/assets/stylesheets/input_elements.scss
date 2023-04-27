@@ -1,14 +1,15 @@
-a {
+a, .btn_text_only {
   color: rgb(0, 0, 0);
   text-decoration: dotted;
   transition: all 0.25s;
+  
 }
 
-a:hover, #btn-config-hide:hover, #btn-config-show:hover, #btn-draw-area:hover, #btn-draw-pv:hover   {
+a:hover, .btn_text_only:hover, #btn-config-hide:hover, #btn-config-show:hover, #btn-draw-area:hover, #btn-draw-pv:hover   {
   opacity: 0.6;
 }
 
-select, input {
+select, input, .input_text_only:focus {
   width: 100%;
   border: none;
   border-radius: 5px;
@@ -216,4 +217,17 @@ input[type="range"] {
 	// margin-right: 10px;
 	font-size: large;
 	transition: all 0.25s;
+}
+
+.btn_text_only {
+  margin: 0;
+  padding: 0;
+  width: 15%;
+  background-color: transparent;
+}
+
+.input_text_only {
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
 }

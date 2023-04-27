@@ -1,8 +1,10 @@
 <h2>Фотоэлектрические модули</h2>
 <%= form_tag import_pv_modules_path, :multipart => true do %>
    <%# <label for="file">Загрузить файл модуля</label>  %>
-   <%= file_field_tag "file", accept: ".PAN" %>
-   <%= submit_tag "Обработать" %>
+   <div class="row-group">
+    <%= file_field_tag "file", accept: ".PAN" %>
+    <%= submit_tag "Обработать", class: "btn_text_only" %>
+   </div>
 <% end %>
 
 <% flash.each do |flash_type, message| %>
@@ -25,10 +27,19 @@
     <% @pv_modules.each do |pv_module| %>
       <tr>
         <td><%= pv_module.manufacturer %></td>
-        <td><%= pv_module.model %></td>
+        <td>
+          <%= form_tag update_model_path(pv_module) do %>
+            <%= text_field_tag :input_pv_model, value = pv_module.model, class: "input_text_only"  %>
+          <%= submit_tag "Изменить", class: "btn_text_only" %>
+          <% end %>
+        </td>
         <td><%= pv_module.width %></td>
         <td><%= pv_module.height %></td>
-        <td><%= link_to 'Изменить', pv_module %> | <%= link_to 'Удалить', pv_module %></td>
+        <td>
+          <%= link_to 'Удалить', 
+                  pv_module,
+                  data: { turbo_method: :delete, turbo_confirm: 'Are you sure?' } %>
+        </td>
       </tr>
     <% end %>
   </tbody>
