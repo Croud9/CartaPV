@@ -25,7 +25,7 @@ body {
 header, footer {
 	display: flex;
 	justify-content: space-between;
-	height: 10vh;
+	height: 70px;
 	padding: 2% 4% 0 4%;
 }
 
@@ -140,9 +140,17 @@ label {
 	flex-direction: column;
 	// justify-content: space-between;
 }
+
 .row-group {
 	display: flex;
+  margin: 0 -5px;
+  justify-content: space-between;
 	// flex-direction: column;
+}
+
+.item-row-group {
+  flex: 0 1 33%;
+  margin: 0 5px;
 }
 
 .draw-table {

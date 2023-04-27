@@ -1,6 +1,6 @@
 document.addEventListener("turbo:load", function() {
     if (document.getElementById("map") !== null) {
-
+        
         const btn_svg_show = document.getElementById('btn-svg-area-show');
         const svg_area = document.getElementById('svg-area');
         const config_show = document.getElementById('btn-config-show');
@@ -68,5 +68,9 @@ document.addEventListener("turbo:load", function() {
 
         numberInput.addEventListener('input', handleInputChange)
 
+        $('#map').ready(function(){
+          //Будет ждать загрузки только DOM-дерева
+          $('.btns-in-map').show();
+        });
     };
 });

@@ -44,7 +44,7 @@ gem 'jquery-rails'
 # Use Sass to process CSS
 gem "sassc-rails"
 
-gem "prawn"
+gem "prawn", submodules: true
 
 # Use Postgres as the database for Active Record
 gem 'pg'

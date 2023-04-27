@@ -1,10 +1,9 @@
 <!-- <div id="distance" class="distance-container"></div> -->
 
 <div id="map">
-    <div id="btn-config-show"><%=image_tag("config_icon.png", class: "icon")%></div>
-    <div id="btn-draw-area"><%=image_tag("area_icon.png", class: "icon-draw")%></div>
-    <div id="btn-draw-pv"><%=image_tag("pv_icon.png", class: "icon-draw")%></div>
-    
+    <div id="btn-config-show" class="btns-in-map" style="display: none"><%=image_tag("config_icon.png", class: "icon")%></div>
+    <div id="btn-draw-area" class="btns-in-map" style="display: none"><%=image_tag("area_icon.png", class: "icon-draw")%></div>
+    <div id="btn-draw-pv" class="btns-in-map" style="display: none"><%=image_tag("pv_icon.png", class: "icon-draw")%></div>
     <div class="container-config hideToUser" id="config">
         <div id="btn-config-hide"><%=image_tag("close_icon.png", class: "icon")%></div>
         <form class="form" id="data">
@@ -148,13 +147,138 @@
 </div>
 <div class="container-result">
     <h2>Отчет</h2>
-    <form class="form" id="data-set-pv">
-        <div class="form-row">
-            <label>
-                Параметр
-                <input type="text" required>
-            </label>
-        </div>
+    <br>
+    <form class="form" id="data-config-for-pdf">
+        <label>
+            <p>Тип отчета</p> 
+            <div class="form_radio_group">
+                <div class="form_radio_group-item">
+                    <input type="radio" id="type-pdf1" name="type-pdf" value="single" checked>
+                    <label for="type-pdf1">Одиночный</label>
+                </div>
+                <div class="form_radio_group-item">
+                    <input type="radio" id="type-pdf2" name="type-pdf" value="multi">
+                    <label for="type-pdf2">Мульти</label>
+                </div>
+            </div>
+        </label>
+        <label>
+            Количество конфигураций
+            <input type="number" name="count-config-pdf" value="2" required>
+        </label>
+        <br>
+        <h3>Конфигурация № 1</h3>
+        <form class="form" id="data-configurato">
+            <div class="row-group">
+              <div class="item-row-group">
+                <h3>Конфигурация площадки</h3>
+                <label>
+                    Расстояние от границ участка до ограждения, м
+                    <input type="number" name="distance-to-barrier" value="20" required>
+                </label>
+                <label>
+                    Расстояние от ограждения до полезной площади, м:
+                    <input type="number" name="distance-to-pv-area" value="20" required>
+                </label>
+                <button type="submit" class="btn">Сохранить</button>
+              </div>
+            
+              <div class="item-row-group">
+                <h3>Конфигурация опорной конструкции</h3>
+                <label for="name-module">
+                    Название модуля
+                    <%= select_tag "select-pv-modules", options_from_collection_for_select(@pv_modules, :id, :model), prompt: 'Выберите'  %>
+                    <%= content_tag :div, id: "params_modules", data: {temp: @pv_modules} do %>
+                    <% end %>
+                </label>
+                <label>
+                    Отступ между модулями, см
+                    <input type="number" id="offset-pv" name="offset-pv" value="2">
+                </label>
+
+                <label>
+                    Количество рядов
+                    <input type="number" id="count-column-pv" name="count-column-pv" value="1" min="1">
+                </label>
+                <label>
+                    Количество модулей в ряду
+                    <input type="number" id="count-row-pv" name="count-row-pv" value="1" min="1">
+                </label>
+                <label>
+                    <p>Ориентация</p> 
+                    <div class="form_radio_group">
+                        <div class="form_radio_group-item">
+                            <input type="radio" id="orient-v" name="orientation" value="vertical" checked>
+                            <label for="orient-v">Книжная</label>
+                        </div>
+                        <div class="form_radio_group-item">
+                            <input type="radio" id="orient-h" name="orientation" value="horizontal">
+                            <label for="orient-h">Альбомная</label>
+                        </div>
+                    </div>
+                </label>
+                <label>
+                    <p>Тип стола</p> 
+                    <div class="form_radio_group">
+                        <div class="form_radio_group-item">
+                            <input type="radio" id="type-table1" name="type-table" value="tracker" checked>
+                            <label for="type-table1">Трекер</label>
+                        </div>
+                        <div class="form_radio_group-item">
+                            <input type="radio" id="type-table2" name="type-table" value="fix">
+                            <label for="type-table2">Фикс</label>
+                        </div>
+                    </div>
+                </label>
+
+                <label id="angle-fix" style="display: none;">
+                    Угол наклона
+                    <div>
+                        <input type="range" value="0" min="0" max="60" name="angle-fix" oninput="rangevalue.value=value"/>
+                        <output id="rangevalue">0</output>
+                    </div>
+                </label>
+              </div>
+
+              <div class="item-row-group">
+                <h3>Конфигурация размещения</h3>
+                <label>
+                    Шаг, м
+                    <input type="number" name="height-offset-tables"  value="10" required>
+                </label>
+                <label>
+                    Расстояние между столами, см
+                    <input type="number" name="width-offset-tables" value="20" required>
+                </label>
+                <label>
+                    <p>Выравнивание столов относительно границ площадки</p> 
+                    <div class="form_radio_group">
+                        <div class="form_radio_group-item">
+                            <input type="radio" id="left" name="align-tables" value="left" >
+                            <label for="left">Левая граница</label>
+                        </div>
+                        <div class="form_radio_group-item">
+                            <input type="radio" id="center" name="align-tables" value="center" checked>
+                            <label for="center">Центр</label>
+                        </div>
+                        <div class="form_radio_group-item">
+                            <input type="radio" id="right" name="align-tables" value="right">
+                            <label for="right">Правая граница</label>
+                        </div>
+                    </div>
+                <label>
+                <label>
+                    Угол поворота столов относительно азимута
+                    <div>
+                        <input type="range" value="0" min="0" max="180" name="angle-from-azimut" id="angle-from-azimut" oninput="rangevalue2.value=value"/>
+                        <output id="rangevalue2">0</output>
+                    </div>
+                </label>
+              </div>
+            </div>
+            
+        </form>
         <button type="submit" class="btn">Сформировать</button>
     </form>
+    <%= link_to 'PDF', export_pdf_path(format: :pdf), class: "btn", target: '_blank'%>
 </div>

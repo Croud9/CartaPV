@@ -24,8 +24,8 @@ document.addEventListener("turbo:load", function() {
         let params = {
             distance_to_barrier: 20,
             distance_to_pv_area: 20,
-            height_table: 1.640,
-            width_table: 9.920,
+            height_table: 1,
+            width_table: 2,
             height_offset_tables: 10,
             width_offset_tables: 20,
             angle_from_azimut: 90,

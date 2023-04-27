@@ -11,11 +11,13 @@ a:hover, .btn_text_only:hover, #btn-config-hide:hover, #btn-config-show:hover, #
 
 select, input, .input_text_only:focus {
   width: 100%;
-  border: none;
-  border-radius: 5px;
+  border:0;
+  border-bottom: 1px solid #424242;
+  background: transparent;
+
+  // border-radius: 5px;
   outline: none;
   padding: 10px 0 10px 10px;
-  background: #c4c4c4;
   // font-weight: bold;
 }
 
@@ -44,11 +46,10 @@ output {
 
 output {
   background: #2f00ff;
-  // padding: 5px 16px;
-  border-radius: 5px;
+  border: none;
+  background: transparent;
   outline: none;
   padding: 10px 10px 10px 10px;
-  background: #c4c4c4;
 }
 
 input[type="range"] {
@@ -56,7 +57,7 @@ input[type="range"] {
   margin-right: 15px;
   width: 80%;
   height: 7px;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(141, 141, 141, 0.6);
   border-radius: 5px;
   background-image: linear-gradient(#ff4500, #ff4500);
   background-size: 70% 100%;
@@ -224,10 +225,14 @@ input[type="range"] {
   padding: 0;
   width: 15%;
   background-color: transparent;
+  border: none;
+  font-weight: bold;
+  font-size: 0.95em;
 }
 
 .input_text_only {
   margin: 0;
   padding: 0;
   background-color: transparent;
+  border: none;
 }
