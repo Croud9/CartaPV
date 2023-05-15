@@ -18,6 +18,7 @@
     <tr>
       <th>Производитель</th>
       <th>Модель</th>
+      <th>Мощность, Вт</th>
       <th>Ширина, м</th>
       <th>Высота, м</th>
       <th></th>
@@ -33,6 +34,7 @@
           <%= submit_tag "Изменить", class: "btn_text_only" %>
           <% end %>
         </td>
+        <td><%= pv_module.power %></td>
         <td><%= pv_module.width %></td>
         <td><%= pv_module.height %></td>
         <td>

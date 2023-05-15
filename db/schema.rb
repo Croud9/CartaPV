@@ -10,9 +10,27 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_04_20_140428) do
+ActiveRecord::Schema[7.0].define(version: 2023_05_15_110512) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "area_configs", force: :cascade do |t|
+    t.string "area_id"
+    t.json "configuration"
+    t.json "geojson_area"
+    t.bigint "project_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "title", null: false
+    t.index ["project_id"], name: "index_area_configs_on_project_id"
+  end
+
+  create_table "projects", force: :cascade do |t|
+    t.string "title", null: false
+    t.text "total_params"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "pv_modules", force: :cascade do |t|
     t.string "manufacturer", null: false
@@ -22,6 +40,8 @@ ActiveRecord::Schema[7.0].define(version: 2023_04_20_140428) do
     t.text "all_params"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.float "power", null: false
   end
 
+  add_foreign_key "area_configs", "projects"
 end

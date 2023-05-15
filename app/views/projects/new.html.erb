@@ -1,0 +1,7 @@
+<%= link_to '<', projects_path, class: "btn_text_only"%>
+<h2>Новый проект</h2>
+
+<%= form_tag projects_path do %>
+  <%= text_field_tag :input_project_title, nil, placeholder: "Введите название проекта"  %>
+  <%= submit_tag "Сохранить", class: "btn_text_only" %>
+<% end %>

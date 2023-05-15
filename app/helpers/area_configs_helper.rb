@@ -1,0 +1,2 @@
+module AreaConfigsHelper
+end

@@ -46,7 +46,7 @@ class ExportPdf
     text "Адрес: ..............", align: :left, size: 11
     text "Координаты: .... ....", align: :left, size: 11
     move_down(20)
-    image img_country, position: :center, scale: 0.6
+    image img_country, position: :center, scale: 0.45
     move_down(10)
     text "Рис. 1 - Местоположение области", align: :center, style: :italic, size: 10
   end
@@ -54,6 +54,8 @@ class ExportPdf
   def single_config
     img_map = "vendor/assets/scrin_map.png"
     img_table = "vendor/assets/scrin_table.png"
+    step_table = "vendor/assets/step_table.png"
+    distance_table = "vendor/assets/distance_table.png"
 
     start_new_page
     page_num()
@@ -71,19 +73,21 @@ class ExportPdf
       ["Количесво ФЭМ, шт.", ""],
       ["Площадь под ФЭМ, га/м²", ""],
       ["Площадь участка, га/м²", ""],
+      ["Мощность СЭС, кВ или МВт", ""],
       [{:content => "Параметры площадки", :colspan => 2}],
       ["Расстояние от границ участка до ограждения, м", ""],
       ["Расстояние от ограждения до полезной площади, м", ""],
       [{:content => "Параметры опорной конструкции", :colspan => 2}],
       ["Название модуля", ""],
+      ["Мощность модуля, кВ или МВт", ""],
       ["Отступ между модулями, см", ""],
       ["Количество рядов", ""],
       ["Количество модулей в ряду", ""],
       ["Ориентация", ""],
       ["Тип стола", ""],
       [{:content => "Параметры размещения", :colspan => 2}],
-      ["Шаг, м", ""],
-      ["Расстояние между столами, см", ""],
+      ["Шаг*, м", ""],
+      ["Расстояние между столами**, см", ""],
       ["Выравнивание столов относительно границ площадки", ""],
       ["Угол поворота столов относительно азимута", ""],
     ]
@@ -93,9 +97,17 @@ class ExportPdf
       column(0).style borders: [:left, :right]
       column(1).style borders: [:left, :right], align: :center
       row(0).style background_color:"025238", text_color: "ffffff", font_style: :bold, borders: [:left, :right, :top], align: :center
-      row([1, 6, 9, 16]).style background_color: "eeeff1", align: :center
-      row(20).style borders: [:left, :right, :bottom]
+      row([1, 7, 10, 18]).style background_color: "eeeff1", align: :center
+      row(22).style borders: [:left, :right, :bottom]
     end
+
+    move_down(10)
+    start_new_page   
+    text "* ", align: :left, size: 11
+    image step_table, position: :center, scale: 0.2
+    text "** ", align: :left, size: 11
+    image distance_table, position: :center, scale: 0.2
+
     page_num()
 
     start_new_page   
@@ -119,19 +131,21 @@ class ExportPdf
       ["Количесво ФЭМ, шт.", "", ""],
       ["Площадь под ФЭМ, га/м²", "", ""],
       ["Площадь участка, га/м²", "", ""],
+      ["Мощность СЭС, кВ или МВт", ""],
       [{:content => "Параметры площадки", :colspan => 3}],
       ["Расстояние от границ участка до ограждения, м", "", ""],
       ["Расстояние от ограждения до полезной площади, м", "", ""],
       [{:content => "Параметры опорной конструкции", :colspan => 3}],
       ["Название модуля", "", ""],
+      ["Мощность модуля, кВ или МВт", ""],
       ["Отступ между модулями, см", "", ""],
       ["Количество рядов", "", ""],
       ["Количество модулей в ряду", "", ""],
       ["Ориентация", "", ""],
       ["Тип стола", "", ""],
       [{:content => "Параметры размещения", :colspan => 3}],
-      ["Шаг, м", "", ""],
-      ["Расстояние между столами, см", "", ""],
+      ["Шаг*, м", "", ""],
+      ["Расстояние между столами**, см", "", ""],
       ["Выравнивание столов относительно границ площадки", "", ""],
       ["Угол поворота столов относительно азимута", "", ""],
       ["Конфигурация опорной конструкции", {image: img_table, position: :center, fit: [50, 100]}, {image: img_table, position: :center, fit: [50, 100]}],
@@ -142,8 +156,8 @@ class ExportPdf
       column(0).style borders: [:left, :right]
       column([1, 2]).style borders: [:left, :right], align: :center
       row(0).style background_color:"025238", text_color: "ffffff", font_style: :bold, borders: [:left, :right, :top], align: :center
-      row([2, 7, 10, 17]).style background_color: "eeeff1", align: :center
-      row(22).style borders: [:left, :right, :bottom]
+      row([2, 8, 11, 19]).style background_color: "eeeff1", align: :center
+      row(24).style borders: [:left, :right, :bottom]
     end
   end
 

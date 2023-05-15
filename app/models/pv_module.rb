@@ -15,6 +15,8 @@ class PvModule < ApplicationRecord
         params_pv.width = split_line[1]
       elsif split_line[0] == "Height"
         params_pv.height = split_line[1]
+      elsif split_line[0] == "PNom"
+        params_pv.power = split_line[1]
       end
     end
     pv_module_find = PvModule.find_by(model: params_pv.model)
