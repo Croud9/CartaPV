@@ -1,12 +1,6 @@
 <h2>Проекты</h2>
 <%= link_to 'Новый проект', new_project_path, class: "btn_text_only"%>
 
-<% flash.each do |flash_type, message| %>
-  <div class="flash__message">
-    <%= message %>
-  </div>
-<% end %>
-
 <table>
   <thead>
     <tr>

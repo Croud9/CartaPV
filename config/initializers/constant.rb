@@ -1,0 +1,17 @@
+DEFAULT_AREA_PARAMS = {
+  distance_to_barrier: 20,
+  distance_to_pv_area: 20,
+  module_id: nil,
+  height_table: 1,
+  width_table: 2,
+  column_pv_in_table: 1,
+  row_pv_in_table: 1,
+  offset_pv: 2,
+  orientation: 'vertical',
+  type_table: 'tracker',
+  angle_fix: 0,
+  height_offset_tables: 10,
+  width_offset_tables: 20,
+  align_row_tables: 'center',
+  angle_from_azimut: 90,
+}

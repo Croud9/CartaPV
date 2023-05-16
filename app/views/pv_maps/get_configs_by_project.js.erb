@@ -1,0 +1,5 @@
+$('#select_config').empty(); 
+$('#select_config').append($('<option>Выберите</option>'));
+<% @configs.each do |config|%>
+  $('#select_config').append($('<option value="<%= config.id %>"> <%= config.title %> </option>'));
+<% end %>

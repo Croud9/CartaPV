@@ -6,3 +6,4 @@ window.$ = jquery
 import "./map"
 import "./style"
 import "./svg-table"
+import "./configs_load"

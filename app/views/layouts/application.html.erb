@@ -15,6 +15,13 @@
         <div>
             <h2><%= link_to 'CARTA PV', pv_maps_path %></h2>
         </div>
+        <div>
+          <% flash.each do |flash_type, message| %>
+            <div class="flash_message">
+              <%= message %>
+            </div>
+          <% end %>
+        </div>
         <div class="head-options">
             <div class="row-group">
               <div class="item-row-group">

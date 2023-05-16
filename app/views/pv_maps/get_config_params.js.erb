@@ -1,0 +1,39 @@
+$('#config_name').text("Конфигурация  <%= @config.title.upcase %>");
+$('#dist_to_barrier').val("<%= @config.configuration['distance_to_barrier'] %>");
+$('#dist_to_pv_area').val("<%= @config.configuration['distance_to_pv_area'] %>");
+$('#count-column-pv').val("<%= @config.configuration['column_pv_in_table'] %>");
+$('#count-row-pv').val("<%= @config.configuration['row_pv_in_table'] %>");
+$('#offset-pv').val("<%= @config.configuration['offset_pv'] %>");
+
+<% if @config.configuration['module_id'] != nil %>
+  $("#select-pv-modules option[value=<%= @config.configuration['module_id'] %>]").prop('selected', true);
+<% else %>
+  $('#select-pv-modules option:first').prop('selected', true);
+<% end %>
+
+<% if @config.configuration['orientation'] == 'vertical'%>
+  $('#orient-v').prop('checked', true);
+<% else %>
+  $('#orient-h').prop('checked', true); 
+<% end %>
+
+<% if @config.configuration['type_table'] == 'tracker'%>
+  $('#type-table1').prop('checked', true);
+<% else %>
+  $('#type-table2').prop('checked', true); 
+<% end %>
+
+$('#angle_fix').val("<%= @config.configuration['angle_fix'] %>");
+$('#height_offset_tables').val("<%= @config.configuration['height_offset_tables'] %>");
+$('#width_offset_tables').val("<%= @config.configuration['width_offset_tables'] %>");
+
+<% if @config.configuration['align_row_tables'] == 'left'%>
+  $('#left').prop('checked', true);
+<% elsif @config.configuration['align_row_tables'] == 'center'%>
+  $('#center').prop('checked', true);
+<% else %>
+  $('#right').prop('checked', true); 
+<% end %>
+
+$('#angle-from-azimut').val("<%= @config.configuration['angle_from_azimut'] %>");
+

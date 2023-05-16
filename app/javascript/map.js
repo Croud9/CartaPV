@@ -20,22 +20,10 @@ document.addEventListener("turbo:load", function() {
         check_border_lines.addEventListener('change', visibilityLayout);
         check_dash_lines.addEventListener('change', visibilityLayout);
         check_pv_polygons.addEventListener('change', visibilityLayout);
+        $('#select_config').change(get_config_params);
+        // при сохранении еще добавить  get_config_params(
 
-        let params = {
-            distance_to_barrier: 20,
-            distance_to_pv_area: 20,
-            height_table: 1,
-            width_table: 2,
-            height_offset_tables: 10,
-            width_offset_tables: 20,
-            angle_from_azimut: 90,
-            align_row_tables: 'center',
-            type_table: 'tracker',
-            orientation: 'vertical',
-            angle_fix: 0,
-            column_pv_in_table: 1,
-            row_pv_in_table: 1,
-        }
+        let global_params
 
         function visibilityLayout(event) {
             const layers_ids = {
@@ -86,12 +74,41 @@ document.addEventListener("turbo:load", function() {
             return new FormData(formNode)
         }
 
+        function get_config_params() {
+          if ($('#select_config option:selected').text() != "Выберите") {
+            $.ajax({
+              url: "get_config_params",
+              data: "id=" + $("#select_config option:selected").val(),
+              success: function(data) {
+                global_params = data
+              },
+              dataType: "json",
+            });
+          };
+        }
+
         function handleFormSubmit(event) {
             event.preventDefault()
-
             const dataForm = serializeForm(event.target);
-            
-            let current_module_params
+            let current_module_params, params
+            params = {
+              distance_to_barrier: 0,
+              distance_to_pv_area: 0,
+              module_id: null,
+              height_table: 0,
+              width_table: 0,
+              column_pv_in_table: 0,
+              row_pv_in_table: 0,
+              offset_pv: 0,
+              orientation: 'vertical',
+              type_table: 'tracker',
+              angle_fix: 0,
+              height_offset_tables: 0,
+              width_offset_tables: 0,
+              align_row_tables: 'center',
+              angle_from_azimut: 0,
+            }
+
             const selected_id = +dataForm.get("select-pv-modules");
             if (selected_id != 0) {
               const modules_params = $('#params_modules').data('temp')
@@ -103,11 +120,11 @@ document.addEventListener("turbo:load", function() {
   
               let width_pv = current_module_params.height // длинная сторона
               let height_pv = current_module_params.width // короткая сторона
-  
               let count_column_pv = +dataForm.get("count-column-pv");
               let count_row_pv = +dataForm.get("count-row-pv");
-              const offset_pv = +dataForm.get("offset-pv") / 100;
-  
+
+              params.module_id = dataForm.get("select-pv-modules");
+              params.offset_pv = +dataForm.get("offset-pv");
               params.distance_to_barrier = +dataForm.get("distance-to-barrier");
               params.distance_to_pv_area = +dataForm.get("distance-to-pv-area");
               params.height_offset_tables = +dataForm.get("height-offset-tables");
@@ -130,12 +147,24 @@ document.addEventListener("turbo:load", function() {
               
               params.column_pv_in_table = count_column_pv;
               params.row_pv_in_table = count_row_pv;
-  
-              params.width_table = count_column_pv * width_pv + offset_pv * (count_column_pv - 1);
-              params.height_table = count_row_pv * height_pv + offset_pv * (count_row_pv - 1);
-  
+              params.width_table = count_column_pv * width_pv + (params.offset_pv / 100) * (count_column_pv - 1);
+              params.height_table = count_row_pv * height_pv + (params.offset_pv / 100) * (count_row_pv - 1);
+              
+              $.ajax({
+                url: 'set_configuration',
+                beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+                method: 'post',
+                dataType: 'html',
+                data: {id: $("#select_config option:selected").val(), param: params},
+                success: function(data) {
+                  alert('Сохранено');
+                },
+              });
+
+              global_params = params
+              
               if (params.height_offset_tables < params.height_table) 
-              alert('Расстояние меньше высоты стола, измените');
+                alert('Расстояние меньше высоты стола, измените');
 
             }
             else {
@@ -304,11 +333,11 @@ document.addEventListener("turbo:load", function() {
                         large_area = polygon(item)
                     }
                 });
-                [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(large_area, params)
+                [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(large_area, global_params)
                 poly_for_pv = createPolyWithHole(poly_for_pv.geometry.coordinates, large_area.geometry.coordinates, all_areas)
             }
             else if (all_areas.length == 1) {
-                [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(start_area, params)
+                [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(start_area, global_params)
             }
             if (area(poly_for_pv) < 0) alert('Полезная площадь слишком мала')
             const current_source_poly = map.getSource(`poly_for_pv${id_area}`)
@@ -332,7 +361,7 @@ document.addEventListener("turbo:load", function() {
         }
 
         function drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
-            const [lines_for_PV , all_tables] = calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, params);
+            const [lines_for_PV , all_tables] = calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, global_params);
             const current_source_pvs = map.getSource(`pvs${id_area}`);
 
             if (current_source_pvs === undefined) {

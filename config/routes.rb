@@ -1,7 +1,9 @@
 Rails.application.routes.draw do
   root "pv_maps#index"
   get "pv_maps", to: "pv_maps#index"
-  get "find_configs", to: "pv_maps#find_configs"
+  get "get_configs_by_project", to: "pv_maps#get_configs_by_project"
+  get "get_config_params", to: "pv_maps#get_config_params"
+  post "set_configuration", to: "pv_maps#set_configuration"
   get "export_pdf", to: "export#show"
   post 'update_model/:id', to: "pv_modules#update_model", as: 'update_model'
 

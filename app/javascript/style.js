@@ -63,13 +63,12 @@ document.addEventListener("turbo:load", function() {
         }
 
         rangeInputs.forEach(input => {
-        input.addEventListener('input', handleInputChange)
+          input.addEventListener('change', handleInputChange)
         })
 
-        numberInput.addEventListener('input', handleInputChange)
+        numberInput.addEventListener('change', handleInputChange)
 
         $('#map').ready(function(){
-          //Будет ждать загрузки только DOM-дерева
           $('.btns-in-map').show();
         });
     };
