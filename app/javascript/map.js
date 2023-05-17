@@ -138,7 +138,7 @@ document.addEventListener("turbo:load", function() {
               [count_column_pv, count_row_pv] = [count_row_pv, count_column_pv];
   
               if (params.type_table == 'tracker') {
-                  params.orientation =  (params.orientation == 'vertical') ? 'horizontal' : 'vertical'
+                  params.orientation = (params.orientation == 'vertical') ? 'horizontal' : 'vertical'
               };
   
               if (params.orientation == 'vertical') {
@@ -154,11 +154,11 @@ document.addEventListener("turbo:load", function() {
                 url: 'set_configuration',
                 beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
                 method: 'post',
-                dataType: 'html',
                 data: {id: $("#select_config option:selected").val(), param: params},
                 success: function(data) {
-                  alert('Сохранено');
-                },
+                  // $("#flash").html(" Сохранено");
+                  // $("#flash").html('<%= j render partial: "layouts/flash" %>');
+                }
               });
 
               global_params = params

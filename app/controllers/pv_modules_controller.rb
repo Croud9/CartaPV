@@ -12,7 +12,8 @@ class PvModulesController < ApplicationController
     if @pv_module.destroy
       redirect_to pv_modules_path, notice: "Параметры модуля успешно удалены"
     else
-      render plain: "Модуль не удален"
+      flash.now[:notice] = "Модуль не удален"
+      render turbo_stream: turbo_stream.replace("flash_notice", partial: "layouts/flash", locals: { flash: flash })
     end
   end
 
@@ -31,7 +32,8 @@ class PvModulesController < ApplicationController
   def update_model
     input_name = params[:input_pv_model]
     if input_name == @pv_module.model || input_name.length == 0
-      flash.now[:notice] = 'имя не изменено'
+      flash.now[:notice] = "Имя не изменено"
+      render turbo_stream: turbo_stream.replace("flash_notice", partial: "layouts/flash", locals: { flash: flash })
     else
       @pv_module.update_attribute(:model, input_name)
       redirect_to pv_modules_path, notice: "Название модели успешно изменено"

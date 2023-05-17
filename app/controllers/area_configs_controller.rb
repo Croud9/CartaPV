@@ -15,7 +15,8 @@ class AreaConfigsController < ApplicationController
   def update
     input_title = params[:input_config_title]
     if input_title == @config.title || input_title.length == 0
-      flash.now[:notice] = 'Название не изменено'
+      flash.now[:notice] = "Название не изменено"
+      render turbo_stream: turbo_stream.replace("flash_notice", partial: "layouts/flash", locals: { flash: flash })
     else
       @config.update_attribute(:title, input_title)
       redirect_to project_path(@config.project), notice: "Название успешно изменено"
@@ -26,7 +27,9 @@ class AreaConfigsController < ApplicationController
     if @config.destroy
       redirect_to project_path(@config.project), notice: "Конфигурация успешно удалена"
     else
-      render plain: "Конфигурация не удалена"
+      flash.now[:notice] = "Конфигурация не удалена"
+      render turbo_stream: turbo_stream.replace("flash_notice", partial: "layouts/flash", locals: { flash: flash })
+      
     end
   end
 

@@ -24,8 +24,13 @@ class PvMapsController < ApplicationController
     config = AreaConfig.find(params[:id])
     input_params = params[:param]
 
-    flash.now[:notice] = 'СООООХРАНЕНО'
-    config.update_attribute(:configuration, input_params)
+    flash.now[:notice] = "Save"
+    # render turbo_stream: turbo_stream.replace("flash_notice", partial: "layouts/flash", locals: { flash: flash })
+    respond_to do |format|
+      format.js
+    end
+    
+    # config.update_attribute(:configuration, input_params)
 
   end
 

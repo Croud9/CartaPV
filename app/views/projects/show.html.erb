@@ -2,12 +2,6 @@
 <h2><%= @project.title %></h2>
 <%= link_to 'Добавить новую конфигурацию', new_area_config_path(project_id: @project), class: "btn_text_only"%>
 
-<% flash.each do |flash_type, message| %>
-  <div class="flash__message">
-    <%= message %>
-  </div>
-<% end %>
-
 <table>
   <thead>
     <tr>
