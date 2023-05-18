@@ -1,6 +1,5 @@
 document.addEventListener("turbo:load", function() {
-    if (document.getElementById("map") !== null) {
-        
+  if (document.getElementById("map") !== null) {
         const btn_svg_show = document.getElementById('btn-svg-area-show');
         const svg_area = document.getElementById('svg-area');
         const config_show = document.getElementById('btn-config-show');
@@ -13,7 +12,7 @@ document.addEventListener("turbo:load", function() {
         const range_azimut_output = document.getElementById('rangevalue2');
 
         btn_svg_show.addEventListener('click', svgArea)
-
+        
         function svgArea(e) {
             if (svg_area.style.display == 'none') {
                 svg_area.style.display = 'block';
@@ -52,13 +51,14 @@ document.addEventListener("turbo:load", function() {
 
         function handleInputChange(e) {
         let target = e.target
-        if (e.target.type !== 'range') {
+        if (target.type !== 'range') {
             target = document.getElementById('range')
         } 
         const min = target.min
         const max = target.max
         const val = target.value
-        
+        console.log(e)
+
         target.style.backgroundSize = (val - min) * 100 / (max - min) + '% 100%'
         }
 
@@ -71,5 +71,6 @@ document.addEventListener("turbo:load", function() {
         $('#map').ready(function(){
           $('.btns-in-map').show();
         });
+
     };
 });

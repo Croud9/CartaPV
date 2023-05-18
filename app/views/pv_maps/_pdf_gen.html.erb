@@ -1,0 +1,29 @@
+<div class="container-result">
+    <h2>Отчет</h2>
+    <br>
+    <form class="form" id="data-config-for-pdf">
+        <div class="row-group">
+          <label class="item-row-group">
+              <p>Тип отчета</p> 
+              <div class="form_radio_group">
+                  <div class="form_radio_group-item">
+                      <input type="radio" id="type-pdf1" name="type-pdf" value="single" checked>
+                      <label for="type-pdf1">Одиночный</label>
+                  </div>
+                  <div class="form_radio_group-item">
+                      <input type="radio" id="type-pdf2" name="type-pdf" value="multi">
+                      <label for="type-pdf2">Мульти</label>
+                  </div>
+              </div>
+          </label>
+          <label class="item-row-group">
+              Выбор конфигураций помещаемых в отчет 
+              <%= select_tag "select-config-pdf", 
+                  options_from_collection_for_select(@area_configs, :id, :title), 
+                  prompt: 'Выберите',
+                  multiple: true
+              %>
+          </label>
+        </div>
+    <%= link_to 'PDF', export_pdf_path(format: :pdf), class: "btn", target: '_blank'%>
+</div>

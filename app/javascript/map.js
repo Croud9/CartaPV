@@ -2,11 +2,13 @@ import maplibregl from 'maplibre-gl';
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import MaplibreGeocoder from '@maplibre/maplibre-gl-geocoder';
 import area from '@turf/area';
-import { polygon } from '@turf/helpers';
+import centroid from '@turf/centroid';
+import { polygon, featureCollection } from '@turf/helpers';
 import { calcAreaForPV, calcPVs, createPolyWithHole } from "./pv-calc.js";
 
 document.addEventListener("turbo:load", function() {
     if (document.getElementById("map") !== null) {
+        let global_params
         const check_border_lines = document.getElementById('check-visible-border-lines');
         const check_dash_lines = document.getElementById('check-visible-dash-lines');
         const check_pv_polygons = document.getElementById('check-visible-pv-polygons');
@@ -21,10 +23,59 @@ document.addEventListener("turbo:load", function() {
         check_dash_lines.addEventListener('change', visibilityLayout);
         check_pv_polygons.addEventListener('change', visibilityLayout);
         $('#select_config').change(get_config_params);
+        $('#select_project').change(set_project_area);
+        $('#btn_save_area').click(add_main_area_to_db);
+        $("#type-table2").click(function () {
+          console.log('ratatatat')
+          $('#angle-from-azimut').val(global_params.angle_from_azimut);
+          $('#rangevalue2').text(global_params.angle_from_azimut);
+        })
         // при сохранении еще добавить  get_config_params(
+        
+        
+        function set_project_area() {
+          if ($('#select_project option:selected').text() != "Выберите") {
+            $.ajax({
+              url: "get_project_params",
+              data: "id=" + $("#select_project option:selected").val(),
+              dataType: "json",
+              success: function(data) {
+                deleteAreas(draw.getAll().features)
+                draw.deleteAll()
+                if (data !== null) {
+                  data.features.forEach((area) => {
+                    draw.add(area)
+                  });
 
-        let global_params
+                  map.flyTo({
+                    center: centroid(data).geometry.coordinates,
+                    zoom: 12,
+                    essential: true // this animation is considered essential with respect to prefers-reduced-motion
+                  });
+                }
+              },
+            });
+          };
+        }
 
+        function add_main_area_to_db() {
+          let areas = []
+          const selected_ids = draw.getSelectedIds();
+          if (selected_ids.length != 0) {
+            selected_ids.forEach((id) => {
+              areas.push(draw.get(id))
+            });
+
+            $.ajax({
+              method: 'post',
+              url: 'update_draw_area',
+              data: {id: $("#select_project option:selected").val(), options: JSON.stringify(featureCollection(areas))},
+              beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+              success: function(data) { alert('Успешно сохранено'); }
+            });
+          };
+        }
+        
         function visibilityLayout(event) {
             const layers_ids = {
                 'check-visible-border-lines': 'pvs_line',
@@ -49,25 +100,60 @@ document.addEventListener("turbo:load", function() {
         };
 
         function clickDrawArea(event) { 
+            let all_data = []
             const selected_ids = draw.getSelectedIds();
+            console.log('selected ids --> ' + selected_ids)
             if (selected_ids.length != 0) {
-                selected_ids.forEach((item) => {
-                    const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(item);  
-                    // const all_tables = drawPVs(item, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
-                    // outputAreaData(item, poly_for_pv, all_tables);
-                });
-            };
+              selected_ids.forEach((id) => {
+                const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id);
+                let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
+                all_data.push(feature)
+                // const all_tables = drawPVs(item, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+                // outputAreaData(item, poly_for_pv, all_tables); 
+              });
+              console.log(all_data)
+              $.ajax({
+                method: 'post',
+                url: 'update_configuration',
+                data: {id: $("#select_config option:selected").val(), param: null, geojsons: JSON.stringify(all_data)},
+                beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+                success: function(data) { alert('Успешно сохранено'); }
+              });
+            }
+            else {
+              alert('Не выбрана область');
+            }
         };
 
         function clickDrawPV(event) {
-            const selected_ids = draw.getSelectedIds();
-            if (selected_ids.length != 0) {
-                selected_ids.forEach((item) => {
-                    const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(item);  
-                    const all_tables = drawPVs(item, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
-                    outputAreaData(item, poly_for_pv, all_tables);
-                });
-            };
+          let all_data = []
+          const selected_ids = draw.getSelectedIds();
+          if (selected_ids.length != 0) {
+            if ($('#select-pv-modules option:selected').text() != "Выберите") {
+              selected_ids.forEach((id) => {
+                  const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id);  
+                  const [all_tables, data_pv] = drawPVs(id, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+                  let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
+                  // let feature = {idx: id, poly_features: poly_for_pv, pv_features: data_pv} // очень долго
+                  all_data.push(feature)
+                  outputAreaData(id, poly_for_pv, all_tables);
+              });
+              
+              $.ajax({
+                method: 'post',
+                url: 'update_configuration',
+                data: {id: $("#select_config option:selected").val(), param: null, geojsons: JSON.stringify(all_data)},
+                beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+                success: function(data) { alert('Успешно сохранено'); }
+              });
+            }
+            else {
+              alert('Не выбран фотоэлектрический модуль! Выберите и сохраните конфигурацию');
+            }
+          }
+          else {
+            alert('Не выбрана область');
+          }
         };
 
         function serializeForm(formNode) {
@@ -80,11 +166,36 @@ document.addEventListener("turbo:load", function() {
               url: "get_config_params",
               data: "id=" + $("#select_config option:selected").val(),
               success: function(data) {
-                global_params = data
+                if (data.geojson !== null) {
+                  data.geojson.forEach((json) => {
+                    console.log(json.idx)
+                    setAreaPolyOnMap(json.idx, json.poly_features)
+                    // if (json.pv_featuren !== null) setPVPolyOnMap(json.idx, json.pv_features) 
+                  });
+                }
+                else {
+                  deleteAreas(draw.getAll().features)
+                };
+                global_params = data.configuration
+                params_to_num()
               },
               dataType: "json",
             });
           };
+        }
+
+        function params_to_num() {
+          global_params.offset_pv = +global_params.offset_pv;
+          global_params.distance_to_barrier = +global_params.distance_to_barrier;
+          global_params.distance_to_pv_area = +global_params.distance_to_pv_area;
+          global_params.height_offset_tables = +global_params.height_offset_tables;
+          global_params.width_offset_tables = +global_params.width_offset_tables;
+          global_params.angle_from_azimut = +global_params.angle_from_azimut;
+          global_params.angle_fix = +global_params.angle_fix;
+          global_params.column_pv_in_table = +global_params.column_pv_in_table;
+          global_params.row_pv_in_table = +global_params.row_pv_in_table;
+          global_params.width_table = +global_params.width_table;
+          global_params.height_table = +global_params.height_table;
         }
 
         function handleFormSubmit(event) {
@@ -135,15 +246,15 @@ document.addEventListener("turbo:load", function() {
               params.angle_fix = +dataForm.get("angle-fix");
               params.orientation = dataForm.get("orientation");
   
-              [count_column_pv, count_row_pv] = [count_row_pv, count_column_pv];
-  
+              
               if (params.type_table == 'tracker') {
-                  params.orientation = (params.orientation == 'vertical') ? 'horizontal' : 'vertical'
+                params.orientation = (params.orientation == 'vertical') ? 'horizontal' : 'vertical'
               };
-  
+              
               if (params.orientation == 'vertical') {
-                  [width_pv, height_pv] = [height_pv, width_pv];
+                [width_pv, height_pv] = [height_pv, width_pv];
               };
+              [count_column_pv, count_row_pv] = [count_row_pv, count_column_pv];
               
               params.column_pv_in_table = count_column_pv;
               params.row_pv_in_table = count_row_pv;
@@ -151,16 +262,16 @@ document.addEventListener("turbo:load", function() {
               params.height_table = count_row_pv * height_pv + (params.offset_pv / 100) * (count_row_pv - 1);
               
               $.ajax({
-                url: 'set_configuration',
+                url: 'update_configuration',
                 beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
                 method: 'post',
-                data: {id: $("#select_config option:selected").val(), param: params},
+                data: {id: $("#select_config option:selected").val(), param: params, geojsons: null},
                 success: function(data) {
                   // $("#flash").html(" Сохранено");
                   // $("#flash").html('<%= j render partial: "layouts/flash" %>');
+                  alert('Успешно сохранено');
                 }
               });
-
               global_params = params
               
               if (params.height_offset_tables < params.height_table) 
@@ -313,10 +424,10 @@ document.addEventListener("turbo:load", function() {
         }
 
         function combineArea(e){
-            const id_union_area = e.createdFeatures[0].id
             deleteAreas(e.deletedFeatures)
-            const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_union_area);
-            outputAreaData(id_union_area, poly_for_pv);
+            // const id_union_area = e.createdFeatures[0].id
+            // const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_union_area);
+            // outputAreaData(id_union_area, poly_for_pv);
             // const all_tables = drawPVs(id_union_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
         }
 
@@ -340,91 +451,18 @@ document.addEventListener("turbo:load", function() {
                 [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(start_area, global_params)
             }
             if (area(poly_for_pv) < 0) alert('Полезная площадь слишком мала')
-            const current_source_poly = map.getSource(`poly_for_pv${id_area}`)
-            if (current_source_poly === undefined) {
-                map.addSource(`poly_for_pv${id_area}`, { 'type': 'geojson', 'data': poly_for_pv });
-                map.addLayer({
-                    'id': `poly_for_pv${id_area}`,
-                    'type': 'fill',
-                    'source': `poly_for_pv${id_area}`,
-                    'layout': {},
-                    'paint': {
-                        'fill-color': '#00cc55',
-                        'fill-opacity': 0.7
-                    }
-                });
-            }
-            else {
-                current_source_poly.setData(poly_for_pv);
-            }
+
+            setAreaPolyOnMap(id_area, poly_for_pv)
+
             return [poly_for_pv, top_coord, lower_coord, left_coord, right_coord]
         }
 
         function drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
             const [lines_for_PV , all_tables] = calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, global_params);
-            const current_source_pvs = map.getSource(`pvs${id_area}`);
+            
+            setPVPolyOnMap(id_area, lines_for_PV)
 
-            if (current_source_pvs === undefined) {
-                map.addSource(`pvs${id_area}`, {
-                    'type': 'geojson',
-                    'data': {
-                        'type': 'FeatureCollection',
-                        'features': lines_for_PV
-                    }
-                });
-                map.addLayer({
-                    'id': `pvs_line${id_area}`,
-                    'type': 'line',
-                    'source': `pvs${id_area}`,
-                    'layout': {
-                        'line-join': 'round',
-                        'line-cap': 'round',
-                        'visibility': 'none'
-                    },
-                    'paint': {
-                        'line-color': '#fff', //'#B42222'
-                        'line-width': 1
-                    },
-                    'filter': ['==', 'name', 'borderline']
-                });
-                map.addLayer({
-                    'id': `pvs_dash_line${id_area}`,
-                    'type': 'line',
-                    'source': `pvs${id_area}`,
-                    'layout': {
-                        'line-join': 'round',
-                        'line-cap': 'round',
-                        'visibility': 'visible'
-                    },
-                    'paint': {
-                        'line-dasharray': [3, 3],
-                        'line-color': '#fff', //'#B42222'
-                        'line-width': 1
-                    },
-                    'filter': ['==', 'name', 'dashline']
-                });
-                map.addLayer({
-                    'id': `pvs_poly${id_area}`,
-                    'type': 'fill',
-                    'source': `pvs${id_area}`,
-                    'layout': {
-                        'visibility': 'visible'
-                    },
-                    'paint': {
-                        'fill-color': '#3333ff',
-                        'fill-opacity': 0.4,
-                        // 'fill-pattern': 'pattern'
-                    },
-                    'filter': ['==', '$type', 'Polygon']
-                });
-            }
-            else {
-                current_source_pvs.setData({
-                    'type': 'FeatureCollection',
-                    'features': lines_for_PV
-                });
-            }
-            return all_tables
+            return [all_tables, lines_for_PV]
         }
 
         function updateArea(e) {
@@ -444,6 +482,90 @@ document.addEventListener("turbo:load", function() {
                     deleteAreas(e.features)
                 }
             }
+        }
+
+        function setAreaPolyOnMap(id_area, data) {
+          let current_source_poly = map.getSource(`poly_for_pv${id_area}`)
+          if (current_source_poly === undefined) {
+              map.addSource(`poly_for_pv${id_area}`, { 'type': 'geojson', 'data': data });
+              map.addLayer({
+                  'id': `poly_for_pv${id_area}`,
+                  'type': 'fill',
+                  'source': `poly_for_pv${id_area}`,
+                  'layout': {},
+                  'paint': {
+                      'fill-color': '#00cc55',
+                      'fill-opacity': 0.7
+                  }
+              });
+          }
+          else {
+              current_source_poly.setData(data);
+          }
+        }
+
+        function setPVPolyOnMap(id_area, data) {
+          let current_source_pvs = map.getSource(`pvs${id_area}`);
+          if (current_source_pvs === undefined) {
+              map.addSource(`pvs${id_area}`, {
+                  'type': 'geojson',
+                  'data': {
+                      'type': 'FeatureCollection',
+                      'features': data
+                  }
+              });
+              map.addLayer({
+                  'id': `pvs_line${id_area}`,
+                  'type': 'line',
+                  'source': `pvs${id_area}`,
+                  'layout': {
+                      'line-join': 'round',
+                      'line-cap': 'round',
+                      'visibility': 'none'
+                  },
+                  'paint': {
+                      'line-color': '#fff', //'#B42222'
+                      'line-width': 1
+                  },
+                  'filter': ['==', 'name', 'borderline']
+              });
+              map.addLayer({
+                  'id': `pvs_dash_line${id_area}`,
+                  'type': 'line',
+                  'source': `pvs${id_area}`,
+                  'layout': {
+                      'line-join': 'round',
+                      'line-cap': 'round',
+                      'visibility': 'visible'
+                  },
+                  'paint': {
+                      'line-dasharray': [3, 3],
+                      'line-color': '#fff', //'#B42222'
+                      'line-width': 1
+                  },
+                  'filter': ['==', 'name', 'dashline']
+              });
+              map.addLayer({
+                  'id': `pvs_poly${id_area}`,
+                  'type': 'fill',
+                  'source': `pvs${id_area}`,
+                  'layout': {
+                      'visibility': 'visible'
+                  },
+                  'paint': {
+                      'fill-color': '#3333ff',
+                      'fill-opacity': 0.4,
+                      // 'fill-pattern': 'pattern'
+                  },
+                  'filter': ['==', '$type', 'Polygon']
+              });
+          }
+          else {
+              current_source_pvs.setData({
+                  'type': 'FeatureCollection',
+                  'features': data
+              });
+          }
         }
     };
 })
@@ -621,3 +743,5 @@ document.addEventListener("turbo:load", function() {
 //         ? 'pointer'
 //         : 'crosshair';
 // });
+
+

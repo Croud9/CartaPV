@@ -1,8 +1,8 @@
 $('#config_name').text("Конфигурация  <%= @config.title.upcase %>");
 $('#dist_to_barrier').val("<%= @config.configuration['distance_to_barrier'] %>");
 $('#dist_to_pv_area').val("<%= @config.configuration['distance_to_pv_area'] %>");
-$('#count-column-pv').val("<%= @config.configuration['column_pv_in_table'] %>");
-$('#count-row-pv').val("<%= @config.configuration['row_pv_in_table'] %>");
+$('#count-row-pv').val("<%= @config.configuration['column_pv_in_table'] %>");
+$('#count-column-pv').val("<%= @config.configuration['row_pv_in_table'] %>");
 $('#offset-pv').val("<%= @config.configuration['offset_pv'] %>");
 
 <% if @config.configuration['module_id'] != nil %>
@@ -20,10 +20,11 @@ $('#offset-pv').val("<%= @config.configuration['offset_pv'] %>");
 <% if @config.configuration['type_table'] == 'tracker'%>
   $('#type-table1').prop('checked', true);
 <% else %>
-  $('#type-table2').prop('checked', true); 
+  $('#type-table2').prop('checked', true).click(); 
 <% end %>
 
 $('#angle_fix').val("<%= @config.configuration['angle_fix'] %>");
+$('#rangevalue').text("<%= @config.configuration['angle_fix'] %>");
 $('#height_offset_tables').val("<%= @config.configuration['height_offset_tables'] %>");
 $('#width_offset_tables').val("<%= @config.configuration['width_offset_tables'] %>");
 
@@ -36,4 +37,5 @@ $('#width_offset_tables').val("<%= @config.configuration['width_offset_tables'] 
 <% end %>
 
 $('#angle-from-azimut').val("<%= @config.configuration['angle_from_azimut'] %>");
+$('#rangevalue2').text("<%= @config.configuration['angle_from_azimut'] %>");
 

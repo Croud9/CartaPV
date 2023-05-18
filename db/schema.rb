@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_05_15_110512) do
+ActiveRecord::Schema[7.0].define(version: 2023_05_18_071553) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -30,6 +30,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_05_15_110512) do
     t.text "total_params"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.json "draw_area"
   end
 
   create_table "pv_modules", force: :cascade do |t|
