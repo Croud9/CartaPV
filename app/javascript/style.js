@@ -12,7 +12,16 @@ document.addEventListener("turbo:load", function() {
         const range_azimut_output = document.getElementById('rangevalue2');
 
         btn_svg_show.addEventListener('click', svgArea)
+
+        $('#type_pdf_report_single').click(function() {
+          $('#select_config_pdf').prop('multiple', false);
+        })
         
+        $('#type_pdf_report_multi').click(function() {
+          $('#select_config_pdf').prop('multiple', true);
+        })
+
+
         function svgArea(e) {
             if (svg_area.style.display == 'none') {
                 svg_area.style.display = 'block';

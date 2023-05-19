@@ -20,7 +20,7 @@ $('#offset-pv').val("<%= @config.configuration['offset_pv'] %>");
 <% if @config.configuration['type_table'] == 'tracker'%>
   $('#type-table1').prop('checked', true);
 <% else %>
-  $('#type-table2').prop('checked', true).click(); 
+  $('#type-table2').prop('checked', true); 
 <% end %>
 
 $('#angle_fix').val("<%= @config.configuration['angle_fix'] %>");

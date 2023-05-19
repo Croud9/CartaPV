@@ -127,6 +127,7 @@ document.addEventListener("turbo:load", function() {
 
         function clickDrawPV(event) {
           let all_data = []
+          let total_params = {}
           const selected_ids = draw.getSelectedIds();
           if (selected_ids.length != 0) {
             if ($('#select-pv-modules option:selected').text() != "Выберите") {
@@ -136,13 +137,19 @@ document.addEventListener("turbo:load", function() {
                   let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
                   // let feature = {idx: id, poly_features: poly_for_pv, pv_features: data_pv} // очень долго
                   all_data.push(feature)
-                  outputAreaData(id, poly_for_pv, all_tables);
+                  const squares = outputAreaData(id, poly_for_pv, all_tables);
+                  total_params = {squares: squares, all_tables: all_tables}
               });
               
               $.ajax({
                 method: 'post',
                 url: 'update_configuration',
-                data: {id: $("#select_config option:selected").val(), param: null, geojsons: JSON.stringify(all_data)},
+                data: {
+                  id: $("#select_config option:selected").val(), 
+                  param: null, 
+                  geojsons: JSON.stringify(all_data),
+                  total_params: total_params
+                },
                 beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
                 success: function(data) { alert('Успешно сохранено'); }
               });
@@ -228,7 +235,8 @@ document.addEventListener("turbo:load", function() {
                 if(modules_params[i].id == selected_id) 
                   current_module_params = modules_params[i]
               };
-  
+              
+              // const power = current_module_params.power // короткая сторона
               let width_pv = current_module_params.height // длинная сторона
               let height_pv = current_module_params.width // короткая сторона
               let count_column_pv = +dataForm.get("count-column-pv");
@@ -246,7 +254,6 @@ document.addEventListener("turbo:load", function() {
               params.angle_fix = +dataForm.get("angle-fix");
               params.orientation = dataForm.get("orientation");
   
-              
               if (params.type_table == 'tracker') {
                 params.orientation = (params.orientation == 'vertical') ? 'horizontal' : 'vertical'
               };
@@ -267,8 +274,6 @@ document.addEventListener("turbo:load", function() {
                 method: 'post',
                 data: {id: $("#select_config option:selected").val(), param: params, geojsons: null},
                 success: function(data) {
-                  // $("#flash").html(" Сохранено");
-                  // $("#flash").html('<%= j render partial: "layouts/flash" %>');
                   alert('Успешно сохранено');
                 }
               });
@@ -291,7 +296,10 @@ document.addEventListener("turbo:load", function() {
         }
 
         function outputAreaData(id_area_initial, poly_for_pv) {
+            let squares = {all_area: {meters: null, hectares: null}, pv_area: {meters: null, hectares: null}}
             let [rounded_area_ga, rounded_area_m] = calcSquareArea(draw.get(id_area_initial));
+            squares.all_area.meters = rounded_area_m
+            squares.all_area.hectares = rounded_area_ga
             const square_text = 'Площадь области: <strong>' + 
             rounded_area_ga + 
             '</strong> га / <strong>' + 
@@ -299,17 +307,20 @@ document.addEventListener("turbo:load", function() {
             '</strong> м²';
             
             [rounded_area_ga, rounded_area_m] = calcSquareArea(poly_for_pv);
+            squares.pv_area.meters = rounded_area_m
+            squares.pv_area.hectares = rounded_area_ga
             const square_pv_area = 'Полезная площадь: <strong>' + 
                                     rounded_area_ga + 
                                     '</strong> га / <strong>' + 
                                     rounded_area_m + 
                                     '</strong> м²';           
             answer.innerHTML = square_text + '<p> ' + square_pv_area + '</p>' // + '<p>Столов: <strong>' + all_tables + ' </strong>шт.</p>'
+            return squares
         }
         
         var map = new maplibregl.Map({
                 container: 'map',
-                zoom: 12,
+                zoom: 2,
                 center: [100, 65],
                 style:
                 'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd', // Актуальные, бесшовные изображения для всего мира с учетом контекста

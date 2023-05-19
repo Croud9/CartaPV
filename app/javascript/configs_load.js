@@ -3,11 +3,8 @@ document.addEventListener("turbo:load", function() {
     
     // $('#select_config').slideUp();
     $('#select_config').fadeOut();
-    // $('#btn-draw-area').fadeOut();
-    // $('#btn-draw-pv').fadeOut();
     $('#data').fadeTo(200, 0);
     $('#select_project').change(function() {
-
         $('#select_config').fadeIn(500);
         $('#select_config').empty();
         $('#data').fadeTo(500, 0);
@@ -22,7 +19,6 @@ document.addEventListener("turbo:load", function() {
       });
       
     $('#select_config').change(function() {
-      
       if ($('#select_config option:selected').text() == "Выберите") {
         $('#data').fadeTo(500, 0);
         $('#btn-draw-area').fadeOut();

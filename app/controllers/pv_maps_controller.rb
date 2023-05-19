@@ -23,7 +23,6 @@ class PvMapsController < ApplicationController
 
   def get_project_params
     project = Project.find(params[:id])
-    print "adewwwww --> #{project.draw_area}"
     respond_to do |format|
       format.json { render json: project.draw_area }
     end
@@ -33,10 +32,11 @@ class PvMapsController < ApplicationController
     config = AreaConfig.find(params[:id])
     input_configuration = params[:param]
     input_geogejson = params[:geojsons]
+    input_total_params = params[:total_params]
 
     # flash.now[:notice] = "Save"
     # render turbo_stream: turbo_stream.replace("flash_notice", partial: "layouts/flash", locals: { flash: flash })
-    
+    config.project.update_attribute(:total_params, input_total_params) unless input_total_params.blank?
     config.update_attribute(:geojson_area, input_geogejson) unless input_geogejson.blank? 
     config.update_attribute(:configuration, input_configuration) unless input_configuration.blank? 
   end

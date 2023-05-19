@@ -1,7 +1,11 @@
 class ExportPdf 
   include Prawn::View
 
-  def initialize
+  def initialize(params)
+    @project = params[:project]
+    @config = params[:config]
+    @pv_module = params[:pv_module]
+    
     set_fonts
     header()
     location()
@@ -24,7 +28,7 @@ class ExportPdf
     img_logo = "vendor/assets/uni_logo.png"
 
     image img_logo, position: :right, scale: 0.235
-    text_box "Отчет параметров СЭС по проекту: <br> ШЛЮМБЕРЖЕ. ЛИПЕЦК. СЭС 363,4 КВТ", size: 14.5, align: :left, inline_format: true, text_color: "374156"
+    text_box "Отчет параметров СЭС по проекту: <br> #{@project.title.upcase}", size: 14.5, align: :left, inline_format: true, text_color: "374156"
     move_down(35)
   end
 
@@ -63,33 +67,49 @@ class ExportPdf
     image img_map, position: :center, scale: 0.9
     move_down(10)
     text "Рис. 2 - Конфигурация опорных конструкций на местности", align: :center, style: :italic, size: 10
-
     start_new_page
     text "Таблица параметров СЭС", style: :italic, size: 10, align: :right
+    pvs_in_table = @config.configuration['row_pv_in_table'].to_i * @config.configuration['column_pv_in_table'].to_i
+    print @project.total_params
+    print @project.total_params['all_tables']
+    if @project.total_params
+      total_pvs = @project.total_params['all_tables'].to_i * pvs_in_table
+      total_power = @pv_module.power * count_pvs
+    end
+
     data = [ 
       ["Название параметра", "Значение"],
       [{:content => "Итоговые параметры", :colspan => 2}],
-      ["Количесво столов, шт.", ""],
-      ["Количесво ФЭМ, шт.", ""],
-      ["Площадь под ФЭМ, га/м²", ""],
-      ["Площадь участка, га/м²", ""],
-      ["Мощность СЭС, кВ или МВт", ""],
+      [],
+      [],
+      [],
+      [],
+      [],
+      # ["Количесво столов, шт.", @project.total_params['all_tables']],
+      # ["Количесво ФЭМ, шт.", total_pvs || ''],
+      # ["Площадь под ФЭМ, м²/га", "#{@project.total_params['squares']['pv_area']['meters']} м²/  #{@project.total_params['squares']['pv_area']['hectares']} га"],
+      # ["Площадь участка, ", "#{@project.total_params['squares']['all_area']['meters']} м²/  #{@project.total_params['squares']['all_area']['hectares']} га"],
+      # ["Мощность СЭС, кВт или МВт", total_power || ''],
       [{:content => "Параметры площадки", :colspan => 2}],
-      ["Расстояние от границ участка до ограждения, м", ""],
-      ["Расстояние от ограждения до полезной площади, м", ""],
+      ["Расстояние от границ участка до ограждения, м", @config.configuration['distance_to_barrier']],
+      ["Расстояние от ограждения до полезной площади, м", @config.configuration['distance_to_pv_area']],
       [{:content => "Параметры опорной конструкции", :colspan => 2}],
-      ["Название модуля", ""],
-      ["Мощность модуля, кВ или МВт", ""],
-      ["Отступ между модулями, см", ""],
-      ["Количество рядов", ""],
-      ["Количество модулей в ряду", ""],
-      ["Ориентация", ""],
-      ["Тип стола", ""],
+      ["Название модуля", @pv_module.model],
+      ["Мощность модуля, Вт", @pv_module.power],
+      ["Отступ между модулями, см", @config.configuration['offset_pv']],
+      ["Количество рядов", @config.configuration['row_pv_in_table']],
+      ["Количество модулей в ряду", @config.configuration['column_pv_in_table']],
+      ["Ориентация", @config.configuration['orientation'] == 'horizontal'? "Альбомная" : "Книжная" ],
+      ["Тип стола", @config.configuration['type_table'] == 'fix' ? 'Фикс' : 'Трекер'],
+      ["Угол наклона стола", @config.configuration['type_table'] == 'fix' ? @config.configuration['angle_fix'] : '-' ],  
       [{:content => "Параметры размещения", :colspan => 2}],
-      ["Шаг*, м", ""],
-      ["Расстояние между столами**, см", ""],
-      ["Выравнивание столов относительно границ площадки", ""],
-      ["Угол поворота столов относительно азимута", ""],
+      ["Шаг*, м", @config.configuration['height_offset_tables']],
+      ["Расстояние между столами**, см", @config.configuration['width_offset_tables']],
+      ["Выравнивание столов относительно границ площадки", 
+        @config.configuration['align_row_tables'] == 'center' ? 'Центр' :
+        @config.configuration['align_row_tables'] == 'left' ? 'Левая граница' : 'Правая граница'
+      ],
+      ["Угол поворота столов относительно азимута", @config.configuration['angle_from_azimut']],
     ]
 
     table(data, position: :left, header: true, column_widths: [270, 270]) do
@@ -97,8 +117,8 @@ class ExportPdf
       column(0).style borders: [:left, :right]
       column(1).style borders: [:left, :right], align: :center
       row(0).style background_color:"025238", text_color: "ffffff", font_style: :bold, borders: [:left, :right, :top], align: :center
-      row([1, 7, 10, 18]).style background_color: "eeeff1", align: :center
-      row(22).style borders: [:left, :right, :bottom]
+      row([1, 7, 10, 19]).style background_color: "eeeff1", align: :center
+      row(23).style borders: [:left, :right, :bottom]
     end
 
     move_down(10)
