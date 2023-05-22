@@ -2,6 +2,7 @@ import maplibregl from 'maplibre-gl';
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import MaplibreGeocoder from '@maplibre/maplibre-gl-geocoder';
 import area from '@turf/area';
+import bbox from '@turf/bbox';
 import centroid from '@turf/centroid';
 import { polygon, featureCollection } from '@turf/helpers';
 import { calcAreaForPV, calcPVs, createPolyWithHole } from "./pv-calc.js";
@@ -30,8 +31,24 @@ document.addEventListener("turbo:load", function() {
           $('#angle-from-azimut').val(global_params.angle_from_azimut);
           $('#rangevalue2').text(global_params.angle_from_azimut);
         })
+        $("#style_map_satellite").click(function () {
+          map.setStyle('https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd')
+        })
+        $("#style_map_streets").click(function () {
+          map.setStyle('https://api.maptiler.com/maps/3f98f986-5df3-44da-b349-6569ed7b764c/style.json?key=QA99yf3HkkZG97cZrjXd')
+        })
+        $("#style_map_outdoors").click(function () {
+          map.setStyle('https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd')
+        })
+        $('#downloadLink').click(function () {
+            map.getCanvas().toBlob(function (blob) {
+              // saveAs(blob, 'map.png');
+              var objectURL = URL.createObjectURL(blob);
+              console.log(objectURL)
+              document.querySelector("#image").src = objectURL;
+            })
+        })
         // при сохранении еще добавить  get_config_params(
-        
         
         function set_project_area() {
           if ($('#select_project option:selected').text() != "Выберите") {
@@ -47,11 +64,13 @@ document.addEventListener("turbo:load", function() {
                     draw.add(area)
                   });
 
-                  map.flyTo({
-                    center: centroid(data).geometry.coordinates,
-                    zoom: 12,
-                    essential: true // this animation is considered essential with respect to prefers-reduced-motion
-                  });
+                  // map.flyTo({
+                  //   center: centroid(data).geometry.coordinates,
+                  //   zoom: 12,
+                  //   essential: true // this animation is considered essential with respect to prefers-reduced-motion
+                  // });
+                  const bbox_all = bbox(data)
+                  map.fitBounds(bbox_all, {padding: 80})
                 }
               },
             });
@@ -128,10 +147,16 @@ document.addEventListener("turbo:load", function() {
         function clickDrawPV(event) {
           let all_data = []
           let total_params = {}
+          let bound
+          console.log($('#svg').text())
+          console.log($('#svg').html())
+          console.log($('#svg').val())
           const selected_ids = draw.getSelectedIds();
+          draw.changeMode('simple_select')
           if (selected_ids.length != 0) {
             if ($('#select-pv-modules option:selected').text() != "Выберите") {
               selected_ids.forEach((id) => {
+                  bound = draw.get(id)
                   const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id);  
                   const [all_tables, data_pv] = drawPVs(id, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
                   let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
@@ -140,19 +165,32 @@ document.addEventListener("turbo:load", function() {
                   const squares = outputAreaData(id, poly_for_pv, all_tables);
                   total_params = {squares: squares, all_tables: all_tables}
               });
-              
-              $.ajax({
-                method: 'post',
-                url: 'update_configuration',
-                data: {
-                  id: $("#select_config option:selected").val(), 
-                  param: null, 
-                  geojsons: JSON.stringify(all_data),
-                  total_params: total_params
-                },
-                beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
-                success: function(data) { alert('Успешно сохранено'); }
-              });
+              const bbox_all = bbox(draw.getAll())
+              map.fitBounds(bbox_all, {padding: 80})
+              setTimeout(() => {   
+                map.getCanvas().toBlob(function (blob) {
+  
+                  // var objectURL = URL.createObjectURL(blob);
+                  // console.log(objectURL)
+                  // document.querySelector("#image").src = objectURL;
+         
+                  const formData = new FormData();
+                  formData.append('id', $("#select_config option:selected").val());
+                  formData.append('geojsons', JSON.stringify(all_data));
+                  formData.append('total_params', JSON.stringify(total_params));
+                  formData.append('files', blob);
+  
+                  $.ajax({
+                    method: 'post',
+                    url: 'update_configuration',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+                    success: function(data) { alert('Успешно сохранено');}
+                  });
+                })
+              }, 2000);
             }
             else {
               alert('Не выбран фотоэлектрический модуль! Выберите и сохраните конфигурацию');
@@ -325,8 +363,8 @@ document.addEventListener("turbo:load", function() {
                 style:
                 'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd', // Актуальные, бесшовные изображения для всего мира с учетом контекста
                 // 'https://api.maptiler.com/maps/3f98f986-5df3-44da-b349-6569ed7b764c/style.json?key=QA99yf3HkkZG97cZrjXd' //Идеальная карта для активного отдыха
-                // 'https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd' // Идеальная базовая карта местности с контурами и заштрихованным рельефом.
-                
+                // 'https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd', // Идеальная базовая карта местности с контурами и заштрихованным рельефом.
+                preserveDrawingBuffer: true
                 // antialias: true // create the gl context with MSAA antialiasing, so custom layers are antialiased
         }); 
 

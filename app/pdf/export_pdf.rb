@@ -45,6 +45,7 @@ class ExportPdf
 
   def location
     img_country = "vendor/assets/scrin_country.png"
+    @config.files
 
     move_down(55)
     text "Адрес: ..............", align: :left, size: 11
@@ -64,32 +65,36 @@ class ExportPdf
     start_new_page
     page_num()
     move_down(35)
-    image img_map, position: :center, scale: 0.9
+    # image img_map, position: :center, scale: 0.9
+    @config.files.each do |file|
+      image StringIO.open(file.download), position: :center, scale: 0.4
+    end
     move_down(10)
     text "Рис. 2 - Конфигурация опорных конструкций на местности", align: :center, style: :italic, size: 10
     start_new_page
     text "Таблица параметров СЭС", style: :italic, size: 10, align: :right
     pvs_in_table = @config.configuration['row_pv_in_table'].to_i * @config.configuration['column_pv_in_table'].to_i
-    print @project.total_params
-    print @project.total_params['all_tables']
+
     if @project.total_params
-      total_pvs = @project.total_params['all_tables'].to_i * pvs_in_table
-      total_power = @pv_module.power * count_pvs
+      total_tables = @project.total_params['all_tables'].to_i
+      total_pvs = total_tables * pvs_in_table
+      total_power = @pv_module.power * total_pvs
+      puts @project.total_params
+      puts total_tables
+      puts total_pvs
+      puts total_power
+      all_square = "#{@project.total_params['squares']['all_area']['meters']} м²/  #{@project.total_params['squares']['all_area']['hectares']} га"
+      pv_square = "#{@project.total_params['squares']['pv_area']['meters']} м²/  #{@project.total_params['squares']['pv_area']['hectares']} га"
     end
 
     data = [ 
       ["Название параметра", "Значение"],
       [{:content => "Итоговые параметры", :colspan => 2}],
-      [],
-      [],
-      [],
-      [],
-      [],
-      # ["Количесво столов, шт.", @project.total_params['all_tables']],
-      # ["Количесво ФЭМ, шт.", total_pvs || ''],
-      # ["Площадь под ФЭМ, м²/га", "#{@project.total_params['squares']['pv_area']['meters']} м²/  #{@project.total_params['squares']['pv_area']['hectares']} га"],
-      # ["Площадь участка, ", "#{@project.total_params['squares']['all_area']['meters']} м²/  #{@project.total_params['squares']['all_area']['hectares']} га"],
-      # ["Мощность СЭС, кВт или МВт", total_power || ''],
+      ["Количесво столов, шт.", total_tables || ''],
+      ["Количесво ФЭМ, шт.", total_pvs || ''],
+      ["Площадь под ФЭМ, м²/га", pv_square || ''],
+      ["Площадь участка, ", all_square || ''],
+      ["Мощность СЭС, кВт или МВт", total_power || ''],
       [{:content => "Параметры площадки", :colspan => 2}],
       ["Расстояние от границ участка до ограждения, м", @config.configuration['distance_to_barrier']],
       ["Расстояние от ограждения до полезной площади, м", @config.configuration['distance_to_pv_area']],
@@ -180,16 +185,5 @@ class ExportPdf
       row(24).style borders: [:left, :right, :bottom]
     end
   end
-
-  # def render()
-  #   pdf = Prawn::Document.new
-  #   table_data = Array.new
-  #   table_data << ["Name","E-mail","Phone"]
-  #   # @subs.each do |p|
-  #   #   table_data << [p.name, p.email,p.phone]
-  #   # end
-  #   pdf.table(table_data, :width => 500, :cell_style => { inline_format: true })
-  #   pdf.render
-  # end
 end
 
