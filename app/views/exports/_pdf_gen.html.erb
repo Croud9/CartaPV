@@ -1,7 +1,7 @@
 <div class="container-result">
     <h2>Отчет</h2>
     <br>
-    <%= form_tag(export_pdf_path(format: :pdf), method: "get", target: '_blank') do %>
+    <%= form_tag(export_pdf_path(format: :pdf), method: "get", target: '_blank', id: "form_pdf") do %>
       <div class="row-group">
         <label class="item-row-group">
             <p>Тип отчета</p> 
@@ -34,6 +34,6 @@
             %>
         </label>
       </div>
-      <%= submit_tag "PDF", class: "btn" %>
+      <%= submit_tag "PDF", id: "btn_pdf", class: "btn" %>
     <% end %>
 </div>

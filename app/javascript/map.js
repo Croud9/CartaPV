@@ -41,12 +41,25 @@ document.addEventListener("turbo:load", function() {
           map.setStyle('https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd')
         })
         $('#downloadLink').click(function () {
-            map.getCanvas().toBlob(function (blob) {
-              // saveAs(blob, 'map.png');
-              var objectURL = URL.createObjectURL(blob);
-              console.log(objectURL)
-              document.querySelector("#image").src = objectURL;
-            })
+          // snapshotCountry()
+          // map_not_display.setZoom(10)
+
+          // Порядок работы
+          // Добавляем точку на карте страны соответсвующую центру области и зафиксировать координаты
+          // зуум на 2
+          // фотография страны с точкой
+          // удаление точки
+          // fitBounds к области
+          // простройка ФЭМ каждой выбранной конфигурации фотографируя результат соответсвенно
+          
+
+          // draw.changeMode('simple_select')
+          // map.getCanvas().toBlob(function (blob) {
+            //   // saveAs(blob, 'map.png');
+            //   // var objectURL = URL.createObjectURL(blob);
+            //   // console.log(objectURL)
+            //   // document.querySelector("#image").src = objectURL;
+            // })
         })
         // при сохранении еще добавить  get_config_params(
         
@@ -63,14 +76,16 @@ document.addEventListener("turbo:load", function() {
                   data.features.forEach((area) => {
                     draw.add(area)
                   });
-
                   // map.flyTo({
                   //   center: centroid(data).geometry.coordinates,
-                  //   zoom: 12,
+                  //   zoom: 3,
                   //   essential: true // this animation is considered essential with respect to prefers-reduced-motion
                   // });
                   const bbox_all = bbox(data)
-                  map.fitBounds(bbox_all, {padding: 80})
+                  map.fitBounds(bbox_all, {
+                      padding: 80,
+                      animate: true,
+                  })
                 }
               },
             });
@@ -148,9 +163,6 @@ document.addEventListener("turbo:load", function() {
           let all_data = []
           let total_params = {}
           let bound
-          console.log($('#svg').text())
-          console.log($('#svg').html())
-          console.log($('#svg').val())
           const selected_ids = draw.getSelectedIds();
           draw.changeMode('simple_select')
           if (selected_ids.length != 0) {
@@ -480,6 +492,25 @@ document.addEventListener("turbo:load", function() {
             // const all_tables = drawPVs(id_union_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
         }
 
+        function updateArea(e) {
+          const id_area = e.features[0].id
+          const all_data = draw.getAll();
+          
+          if (all_data.features.length > 0) {
+              // const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_area);    
+              // outputAreaData(id_area, poly_for_pv);
+              // const all_tables = drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+          } else {
+              answer.innerHTML = '';
+              if (e.type !== 'draw.delete') {
+                  alert('Use the draw tools to draw a polygon!');
+              }
+              else {
+                  deleteAreas(e.features)
+              }
+          }
+        }
+
         function drawAreaForPV(id_area) {
             let poly_for_pv, top_coord, lower_coord, left_coord, right_coord, large_area
             const start_area = draw.get(id_area)
@@ -512,25 +543,6 @@ document.addEventListener("turbo:load", function() {
             setPVPolyOnMap(id_area, lines_for_PV)
 
             return [all_tables, lines_for_PV]
-        }
-
-        function updateArea(e) {
-            const id_area = e.features[0].id
-            const all_data = draw.getAll();
-            
-            if (all_data.features.length > 0) {
-                // const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_area);    
-                // outputAreaData(id_area, poly_for_pv);
-                // const all_tables = drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
-            } else {
-                answer.innerHTML = '';
-                if (e.type !== 'draw.delete') {
-                    alert('Use the draw tools to draw a polygon!');
-                }
-                else {
-                    deleteAreas(e.features)
-                }
-            }
         }
 
         function setAreaPolyOnMap(id_area, data) {
