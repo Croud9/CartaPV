@@ -10,6 +10,7 @@ import { calcAreaForPV, calcPVs, createPolyWithHole } from "./pv-calc.js";
 document.addEventListener("turbo:load", function() {
     if (document.getElementById("map_not_display") !== null) {
       $('#select_config_pdf').empty();
+      $('#form_pdf').fadeTo(500, 0);
       $('#select_project_pdf').change(function() {
         $('#select_config_pdf').empty();
         $.ajax({
@@ -19,7 +20,6 @@ document.addEventListener("turbo:load", function() {
           dataType: "script",
         });
       });
-
 
       function get_config_params() {
         const selected_config = $("#select_config_pdf").val()
@@ -57,38 +57,66 @@ document.addEventListener("turbo:load", function() {
             animate: false,
         })
         
+        snapshot_PV(data, 0)
+      };
+
+      function snapshot_PV(data, i) {
         const id_area = data.project_areas.features[0].id
-        // data.configs.forEach((config) => {
-        //   params_to_num(config.configuration)
-        //   console.log(config)
-        //   const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_area, data.project_areas.features[0], config.configuration);  
-        //   const [all_tables, data_pv] = drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord, config.configuration);
-        //   map_not_display.once('idle',function(){
-        //     deleteAreas(data.project_areas.features)
-        //   })
-        //   // setTimeout(() => {  deleteAreas(data.project_areas.features)}, 2000);
-        // });
+        const config = data.configs[i]
+        params_to_num(config.configuration)  
+        drawTable(config)
+        const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_area, data.project_areas.features[0], config.configuration);  
+        const [all_tables, data_pv] = drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord, config.configuration);
+        const squares = outputAreaData(data.project_areas.features[0], poly_for_pv);
+        const total_params = {
+          squares: squares, 
+          all_tables: all_tables
+        }
 
-        let conf = 0
-        while ( conf < data.configs.length - 1){
-            console.log('arwe - >' + conf)  
-            const config = data.configs[conf]
-            params_to_num(config.configuration)
-            console.log(config)  
-            const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_area, data.project_areas.features[0], config.configuration);  
-            const [all_tables, data_pv] = drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord, config.configuration);
-            map_not_display.once('idle',function(){
-              map_not_display.getCanvas().toBlob(function (blob) {
-                const pt_pvs = blob
-                conf++
-                console.log('atttttttribute')  
-              })
-              deleteAreas(data.project_areas.features)
-            })
+        map_not_display.once('idle', function(){
+          map_not_display.getCanvas().toBlob( function (blob) {
+            config['config_img'] = blob
+            config['total_params'] = total_params
 
+            // var objectURL = URL.createObjectURL(blob);
+            // document.querySelector("#image_pv").src = objectURL
+
+            deleteAreas(data.project_areas.features)
+            if (i != data.configs.length - 1 ) {
+              i++
+              snapshot_PV(data, i)
+            } else {
+              saveRequestParams(data)
+              console.log('закончили')
+              console.log(data)
+            }
+          })
+        })
+      };
+
+      function saveRequestParams(data) {
+        const formData = new FormData();
+        // formData.append('id', $("#select_config option:selected").val());
+        // formData.append('data', JSON.stringify(data));
+        formData.append('project_img', data.project_img);
+        for (let config of data.configs) {
+          config.total_params["svg"] = config.svg
+          formData.append('configs[]', JSON.stringify({id: config.id, total_params: config.total_params}));
+          formData.append('config_imgs[]', config.config_img);
+        }
+
+        $.ajax({
+          method: 'post',
+          url: 'update_files',
+          data: formData,
+          processData: false,
+          contentType: false,
+          beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+          success: function(data) { 
+            $("#form_pdf").submit();
+            alert('Успешно сохранено');
           }
-          // setTimeout(() => {  deleteAreas(data.project_areas.features)}, 2000);
-
+        });
       };
 
       function drawPointInCountry(data) {
@@ -117,10 +145,12 @@ document.addEventListener("turbo:load", function() {
           zoom: 2.5,
           animate: false,
         });
+
         map_not_display.once('idle',function(){
-          // deleteAreas(data.project_areas.features)
           map_not_display.getCanvas().toBlob(function (blob) {
-            const pt_country_img = blob
+            data['project_img'] = blob
+            // var objectURL = URL.createObjectURL(blob);
+            // document.querySelector("#image_project").src = objectURL
             if (map_not_display.getLayer('pt_geolocation')) {
               map_not_display.removeLayer('pt_geolocation');
             }
@@ -128,30 +158,31 @@ document.addEventListener("turbo:load", function() {
               map_not_display.removeSource('pt_geolocation');
             }
             drawPolyPV(data)
-            // const formData = new FormData();
-            // formData.append('id', $("#select_config option:selected").val());
-            // formData.append('geojsons', JSON.stringify(all_data));
-            // formData.append('total_params', JSON.stringify(total_params));
-            // formData.append('files', blob);
-  
-            // $.ajax({
-            //   method: 'post',
-            //   url: 'update_files',
-            //   data: formData,
-            //   processData: false,
-            //   contentType: false,
-            //   beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
-            //   success: function(data) { alert('Успешно сохранено');}
-            // });
           })
         })
+      };
 
+      function outputAreaData(project_area, poly_for_pv) {
+        let squares = {
+          all_area: {meters: null, hectares: null}, 
+          pv_area: {meters: null, hectares: null}
+        };
 
-      }
+        let [rounded_area_ga, rounded_area_m] = calcSquareArea(project_area);
+        squares.all_area.meters = rounded_area_m
+        squares.all_area.hectares = rounded_area_ga
+        let [round_area_ga, round_area_m] = calcSquareArea(poly_for_pv);
+        squares.pv_area.meters = round_area_m
+        squares.pv_area.hectares = round_area_ga
+        return squares
+      };
 
-      function getParams() { 
-        get_config_params()
-      }
+      function calcSquareArea(poly_area) {
+        const square = area(poly_area);
+        const rounded_area_ga = Math.round((square / 10000) * 100) / 100;
+        const rounded_area_m = Math.round(square * 100) / 100;
+        return [rounded_area_ga, rounded_area_m]
+      };
 
       $("#btn_pdf").click(function(e) {
         let isFormValid = $('#form_pdf')[0].checkValidity();
@@ -159,8 +190,7 @@ document.addEventListener("turbo:load", function() {
           $('#form_pdf')[0].reportValidity();
         } else {
           e.preventDefault();
-          getParams()
-          // $("#form_pdf").submit();
+          get_config_params()
         }
       });
 
@@ -323,17 +353,95 @@ document.addEventListener("turbo:load", function() {
               'features': data
           });
       }
-    }
-      var map_not_display = new maplibregl.Map({
-        container: 'map_not_display',
-        zoom: 3,
-        center: [100, 65],
-        style:
-        'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd', // Актуальные, бесшовные изображения для всего мира с учетом контекста
-        // 'https://api.maptiler.com/maps/3f98f986-5df3-44da-b349-6569ed7b764c/style.json?key=QA99yf3HkkZG97cZrjXd' //Идеальная карта для активного отдыха
-        // 'https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd', // Идеальная базовая карта местности с контурами и заштрихованным рельефом.
-        preserveDrawingBuffer: true
-        // antialias: true // create the gl context with MSAA antialiasing, so custom layers are antialiased
-      });
     };
+
+    var map_not_display = new maplibregl.Map({
+      container: 'map_not_display',
+      zoom: 3,
+      center: [100, 65],
+      style:
+      'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd', // Актуальные, бесшовные изображения для всего мира с учетом контекста
+      // 'https://api.maptiler.com/maps/3f98f986-5df3-44da-b349-6569ed7b764c/style.json?key=QA99yf3HkkZG97cZrjXd' //Идеальная карта для активного отдыха
+      // 'https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd', // Идеальная базовая карта местности с контурами и заштрихованным рельефом.
+      preserveDrawingBuffer: true
+      // antialias: true // create the gl context with MSAA antialiasing, so custom layers are antialiased
+    });
+
+    map_not_display.on('load', function () {
+      $('#form_pdf').fadeTo(500, 1);
+      map_not_display.resize();
+    });
+
+
+
+    function drawTable(config) {
+        let x_start = 0;
+        let y_start = 0;
+        let col_tables = config.configuration.column_pv_in_table;
+        let row_tables = config.configuration.row_pv_in_table;
+        const offset_tables = config.configuration.offset_pv;
+        const params = {
+            w_cell: 10,
+            h_cell: 10,
+            col_cells: 4,
+            row_cells: 7,
+            width_pv: 0,
+            height_pv: 0,
+            scale: 1,
+        };
+
+        if (config.configuration.type_table == 'fix') {
+            [col_tables, row_tables] = [row_tables, col_tables]
+        }
+
+        if (config.configuration.orientation == 'horizontal') {
+            [params.col_cells, params.row_cells] = [params.row_cells, params.col_cells]
+        };
+
+        params.width_pv = params.w_cell * params.col_cells + 0.5 * (params.col_cells - 1)
+        params.height_pv = params.h_cell * params.row_cells + 0.5 * (params.row_cells - 1)
+        const width_table = params.width_pv * col_tables + offset_tables * (col_tables - 1);
+        const height_table = params.height_pv * row_tables + offset_tables * (row_tables - 1);
+
+        console.log(width_table)
+        console.log(height_table)
+        const svg = Snap(width_table, height_table);
+        const frame_table = svg.rect(x_start, y_start, width_table, height_table);
+        frame_table.attr({
+            fillOpacity: 0.1,
+            fill: '#3d3d3d',
+        });
+        params['table'] = svg.group()
+        params.table.add(frame_table)
+    
+        for (let col = 0; col < col_tables; col++) {
+            for (let row = 0; row < row_tables; row++) {
+                drawPV(x_start + (params.width_pv + offset_tables) * col, 
+                        y_start + (params.height_pv + offset_tables) * row, params, svg);
+            };
+        };
+        svg.attr({ viewBox: '0 0' + ' ' + width_table + ' ' +  height_table});
+        config['svg'] = svg.outerSVG()
+    };
+
+    function drawPV(x_start, y_start, params, svg) {
+        const base_pv = svg.rect(x_start, y_start, params.width_pv, params.height_pv);
+        base_pv.attr({
+            fill: '#bababa',
+        });
+        params.table.add(base_pv)
+
+        for (let col = 0; col < params.col_cells; col++) {
+            for (let row = 0; row < params.row_cells; row++) {
+                const cell_pv = svg.rect(x_start + (params.w_cell + 0.5) * col, y_start + (params.h_cell + 0.5) * row, params.w_cell, params.h_cell);
+                cell_pv.attr({
+                    fill: '#005da8',
+                    rx: 1.5,
+                    ry: 1.5,
+                });
+                params.table.add(cell_pv)
+            };
+        };
+    };
+  };
 })

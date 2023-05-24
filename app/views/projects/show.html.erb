@@ -7,6 +7,7 @@
     <tr>
       <th>Название</th>
       <th>Конфигурация</th>
+      <th>Итог</th>
       <th></th>
     </tr>
   </thead>
@@ -19,7 +20,36 @@
             <%= submit_tag "Изменить", class: "btn_text_only" %>
           <% end %>
         </td>
-        <td><%= config.configuration %></td>
+        <td>
+          <%= 
+            "
+            Расстояние до ограждения: #{config.configuration['distance_to_barrier']},
+            Расстояние до полезной площади: #{config.configuration['distance_to_pv_area']},
+            Высота стола: #{config.configuration['height_table']},
+            Ширина стола: #{config.configuration['width_table']},
+            Кол-во рядов: #{config.configuration['row_pv_in_table']},
+            Кол-во модулей в ряду: #{config.configuration['column_pv_in_table']},
+            Отступ модулей: #{config.configuration['offset_pv']},
+            Ориентация стола: #{config.configuration['orientation']},
+            Тип стола: #{config.configuration['type_table']},
+            Угол фикса: #{config.configuration['angle_fix']},
+            Шаг: #{config.configuration['height_offset_tables']},
+            Расстояние между столами: #{config.configuration['width_offset_tables']},
+            Выравнивание столов: #{config.configuration['align_row_tables']},
+            Угол относительно азимута: #{config.configuration['angle_from_azimut']},
+            " 
+          %>
+        </td>
+        
+        <td>
+          <% if config.total_params %>
+            <%= 
+              "Площадь области:  #{config.total_params['squares']['all_area']['meters']} м²/  #{config.total_params['squares']['all_area']['hectares']} га,
+              Полезная площадь:  #{config.total_params['squares']['pv_area']['meters']} м²/  #{config.total_params['squares']['pv_area']['hectares']} га,
+              Кол-во cтолов: #{config.total_params['all_tables']}"
+            %>
+          <% end %>
+        </td>
         <td>
           <%= link_to 'Удалить', 
                   config,

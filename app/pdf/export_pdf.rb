@@ -45,13 +45,13 @@ class ExportPdf
 
   def location
     img_country = "vendor/assets/scrin_country.png"
-    @config.files
 
     move_down(55)
     text "Адрес: ..............", align: :left, size: 11
     text "Координаты: .... ....", align: :left, size: 11
     move_down(20)
-    image img_country, position: :center, scale: 0.45
+    # image img_country, position: :center, scale: 0.45
+    image StringIO.open(@project.point_on_map.download), position: :center, scale: 0.45
     move_down(10)
     text "Рис. 1 - Местоположение области", align: :center, style: :italic, size: 10
   end
@@ -66,25 +66,22 @@ class ExportPdf
     page_num()
     move_down(35)
     # image img_map, position: :center, scale: 0.9
-    @config.files.each do |file|
-      image StringIO.open(file.download), position: :center, scale: 0.4
-    end
+    image StringIO.open(@config.pv_config_on_map.download), position: :center, scale: 0.4
+    # @config.files.each do |file|
+    #   image StringIO.open(file.download), position: :center, scale: 0.4
+    # end
     move_down(10)
     text "Рис. 2 - Конфигурация опорных конструкций на местности", align: :center, style: :italic, size: 10
     start_new_page
     text "Таблица параметров СЭС", style: :italic, size: 10, align: :right
     pvs_in_table = @config.configuration['row_pv_in_table'].to_i * @config.configuration['column_pv_in_table'].to_i
 
-    if @project.total_params
-      total_tables = @project.total_params['all_tables'].to_i
+    if @config.total_params
+      total_tables = @config.total_params['all_tables'].to_i
       total_pvs = total_tables * pvs_in_table
       total_power = @pv_module.power * total_pvs
-      puts @project.total_params
-      puts total_tables
-      puts total_pvs
-      puts total_power
-      all_square = "#{@project.total_params['squares']['all_area']['meters']} м²/  #{@project.total_params['squares']['all_area']['hectares']} га"
-      pv_square = "#{@project.total_params['squares']['pv_area']['meters']} м²/  #{@project.total_params['squares']['pv_area']['hectares']} га"
+      all_square = "#{@config.total_params['squares']['all_area']['meters']} м²/  #{@config.total_params['squares']['all_area']['hectares']} га"
+      pv_square = "#{@config.total_params['squares']['pv_area']['meters']} м²/  #{@config.total_params['squares']['pv_area']['hectares']} га"
     end
 
     data = [ 
@@ -108,8 +105,10 @@ class ExportPdf
       ["Тип стола", @config.configuration['type_table'] == 'fix' ? 'Фикс' : 'Трекер'],
       ["Угол наклона стола", @config.configuration['type_table'] == 'fix' ? @config.configuration['angle_fix'] : '-' ],  
       [{:content => "Параметры размещения", :colspan => 2}],
-      ["Шаг*, м", @config.configuration['height_offset_tables']],
-      ["Расстояние между столами**, см", @config.configuration['width_offset_tables']],
+      ["Шаг*, м", {:content => @config.configuration['height_offset_tables'], :rowspan => 2}],
+      [{image: step_table, position: :center, fit: [125, 100]}],
+      ["Расстояние между столами**, см", {:content => @config.configuration['width_offset_tables'] , :rowspan => 2}],
+      [{image: distance_table, position: :center, fit: [175, 100]}],
       ["Выравнивание столов относительно границ площадки", 
         @config.configuration['align_row_tables'] == 'center' ? 'Центр' :
         @config.configuration['align_row_tables'] == 'left' ? 'Левая граница' : 'Правая граница'
@@ -118,27 +117,29 @@ class ExportPdf
     ]
 
     table(data, position: :left, header: true, column_widths: [270, 270]) do
-      cells.style borders: [], padding: 7, border_color: "025238", border_width: 0.5
+      cells.style borders: [], padding: 7, border_color: "025238", border_width: 0.5, valign: :center
       column(0).style borders: [:left, :right]
       column(1).style borders: [:left, :right], align: :center
       row(0).style background_color:"025238", text_color: "ffffff", font_style: :bold, borders: [:left, :right, :top], align: :center
       row([1, 7, 10, 19]).style background_color: "eeeff1", align: :center
-      row(23).style borders: [:left, :right, :bottom]
+      row(25).style borders: [:left, :right, :bottom]
     end
 
-    move_down(10)
-    start_new_page   
-    text "* ", align: :left, size: 11
-    image step_table, position: :center, scale: 0.2
-    text "** ", align: :left, size: 11
-    image distance_table, position: :center, scale: 0.2
+    # move_down(10)
+    # start_new_page   
+    # text "* ", align: :left, size: 11
+    # image step_table, position: :center, scale: 0.1
+    # text "** ", align: :left, size: 11
+    # image distance_table, position: :center, scale: 0.1
 
     page_num()
 
     start_new_page   
-    move_down(35)
-    image img_table, position: :center, scale: 0.5
-    move_down(10)
+    outputter = @config.total_params['svg']
+    svg outputter, position: :center, vposition: :top, width: 540
+    # image img_table, position: :center, scale: 0.5
+    # move_down(10)
+    # svg outputter, width: 50, height: 50,  at: [0, 750]
     text "Рис. 3 - Конфигурация опорной конструкции", align: :center, style: :italic, size: 10
   end
 

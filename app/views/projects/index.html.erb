@@ -19,13 +19,6 @@
           <% end %>
         </td>
         <td>Кол-во конфигураций: <%= project.area_configs.count %>,
-            <% if project.total_params %>
-              <%= 
-                "Площадь области:  #{project.total_params['squares']['all_area']['meters']} м²/  #{project.total_params['squares']['all_area']['hectares']} га,
-                Полезная площадь:  #{project.total_params['squares']['pv_area']['meters']} м²/  #{project.total_params['squares']['pv_area']['hectares']} га,
-                Кол-во cтолов: #{project.total_params['all_tables']} ,"
-              %>
-            <% end %>
         </td>
         <td>
           <%= link_to 'Удалить', 

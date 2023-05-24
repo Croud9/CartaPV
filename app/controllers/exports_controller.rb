@@ -26,7 +26,7 @@ class ExportsController < ApplicationController
     out_params = {project_areas: project_area.present? ? JSON.parse(project_area) : project_area, configs: []}
 
     configs.each do |config|
-      out_params[:configs] << {configuration: config.configuration}
+      out_params[:configs] << {id: config.id, configuration: config.configuration}
     end
     respond_to do |format|
       format.json { render json: out_params }
@@ -34,16 +34,23 @@ class ExportsController < ApplicationController
   end
 
   def update_files
-    config = AreaConfig.find(params[:id])
-    input_configuration = params[:param]
-    input_geogejson = params[:geojsons]
-    input_total_params = params[:total_params]
+    configs = params[:configs]
+    images = params[:config_imgs]
+    configs.length.times do |i|
+      config = JSON.parse(configs[i])
+      db_config = AreaConfig.find(config['id'])
+      @project = db_config.project
+      image = images[i]
+      input_total_params = config['total_params']
 
-    # config.files.purge
-    # config.files.attach(params[:files])
-    # config.project.update_attribute(:total_params, JSON.parse(input_total_params)) unless input_total_params.blank?
-    # config.update_attribute(:geojson_area, input_geogejson) unless input_geogejson.blank? 
-    # config.update_attribute(:configuration, input_configuration) unless input_configuration.blank? 
+      db_config.pv_config_on_map.purge
+      db_config.pv_config_on_map.attach(image)
+      db_config.update_attribute(:total_params, input_total_params) unless input_total_params.blank?
+      # db_config.table.purge
+      # db_config.table.attach(params[:files])
+    end
+    @project.point_on_map.purge
+    @project.point_on_map.attach(params[:project_img])
   end
 end
 

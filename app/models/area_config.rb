@@ -1,4 +1,4 @@
 class AreaConfig < ApplicationRecord
-  has_many_attached :files
+  has_one_attached :pv_config_on_map
   belongs_to :project
 end
