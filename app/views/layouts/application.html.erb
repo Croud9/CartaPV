@@ -15,7 +15,7 @@
         <div>
             <h2><%= link_to 'CARTA PV', pv_maps_path %></h2>
         </div>
-        <div class="form_radio_group">
+        <div class="form_radio_group" id="map_styles" style="display: none;">
             <div class="form_radio_group-item">
                 <%= radio_button_tag('style_map', 'satellite', true) %>
                 <%= label_tag(:style_map_satellite, "Спутник") %>

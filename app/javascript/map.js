@@ -451,6 +451,10 @@ document.addEventListener("turbo:load", function() {
         map.on('draw.combine', combineArea);
         map.on('draw.uncombine', uncombineAreas);
 
+        map.on('load', function () {
+          $('#map_styles').fadeTo(500, 1);
+        });
+
         function deleteAreas(features) {
             features.forEach((item) => { 
                 const id = `poly_for_pv${item.id}`

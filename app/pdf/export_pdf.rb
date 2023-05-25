@@ -105,9 +105,9 @@ class ExportPdf
       ["Тип стола", @config.configuration['type_table'] == 'fix' ? 'Фикс' : 'Трекер'],
       ["Угол наклона стола", @config.configuration['type_table'] == 'fix' ? @config.configuration['angle_fix'] : '-' ],  
       [{:content => "Параметры размещения", :colspan => 2}],
-      ["Шаг*, м", {:content => @config.configuration['height_offset_tables'], :rowspan => 2}],
+      ["Шаг (b), м", {:content => @config.configuration['height_offset_tables'], :rowspan => 2}],
       [{image: step_table, position: :center, fit: [125, 100]}],
-      ["Расстояние между столами**, см", {:content => @config.configuration['width_offset_tables'] , :rowspan => 2}],
+      ["Расстояние между столами (a), см", {:content => @config.configuration['width_offset_tables'] , :rowspan => 2}],
       [{image: distance_table, position: :center, fit: [175, 100]}],
       ["Выравнивание столов относительно границ площадки", 
         @config.configuration['align_row_tables'] == 'center' ? 'Центр' :
@@ -135,10 +135,22 @@ class ExportPdf
     page_num()
 
     start_new_page   
-    outputter = @config.total_params['svg']
-    svg outputter, position: :center, vposition: :top, width: 540
+    outputter = @config.total_params['svg']['img']
+    w_svg = @config.total_params['svg']['width']
+    h_svg  = @config.total_params['svg']['height']
+    w_max = 540
+    h_max = 650
+
+    if w_svg > w_max
+      svg outputter, position: :center, vposition: :center, width: w_max
+    elsif h_svg > h_max
+      svg outputter, position: :center, vposition: :center, height: h_max
+    else
+      svg outputter, position: :center, vposition: :center
+    end
+
     # image img_table, position: :center, scale: 0.5
-    # move_down(10)
+    move_down(10)
     # svg outputter, width: 50, height: 50,  at: [0, 750]
     text "Рис. 3 - Конфигурация опорной конструкции", align: :center, style: :italic, size: 10
   end

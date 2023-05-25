@@ -114,7 +114,8 @@ document.addEventListener("turbo:load", function() {
           beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
           success: function(data) { 
             $("#form_pdf").submit();
-            alert('Успешно сохранено');
+            // alert('Успешно сохранено');
+            
           }
         });
       };
@@ -157,11 +158,39 @@ document.addEventListener("turbo:load", function() {
             if (map_not_display.getSource('pt_geolocation')) {
               map_not_display.removeSource('pt_geolocation');
             }
+
+            reverseGeocode(center_pt.geometry.coordinates).then(function(result) {
+              console.log(result.address)
+              console.log(result.address.display_name)
+              // here you can use the result of promiseB
+            });
             drawPolyPV(data)
           })
         })
       };
 
+      async function reverseGeocode(coord) {
+        let address = null;
+        try {
+            let request = 
+              'https://nominatim.openstreetmap.org/reverse?' + 
+              'lat=' + coord[1] + 
+              '&lon=' + coord[0] + 
+              '&format=json';
+            let options = {
+              headers: {
+                'User-Agent': 'CartaPV/service/website/etc. v0.1'
+              }
+            };
+
+            const response = await fetch(request, options);
+            address = await response.json();
+        } catch (e) {
+            console.error(`Failed to forwardGeocode with error: ${e}`);
+        }
+        return { address: address };
+      }
+      
       function outputAreaData(project_area, poly_for_pv) {
         let squares = {
           all_area: {meters: null, hectares: null}, 
@@ -372,8 +401,6 @@ document.addEventListener("turbo:load", function() {
       map_not_display.resize();
     });
 
-
-
     function drawTable(config) {
         let x_start = 0;
         let y_start = 0;
@@ -403,9 +430,9 @@ document.addEventListener("turbo:load", function() {
         const width_table = params.width_pv * col_tables + offset_tables * (col_tables - 1);
         const height_table = params.height_pv * row_tables + offset_tables * (row_tables - 1);
 
-        console.log(width_table)
-        console.log(height_table)
         const svg = Snap(width_table, height_table);
+        svg.attr("display", "none");
+        svg.attr({ viewBox: '0 0' + ' ' + width_table + ' ' +  height_table});
         const frame_table = svg.rect(x_start, y_start, width_table, height_table);
         frame_table.attr({
             fillOpacity: 0.1,
@@ -420,8 +447,12 @@ document.addEventListener("turbo:load", function() {
                         y_start + (params.height_pv + offset_tables) * row, params, svg);
             };
         };
-        svg.attr({ viewBox: '0 0' + ' ' + width_table + ' ' +  height_table});
-        config['svg'] = svg.outerSVG()
+        // params.table.transform('s' + params.scale +  ' 0 0');
+        config['svg'] = {
+          img: svg.outerSVG(),
+          width: width_table,
+          height: height_table,
+        }
     };
 
     function drawPV(x_start, y_start, params, svg) {
