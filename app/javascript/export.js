@@ -162,7 +162,6 @@ document.addEventListener("turbo:load", function() {
             reverseGeocode(center_pt.geometry.coordinates).then(function(result) {
               console.log(result.address)
               console.log(result.address.display_name)
-              // here you can use the result of promiseB
             });
             drawPolyPV(data)
           })

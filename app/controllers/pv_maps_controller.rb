@@ -33,19 +33,13 @@ class PvMapsController < ApplicationController
     input_configuration = params[:param]
     input_geogejson = params[:geojsons]
     input_total_params = params[:total_params]
-
-    puts "оп оп - - > #{config.files.attached?}"
-    print 'la la V'
-    print config.files
     
-    # flash.now[:notice] = "Save"
-    # render turbo_stream: turbo_stream.replace("flash_notice", partial: "layouts/flash", locals: { flash: flash })
-
-    config.files.purge
-    config.files.attach(params[:files])
-    config.project.update_attribute(:total_params, JSON.parse(input_total_params)) unless input_total_params.blank?
+    
+    config.update_attribute(:total_params, JSON.parse(input_total_params)) unless input_total_params.blank?
     config.update_attribute(:geojson_area, input_geogejson) unless input_geogejson.blank? 
     config.update_attribute(:configuration, input_configuration) unless input_configuration.blank? 
+    flash.now[:notice] = "Успешно сохранено"
+    render turbo_stream: turbo_stream.replace("flash_notice", partial: "layouts/flash", locals: { flash: flash })
   end
 
   def update_draw_area

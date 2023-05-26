@@ -151,7 +151,7 @@ document.addEventListener("turbo:load", function() {
                 url: 'update_configuration',
                 data: {id: $("#select_config option:selected").val(), param: null, geojsons: JSON.stringify(all_data)},
                 beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
-                success: function(data) { alert('Успешно сохранено'); }
+                success: function(data) { window.Turbo.renderStreamMessage(data);}
               });
             }
             else {
@@ -179,30 +179,21 @@ document.addEventListener("turbo:load", function() {
               });
               const bbox_all = bbox(draw.getAll())
               map.fitBounds(bbox_all, {padding: 80})
-              setTimeout(() => {   
-                map.getCanvas().toBlob(function (blob) {
-  
-                  // var objectURL = URL.createObjectURL(blob);
-                  // console.log(objectURL)
-                  // document.querySelector("#image").src = objectURL;
-         
-                  const formData = new FormData();
-                  formData.append('id', $("#select_config option:selected").val());
-                  formData.append('geojsons', JSON.stringify(all_data));
-                  formData.append('total_params', JSON.stringify(total_params));
-                  formData.append('files', blob);
-  
-                  $.ajax({
-                    method: 'post',
-                    url: 'update_configuration',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
-                    success: function(data) { alert('Успешно сохранено');}
-                  });
-                })
-              }, 2000);
+        
+              const formData = new FormData();
+              formData.append('id', $("#select_config option:selected").val());
+              formData.append('geojsons', JSON.stringify(all_data));
+              formData.append('total_params', JSON.stringify(total_params));
+
+              $.ajax({
+                method: 'post',
+                url: 'update_configuration',
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+                success: function(data) { window.Turbo.renderStreamMessage(data);}
+              });
             }
             else {
               alert('Не выбран фотоэлектрический модуль! Выберите и сохраните конфигурацию');
@@ -324,7 +315,7 @@ document.addEventListener("turbo:load", function() {
                 method: 'post',
                 data: {id: $("#select_config option:selected").val(), param: params, geojsons: null},
                 success: function(data) {
-                  alert('Успешно сохранено');
+                  window.Turbo.renderStreamMessage(data);
                 }
               });
               global_params = params
