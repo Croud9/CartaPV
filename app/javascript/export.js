@@ -26,10 +26,14 @@ document.addEventListener("turbo:load", function() {
         $.ajax({
           url: "get_params_for_snapshots",
           data: {id: selected_config},
-          dataType: "json",
           success: function(data) {
-            console.log(data)
-            drawPointInCountry(data)
+            if (typeof(data) == 'string'){
+              window.Turbo.renderStreamMessage(data);
+            }
+            else {
+              console.log(data)
+              drawPointInCountry(data)
+            }
           },
         });
       };
@@ -53,7 +57,7 @@ document.addEventListener("turbo:load", function() {
             current_source_poly.setData(data.project_areas );
         }
         map_not_display.fitBounds(bbox_all, {
-            padding: 80,
+            padding: 20,
             animate: false,
         })
         
@@ -99,6 +103,7 @@ document.addEventListener("turbo:load", function() {
         // formData.append('id', $("#select_config option:selected").val());
         // formData.append('data', JSON.stringify(data));
         formData.append('project_img', data.project_img);
+        formData.append('location', JSON.stringify(data.location));
         for (let config of data.configs) {
           config.total_params["svg"] = config.svg
           formData.append('configs[]', JSON.stringify({id: config.id, total_params: config.total_params}));
@@ -114,8 +119,6 @@ document.addEventListener("turbo:load", function() {
           beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
           success: function(data) { 
             $("#form_pdf").submit();
-            // alert('Успешно сохранено');
-            
           }
         });
       };
@@ -143,7 +146,7 @@ document.addEventListener("turbo:load", function() {
 
         map_not_display.flyTo({
           center: center_pt.geometry.coordinates,
-          zoom: 2.5,
+          zoom: 2,
           animate: false,
         });
 
@@ -161,9 +164,12 @@ document.addEventListener("turbo:load", function() {
 
             reverseGeocode(center_pt.geometry.coordinates).then(function(result) {
               console.log(result.address)
-              console.log(result.address.display_name)
+              data['location'] = {
+                latlong: [result.address.lat, result.address.lon],
+                address: result.address.display_name
+              }
+              drawPolyPV(data)
             });
-            drawPolyPV(data)
           })
         })
       };
@@ -391,13 +397,14 @@ document.addEventListener("turbo:load", function() {
       'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd', // Актуальные, бесшовные изображения для всего мира с учетом контекста
       // 'https://api.maptiler.com/maps/3f98f986-5df3-44da-b349-6569ed7b764c/style.json?key=QA99yf3HkkZG97cZrjXd' //Идеальная карта для активного отдыха
       // 'https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd', // Идеальная базовая карта местности с контурами и заштрихованным рельефом.
-      preserveDrawingBuffer: true
+      preserveDrawingBuffer: true,
+      trackResize: false,
       // antialias: true // create the gl context with MSAA antialiasing, so custom layers are antialiased
     });
+    $('#map_not_display').css("display", "none")
 
     map_not_display.on('load', function () {
       $('#form_pdf').fadeTo(500, 1);
-      map_not_display.resize();
     });
 
     function drawTable(config) {
@@ -475,3 +482,5 @@ document.addEventListener("turbo:load", function() {
     };
   };
 })
+
+

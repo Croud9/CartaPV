@@ -4,19 +4,6 @@
     <%= form_tag(export_pdf_path(format: :pdf), method: "get", target: '_blank', id: "form_pdf", style: "display: none") do %>
       <div class="row-group">
         <label class="item-row-group">
-            <p>Тип отчета</p> 
-            <div class="form_radio_group">
-                <div class="form_radio_group-item">
-                    <%= radio_button_tag('type_pdf_report', 'single', true) %>
-                    <%= label_tag(:type_pdf_report_single, "Одиночный") %>
-                </div>
-                <div class="form_radio_group-item">
-                    <%= radio_button_tag('type_pdf_report', 'multi', false) %>
-                    <%= label_tag(:type_pdf_report_multi, "Мульти") %>
-                </div>
-            </div>
-        </label>
-        <label>
             Проект
             <%= select_tag "select_project_pdf", 
                 options_from_collection_for_select(@projects, :id, :title), 
