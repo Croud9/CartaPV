@@ -6,19 +6,21 @@ class ExportsController < ApplicationController
 
   def show
     project = Project.find(params[:select_project_pdf])
+
     configs = []
     params[:select_config_pdf].each do |id|
       config = AreaConfig.find(id)
       pv_module = PvModule.find(config.configuration['module_id'])
       configs << {config: config, pv_module: pv_module}
     end
-
+    
     respond_to do |format|
       format.pdf do
         pdf = ExportPdf.new(project: project, configs: configs)
         send_data pdf.render,
           filename: "export.pdf",
           type: 'application/pdf',
+          page_size: 'A4',
           disposition: 'inline'
       end
     end

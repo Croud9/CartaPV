@@ -1,4 +1,5 @@
 class ExportPdf 
+  require 'rmagick'
   include Prawn::View
 
   def initialize(params)
@@ -54,7 +55,6 @@ class ExportPdf
     move_down(10)
     text "Рис. 1 - Местоположение области", align: :center, style: :italic, size: 10
   end
-
 
   def single_config
     config = @configs[0][:config]
@@ -155,183 +155,41 @@ class ExportPdf
     distance_table = "vendor/assets/distance_table.png"
     img_map = "vendor/assets/scrin_map.png"
     img_table = "vendor/assets/scrin_table.png"
+    # start_new_page(size: size, layout: :portrait)
 
-    start_new_page
-    text "Таблица сравнения конфигураций СЭС", style: :italic, size: 10, align: :right
     count_config = @configs.length
-    if count_config % 2 == 0
-      last = false
+    
+    if count_config <= 5
+      pages = []
+      pages = gen_table(pages, count_config)
     else
-      last = true
+      five_col = count_config / 5
+      pages = Array.new(five_col, {column: 5, layout: :landscape})
+      remain = count_config % 5
+      pages = gen_table(pages, remain)
     end
-
-    count_config /= 2
+    print pages
+    
     index_config = 0
-    count_config.times do |i|
-      data = [ 
-        ["Параметр"],
-        ["Конфигурация опорных конструкций на местности"],
-        [{:content => "Итоговые параметры", :colspan => 3}],
-        ["Количесво столов, шт."],
-        ["Количесво ФЭМ, шт."],
-        ["Площадь под ФЭМ"],
-        ["Площадь участка"],
-        ["Мощность СЭС"],
-        [{:content => "Параметры площадки", :colspan => 3}],
-        ["Расстояние от границ участка до ограждения, м"],
-        ["Расстояние от ограждения до полезной площади, м"],
-        [{:content => "Параметры опорной конструкции", :colspan => 3}],
-        ["Название модуля"],
-        ["Мощность модуля, Вт"],
-        ["Отступ между модулями, см"],
-        ["Количество рядов"],
-        ["Количество модулей в ряду"],
-        ["Ориентация"],
-        ["Тип стола"],
-        ["Угол наклона стола"],
-        [{:content => "Параметры размещения", :colspan => 3}],
-        ["Шаг*, м"],
-        ["Расстояние между столами**, см"],
-        ["Выравнивание столов относительно границ площадки"],
-        ["Угол поворота столов относительно азимута"],
-        ["Конфигурация опорной конструкции"],
-      ]
-      2.times do |n|
+    pages.each do |page|
+      start_new_page(layout: page[:layout])
+      text "Таблица сравнения конфигураций СЭС", style: :italic, size: 10, align: :right
+      columns = page[:column]
+      data = rows_titles(columns + 1)
+      col_params = get_column_width_and_scale(columns)
+
+      columns.times do |n|
         config = @configs[index_config][:config]
         pv_module = @configs[index_config][:pv_module]
   
-        if config.total_params
-          pvs_in_table = config.configuration['row_pv_in_table'].to_i * config.configuration['column_pv_in_table'].to_i
-          total_tables = config.total_params['all_tables'].to_i
-          total_pvs = total_tables * pvs_in_table
-          total_power = (pv_module.power * total_pvs) / 1000
-          if total_power > 1000
-            total_power = "#{total_power / 1000} МВт"
-          else
-            total_power = "#{total_power} кВт"
-          end
-          all_square = "#{config.total_params['squares']['all_area']['meters']} м² /  #{config.total_params['squares']['all_area']['hectares']} га"
-          pv_square = "#{config.total_params['squares']['pv_area']['meters']} м² /  #{config.total_params['squares']['pv_area']['hectares']} га"
-        end
-  
-        img_point_on_map = StringIO.open(config.pv_config_on_map.download)
-        data[0] << config.title
-        data[1] << {image: img_point_on_map, position: :center, scale: 0.15}
-        data[3] << total_tables || ''
-        data[4] << total_pvs || ''
-        data[5] << pv_square || ''
-        data[6] << all_square || ''
-        data[7] << total_power || ''
-        data[9] << config.configuration['distance_to_barrier']
-        data[10] << config.configuration['distance_to_pv_area']
-        data[12] << pv_module.model
-        data[13] << pv_module.power
-        data[14] << config.configuration['offset_pv']
-        data[15] << config.configuration['row_pv_in_table']
-        data[16] << config.configuration['column_pv_in_table']
-        data[17] << (config.configuration['orientation'] == 'horizontal'? "Альбомная" : "Книжная" )
-        data[18] << (config.configuration['type_table'] == 'fix' ? 'Фикс' : 'Трекер')
-        data[19] << (config.configuration['type_table'] == 'fix' ? 
-                        config.configuration['angle_fix'] : '-' )
-        data[21] << config.configuration['height_offset_tables']
-        data[22] << config.configuration['width_offset_tables']
-        data[23] << (config.configuration['align_row_tables'] == 'center' ? 
-                        'Центр' : config.configuration['align_row_tables'] == 'left' ? 
-                        'Левая граница' : 'Правая граница')
-        data[24] << config.configuration['angle_from_azimut']
-        data[25] << { image: img_table, position: :center, fit: [50, 100] }
+        data = add_data_column(config, pv_module, col_params[:scale], data, index_config)
         index_config += 1
       end
-  
-      table(data, position: :left, header: true, column_widths: [120, 210, 210]) do
+      
+      table(data, position: :left, header: true, column_widths: col_params[:width]) do
         cells.style borders: [], padding: 7, border_color: "025238", border_width: 0.5, valign: :center
         column(0).style borders: [:left, :right]
-        column([1, 2]).style borders: [:left, :right], align: :center
-        row(0).style background_color:"025238", text_color: "ffffff", font_style: :bold, borders: [:left, :right, :top], align: :center
-        row([2, 8, 11, 20]).style background_color: "eeeff1", align: :center
-        row(25).style borders: [:left, :right, :bottom]
-      end
-    end
-    
-    if last 
-      move_down(10)
-      data = [ 
-        ["Параметр"],
-        ["Конфигурация опорных конструкций на местности"],
-        [{:content => "Итоговые параметры", :colspan => 3}],
-        ["Количесво столов, шт."],
-        ["Количесво ФЭМ, шт."],
-        ["Площадь под ФЭМ"],
-        ["Площадь участка"],
-        ["Мощность СЭС"],
-        [{:content => "Параметры площадки", :colspan => 3}],
-        ["Расстояние от границ участка до ограждения, м"],
-        ["Расстояние от ограждения до полезной площади, м"],
-        [{:content => "Параметры опорной конструкции", :colspan => 3}],
-        ["Название модуля"],
-        ["Мощность модуля, Вт"],
-        ["Отступ между модулями, см"],
-        ["Количество рядов"],
-        ["Количество модулей в ряду"],
-        ["Ориентация"],
-        ["Тип стола"],
-        ["Угол наклона стола"],
-        [{:content => "Параметры размещения", :colspan => 3}],
-        ["Шаг*, м"],
-        ["Расстояние между столами**, см"],
-        ["Выравнивание столов относительно границ площадки"],
-        ["Угол поворота столов относительно азимута"],
-        ["Конфигурация опорной конструкции"],
-      ]
-
-      config = @configs[-1][:config]
-      pv_module = @configs[-1][:pv_module]
-
-      if config.total_params
-        pvs_in_table = config.configuration['row_pv_in_table'].to_i * config.configuration['column_pv_in_table'].to_i
-        total_tables = config.total_params['all_tables'].to_i
-        total_pvs = total_tables * pvs_in_table
-        total_power = (pv_module.power * total_pvs) / 1000
-        if total_power > 1000
-          total_power = "#{total_power / 1000} МВт"
-        else
-          total_power = "#{total_power} кВт"
-        end
-        all_square = "#{config.total_params['squares']['all_area']['meters']} м² /  #{config.total_params['squares']['all_area']['hectares']} га"
-        pv_square = "#{config.total_params['squares']['pv_area']['meters']} м² /  #{config.total_params['squares']['pv_area']['hectares']} га"
-      end
-
-      img_point_on_map = StringIO.open(config.pv_config_on_map.download)
-      data[0] << config.title
-      data[1] << {image: img_point_on_map, position: :center, scale: 0.15}
-      data[3] << total_tables || ''
-      data[4] << total_pvs || ''
-      data[5] << pv_square || ''
-      data[6] << all_square || ''
-      data[7] << total_power || ''
-      data[9] << config.configuration['distance_to_barrier']
-      data[10] << config.configuration['distance_to_pv_area']
-      data[12] << pv_module.model
-      data[13] << pv_module.power
-      data[14] << config.configuration['offset_pv']
-      data[15] << config.configuration['row_pv_in_table']
-      data[16] << config.configuration['column_pv_in_table']
-      data[17] << (config.configuration['orientation'] == 'horizontal'? "Альбомная" : "Книжная" )
-      data[18] << (config.configuration['type_table'] == 'fix' ? 'Фикс' : 'Трекер')
-      data[19] << (config.configuration['type_table'] == 'fix' ? 
-                      config.configuration['angle_fix'] : '-' )
-      data[21] << config.configuration['height_offset_tables']
-      data[22] << config.configuration['width_offset_tables']
-      data[23] << (config.configuration['align_row_tables'] == 'center' ? 
-                      'Центр' : config.configuration['align_row_tables'] == 'left' ? 
-                      'Левая граница' : 'Правая граница')
-      data[24] << config.configuration['angle_from_azimut']
-      data[25] << { image: img_table, position: :center, fit: [50, 100] }
-
-      table(data, position: :left, header: true, column_widths: [270, 270]) do
-        cells.style borders: [], padding: 7, border_color: "025238", border_width: 0.5, valign: :center
-        column(0).style borders: [:left, :right]
-        column([1, 2]).style borders: [:left, :right], align: :center
+        column((1..columns).to_a).style borders: [:left, :right], align: :center
         row(0).style background_color:"025238", text_color: "ffffff", font_style: :bold, borders: [:left, :right, :top], align: :center
         row([2, 8, 11, 20]).style background_color: "eeeff1", align: :center
         row(25).style borders: [:left, :right, :bottom]
@@ -344,25 +202,123 @@ class ExportPdf
     move_down(10)
     text "** ", align: :left, size: 11
     image distance_table, position: :left, scale: 0.15
+  end
 
-    @configs.each do |conf|
-      config = conf[:config]
-      start_new_page 
-      outputter = config.total_params['svg']['img']
-      outputter.slice!('style="display: none;"')
-      w_svg = config.total_params['svg']['width']
-      h_svg  = config.total_params['svg']['height']
-      w_max = 540
-      h_max = 650
-
-      if w_svg > w_max
-        svg outputter, position: :center, vposition: :center, width: w_max
-      elsif h_svg > h_max
-        svg outputter, position: :center, vposition: :center, height: h_max
-      else
-        svg outputter, position: :center, vposition: :center
-      end
+  def get_column_width_and_scale col
+    if col == 1
+      scale = 0.210
+      w_data_col = 270
+      width = [w_data_col, w_data_col]
+    elsif col == 2
+      scale = 0.163
+      w_data_col = 210
+      width = [120, w_data_col, w_data_col]
+    elsif col == 3
+      scale = 0.156
+      w_data_col = 200
+      width = [120, w_data_col, w_data_col, w_data_col]
+    elsif col == 4
+      scale = 0.116
+      w_data_col = 150
+      width = [120, w_data_col, w_data_col, w_data_col, w_data_col]
+    elsif col == 5
+      scale = 0.092
+      w_data_col = 120
+      width = [120, w_data_col, w_data_col, w_data_col, w_data_col, w_data_col]
     end
+    {width: width, scale: scale}
+  end
+
+  def gen_table pages, count_config
+    if count_config <= 2
+      pages << {column: count_config, layout: :portrait}
+    elsif (3..5).include?(count_config)
+      pages << {column: count_config, layout: :landscape}
+    end
+  end
+
+  def add_data_column config, pv_module, scale, data, index_config
+    img_table = "vendor/assets/scrin_table.png"
+    if config.total_params
+      pvs_in_table = config.configuration['row_pv_in_table'].to_i * config.configuration['column_pv_in_table'].to_i
+      total_tables = config.total_params['all_tables'].to_i
+      total_pvs = total_tables * pvs_in_table
+      total_power = (pv_module.power * total_pvs) / 1000
+      if total_power > 1000
+        total_power = "#{total_power / 1000} МВт"
+      else
+        total_power = "#{total_power} кВт"
+      end
+      all_square = "#{config.total_params['squares']['all_area']['meters']} м² /  #{config.total_params['squares']['all_area']['hectares']} га"
+      pv_square = "#{config.total_params['squares']['pv_area']['meters']} м² /  #{config.total_params['squares']['pv_area']['hectares']} га"
+    end
+
+    img_point_on_map = StringIO.open(config.pv_config_on_map.download)
+    outputter = config.total_params['svg']['img']
+    outputter.slice!('style="display: none;"')
+    image_table = StringIO.open(get_png_from_svg(outputter))
+    data[0] << "№#{index_config + 1}| #{config.title}"
+    data[1] << {image: img_point_on_map, position: :center, scale: scale}
+    data[3] << total_tables || ''
+    data[4] << total_pvs || ''
+    data[5] << pv_square || ''
+    data[6] << all_square || ''
+    data[7] << total_power || ''
+    data[9] << config.configuration['distance_to_barrier']
+    data[10] << config.configuration['distance_to_pv_area']
+    data[12] << pv_module.model
+    data[13] << pv_module.power
+    data[14] << config.configuration['offset_pv']
+    data[15] << config.configuration['row_pv_in_table']
+    data[16] << config.configuration['column_pv_in_table']
+    data[17] << (config.configuration['orientation'] == 'horizontal'? "Альбомная" : "Книжная" )
+    data[18] << (config.configuration['type_table'] == 'fix' ? 'Фикс' : 'Трекер')
+    data[19] << (config.configuration['type_table'] == 'fix' ? 
+                    config.configuration['angle_fix'] : '-' )
+    data[21] << config.configuration['height_offset_tables']
+    data[22] << config.configuration['width_offset_tables']
+    data[23] << (config.configuration['align_row_tables'] == 'center' ? 
+                    'Центр' : config.configuration['align_row_tables'] == 'left' ? 
+                    'Левая граница' : 'Правая граница')
+    data[24] << config.configuration['angle_from_azimut']
+    data[25] << { image: image_table, position: :center, fit: pvs_in_table > 2 ? [100, 200] : [50, 100]}
+    data
+  end
+
+  def rows_titles columns
+    data = []
+    data << ["Параметр"]
+    data << ["Конфигурация опорных конструкций на местности"]
+    data << [{:content => "Итоговые параметры", :colspan => columns}]
+    data << ["Количесво столов, шт."]
+    data << ["Количесво ФЭМ, шт."]
+    data << ["Площадь под ФЭМ"]
+    data << ["Площадь участка"]
+    data << ["Мощность СЭС"]
+    data << [{:content => "Параметры площадки", :colspan => columns}]
+    data << ["Расстояние от границ участка до ограждения, м"]
+    data << ["Расстояние от ограждения до полезной площади, м"]
+    data << [{:content => "Параметры опорной конструкции", :colspan => columns}]
+    data << ["Название модуля"]
+    data << ["Мощность модуля, Вт"]
+    data << ["Отступ между модулями, см"]
+    data << ["Количество рядов"]
+    data << ["Количество модулей в ряду"]
+    data << ["Ориентация"]
+    data << ["Тип стола"]
+    data << ["Угол наклона стола"]
+    data << [{:content => "Параметры размещения", :colspan => columns}]
+    data << ["Шаг*, м"]
+    data << ["Расстояние между столами**, см"]
+    data << ["Выравнивание столов относительно границ площадки"]
+    data << ["Угол поворота столов относительно азимута"]
+    data << ["Конфигурация опорной конструкции"]
+  end
+
+  def get_png_from_svg svg
+    img_table = Magick::Image::from_blob(svg)
+    img_table[0].format = 'png'
+    image = img_table[0].to_blob
   end
 end
 

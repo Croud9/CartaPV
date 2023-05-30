@@ -48,8 +48,8 @@ document.addEventListener("turbo:load", function() {
             'type': 'line',
             'source': 'project_area',
             'paint': {
-              'line-color': 'rgba(255, 0, 0, 1)',
-              'line-width': 2
+              'line-color': 'rgb(128, 172, 255)',
+              'line-width': 3
             }
           });
         }
@@ -125,20 +125,20 @@ document.addEventListener("turbo:load", function() {
 
       function drawPointInCountry(data) {
         const center_pt = centroid(data.project_areas)
-
+        
         let current_source_poly = map_not_display.getSource('pt_geolocation')
         if (current_source_poly === undefined) {
-            map_not_display.addSource('pt_geolocation', { 'type': 'geojson', 'data': center_pt });
-            map_not_display.addLayer({
-                  'id': 'pt_geolocation',
-                  'type': 'circle',
-                  'source': 'pt_geolocation',
-                  'layout': {},
-                  'paint': {
-                    'circle-radius': 6,
-                    'circle-color': '#00e61f'
-                  }
-              });
+          map_not_display.addSource('pt_geolocation', { 'type': 'geojson', 'data': center_pt });
+          map_not_display.addLayer({
+                'id': 'pt_geolocation',
+                'type': 'symbol',
+                'source': 'pt_geolocation',
+                'layout': {},
+                'layout': {
+                  'icon-image': 'sun',
+                  'icon-size': 0.16
+                }
+          });
         }
         else {
             current_source_poly.setData(center_pt);
@@ -315,8 +315,8 @@ document.addEventListener("turbo:load", function() {
               'source': `poly_for_pv${id_area}`,
               'layout': {},
               'paint': {
-                  'fill-color': '#00cc55',
-                  'fill-opacity': 0.7
+                  'fill-color': '#80ffb5',
+                  'fill-opacity': 0.9
               }
           });
       }
@@ -345,7 +345,7 @@ document.addEventListener("turbo:load", function() {
                   'visibility': 'none'
               },
               'paint': {
-                  'line-color': '#fff', //'#B42222'
+                  'line-color': '#fff', 
                   'line-width': 1
               },
               'filter': ['==', 'name', 'borderline']
@@ -374,7 +374,7 @@ document.addEventListener("turbo:load", function() {
                   'visibility': 'visible'
               },
               'paint': {
-                  'fill-color': '#3333ff',
+                  'fill-color': '#0000f0',
                   'fill-opacity': 0.4,
                   // 'fill-pattern': 'pattern'
               },
@@ -405,13 +405,42 @@ document.addEventListener("turbo:load", function() {
 
     map_not_display.on('load', function () {
       $('#form_pdf').fadeTo(500, 1);
+
+      map_not_display.addSource('contours', {
+        type: 'vector',
+        url:
+          'https://api.maptiler.com/tiles/contours/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
+      });
+
+      map_not_display.addLayer({
+        'id': 'terrain-data',
+        'type': 'line',
+        'source': 'contours',
+        'source-layer': 'contour',
+        'layout': {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        'paint': {
+          'line-color': '#ff69b4',
+          'line-width': 1
+        }
+      });
+
+      map_not_display.loadImage(
+        'sun.png',
+        function (error, image) {
+          if (error) throw error;
+          map_not_display.addImage('sun', image);
+        }
+      );
     });
 
     function drawTable(config) {
         let x_start = 0;
         let y_start = 0;
-        let col_tables = config.configuration.column_pv_in_table;
-        let row_tables = config.configuration.row_pv_in_table;
+        let row_tables = config.configuration.column_pv_in_table;
+        let col_tables = config.configuration.row_pv_in_table;
         const offset_tables = config.configuration.offset_pv;
         const params = {
             w_cell: 10,
@@ -441,8 +470,11 @@ document.addEventListener("turbo:load", function() {
         svg.attr({ viewBox: '0 0' + ' ' + width_table + ' ' +  height_table});
         const frame_table = svg.rect(x_start, y_start, width_table, height_table);
         frame_table.attr({
-            fillOpacity: 0.1,
-            fill: '#3d3d3d',
+            fillOpacity: 1,
+            fill: '#fff',
+            stroke: "#fff",
+            strokeWidth: 0.1,
+
         });
         params['table'] = svg.group()
         params.table.add(frame_table)
@@ -465,6 +497,8 @@ document.addEventListener("turbo:load", function() {
         const base_pv = svg.rect(x_start, y_start, params.width_pv, params.height_pv);
         base_pv.attr({
             fill: '#bababa',
+            stroke: "#fff",
+            strokeWidth: 0.1,
         });
         params.table.add(base_pv)
 
@@ -473,6 +507,8 @@ document.addEventListener("turbo:load", function() {
                 const cell_pv = svg.rect(x_start + (params.w_cell + 0.5) * col, y_start + (params.h_cell + 0.5) * row, params.w_cell, params.h_cell);
                 cell_pv.attr({
                     fill: '#005da8',
+                    stroke: "#cfcfcf",
+                    strokeWidth: 0.05,
                     rx: 1.5,
                     ry: 1.5,
                 });

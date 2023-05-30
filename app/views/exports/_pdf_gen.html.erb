@@ -21,6 +21,33 @@
             %>
         </label>
       </div>
-      <%= submit_tag "PDF", id: "btn_pdf", class: "btn" %>
+      <div class="column-group">
+          <div class="item-row-group">
+              <label class="checkbox-title">Скачать PNG</label>
+              <label class="toggler-wrapper">
+                  <input type="checkbox" id="download_img">
+                  <div class="toggler-slider">
+                      <div class="toggler-knob"></div>
+                  </div>
+              </label>
+          </div>
+          <div class="row-group">
+            <div class="form_radio_group" id="not_map_styles">
+                <div class="form_radio_group-item">
+                    <%= radio_button_tag('style_not_map', 'satellite', true) %>
+                    <%= label_tag(:style_not_map_satellite, "Спутник") %>
+                </div>
+                <div class="form_radio_group-item">
+                    <%= radio_button_tag('style_not_map', 'streets', false) %>
+                    <%= label_tag(:style_not_map_streets, "Стандарт") %>
+                </div>
+                <div class="form_radio_group-item">
+                    <%= radio_button_tag('style_not_map', 'outdoors', false) %>
+                    <%= label_tag(:style_not_map_outdoors, "Рельеф") %>
+                </div>
+            </div>
+          </div>
+        </div>
+      <%= submit_tag "PDF", id: "btn_pdf", class: "btn"%>
     <% end %>
 </div>

@@ -47,6 +47,7 @@ gem "sassc-rails"
 gem "prawn"
 gem 'prawn-table'
 gem 'prawn-svg'
+gem 'rmagick'
 
 # Use Postgres as the database for Active Record
 gem 'pg'
