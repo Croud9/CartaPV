@@ -15,36 +15,13 @@
         <div>
             <h2><%= link_to 'CARTA PV', pv_maps_path %></h2>
         </div>
-        <div class="form_radio_group" id="map_styles" style="display: none;">
-            <div class="form_radio_group-item">
-                <%= radio_button_tag('style_map', 'satellite', true) %>
-                <%= label_tag(:style_map_satellite, "Спутник") %>
-            </div>
-            <div class="form_radio_group-item">
-                <%= radio_button_tag('style_map', 'streets', false) %>
-                <%= label_tag(:style_map_streets, "Стандарт") %>
-            </div>
-            <div class="form_radio_group-item">
-                <%= radio_button_tag('style_map', 'outdoors', false) %>
-                <%= label_tag(:style_map_outdoors, "Рельеф") %>
-            </div>
-        </div>
-        <div class="head-options">
-            <div class="row-group">
-              <div class="item-row-group">
-                <%= link_to 'Export', export_path, class: "btn"%>
-              </div>
-              <%# <div class="item-row-group">
-                <a id="downloadLink" class="btn">PNG</a>
-              </div> %>
-              <div class="item-row-group">
-                <%= link_to 'Проекты', projects_path, class: "btn"%>
-              </div>
-              <div class="item-row-group">
-                <%= link_to 'Модули', pv_modules_path, class: "btn"%>
-              </div>
-            </div>
-        </div>
+        <nav class="navMenu">
+          <%= link_to 'ЭКспорт', export_path%>
+          <%= link_to 'Проекты', projects_path%>
+          <%= link_to 'Модули', pv_modules_path%>
+          <a href="#">Профиль</a>
+          <div class="dot"></div>
+        </nav>
     </header>
     <div class="main"> 
         <%= turbo_frame_tag "flash" do %>

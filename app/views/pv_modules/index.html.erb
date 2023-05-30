@@ -25,7 +25,7 @@
         <td>
           <%= form_tag update_model_path(pv_module) do %>
             <%= text_field_tag :input_pv_model, value = pv_module.model, class: "input_text_only"  %>
-          <%= submit_tag "Изменить", class: "btn_text_only" %>
+            <%= submit_tag "Изменить", class: "btn_text_only" %>
           <% end %>
         </td>
         <td><%= pv_module.power %></td>

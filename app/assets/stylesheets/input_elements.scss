@@ -9,17 +9,17 @@ a:hover, .btn_text_only:hover, #btn-config-hide:hover, #btn-config-show:hover, #
   opacity: 0.6;
 }
 
-select, input, .input_text_only:focus {
-  width: 100%;
-  border:0;
-  border-bottom: 1px solid #424242;
-  background: transparent;
+// select, input, .input_text_only:focus {
+//   width: 100%;
+//   border:0;
+//   border-bottom: 1px solid #424242;
+//   background: transparent;
 
-  // border-radius: 5px;
-  outline: none;
-  padding: 10px 0 10px 10px;
-  // font-weight: bold;
-}
+//   // border-radius: 5px;
+//   outline: none;
+//   padding: 10px 0 10px 10px;
+//   // font-weight: bold;
+// }
 
 .btn, .input_field, .submit {
   background: rgb(119, 119, 119);

@@ -15,7 +15,7 @@
 }
 
 body {
-  background: linear-gradient(45deg, #EECFBA, #C5DDE8);
+  background: linear-gradient(235deg, #EECFBA, #b8e3f7);
   display: flex;
   min-height: 100vh;
   flex-direction: column;
@@ -144,13 +144,13 @@ label {
 .row-group {
 	display: flex;
   margin: 0 -5px;
-  justify-content: space-between;
+  justify-content: flex-start;
 	// flex-direction: column;
 }
 
 .item-row-group {
-  flex: 0 1 33%;
-  margin: 0 5px;
+  flex: 0 1 25%;
+  margin: 0 5px 10px 0;
 }
 
 .draw-table {
@@ -255,7 +255,7 @@ label {
 	border: none;
 	// padding: 0.5em;
 	border-radius: 15px;
-	margin: 0 0 4% 0;
+	margin: 0 0 10px 0;
 	box-shadow: 2px 2px 7px rgba(0, 0, 0, 0.25);
 }
 
