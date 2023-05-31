@@ -406,26 +406,26 @@ document.addEventListener("turbo:load", function() {
     map_not_display.on('load', function () {
       $('#form_pdf').fadeTo(500, 1);
 
-      map_not_display.addSource('contours', {
-        type: 'vector',
-        url:
-          'https://api.maptiler.com/tiles/contours/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
-      });
+      // map_not_display.addSource('contours', {
+      //   type: 'vector',
+      //   url:
+      //     'https://api.maptiler.com/tiles/contours/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
+      // });
 
-      map_not_display.addLayer({
-        'id': 'terrain-data',
-        'type': 'line',
-        'source': 'contours',
-        'source-layer': 'contour',
-        'layout': {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        'paint': {
-          'line-color': '#ff69b4',
-          'line-width': 1
-        }
-      });
+      // map_not_display.addLayer({
+      //   'id': 'terrain-data',
+      //   'type': 'line',
+      //   'source': 'contours',
+      //   'source-layer': 'contour',
+      //   'layout': {
+      //     'line-join': 'round',
+      //     'line-cap': 'round'
+      //   },
+      //   'paint': {
+      //     'line-color': '#ff69b4',
+      //     'line-width': 1
+      //   }
+      // });
 
       map_not_display.loadImage(
         'sun.png',

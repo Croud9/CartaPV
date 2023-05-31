@@ -9,7 +9,63 @@ import { calcAreaForPV, calcPVs, createPolyWithHole } from "./pv-calc.js";
 
 document.addEventListener("turbo:load", function() {
     if (document.getElementById("map") !== null) {
+        var draw = new MapboxDraw({
+            displayControlsDefault: false,
+            controls: {
+                polygon: true,
+                combine_features: true,
+                uncombine_features: true,
+                trash: true,
+            }
+        });
+        let style_bing_map
         let global_params
+        var geocoder_api = {
+            forwardGeocode: async (config) => {
+                const features = [];
+                try {
+                    let request =
+                        'https://nominatim.openstreetmap.org/search?q=' +
+                        config.query +
+                        '&format=geojson&polygon_geojson=1&addressdetails=1';
+                    const response = await fetch(request);
+                    const geojson = await response.json();
+                    for (let feature of geojson.features) {
+                        let center = [
+                            feature.bbox[0] +
+                                (feature.bbox[2] - feature.bbox[0]) / 2,
+                            feature.bbox[1] +
+                                (feature.bbox[3] - feature.bbox[1]) / 2
+                        ];
+                        let point = {
+                            type: 'Feature',
+                            geometry: {
+                                type: 'Point',
+                                coordinates: center
+                            },
+                            place_name: feature.properties.display_name,
+                            properties: feature.properties,
+                            text: feature.properties.display_name,
+                            place_type: ['place'],
+                            center: center
+                        };
+                        features.push(point);
+                    }
+                } catch (e) {
+                    console.error(`Failed to forwardGeocode with error: ${e}`);
+                }
+
+                return {
+                    features: features
+                };
+            }
+        };
+        var map;
+        var BingMapsKey = 'Ahdsg0_Kxmm_5xKeGvoQzzMeUjhfT-SIAhyQh38t_naexGTgpJLcd3clUu_9VhDL';
+        var BingMapsImagerySet = 'AerialWithLabelsOnDemand'; //Alternatively, use 'AerialWithLabelsOnDemand' if you also want labels on the map.
+        var BingMapsImageryMetadataUrl = `https://dev.virtualearth.net/REST/V1/Imagery/Metadata/${BingMapsImagerySet}?output=json&include=ImageryProviders&key=${BingMapsKey}`;
+
+        initBingMaps()
         const check_border_lines = document.getElementById('check-visible-border-lines');
         const check_dash_lines = document.getElementById('check-visible-dash-lines');
         const check_pv_polygons = document.getElementById('check-visible-pv-polygons');
@@ -35,7 +91,7 @@ document.addEventListener("turbo:load", function() {
           map.setStyle('https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd')
         })
         $("#style_map_streets").click(function () {
-          map.setStyle('https://api.maptiler.com/maps/3f98f986-5df3-44da-b349-6569ed7b764c/style.json?key=QA99yf3HkkZG97cZrjXd')
+          map.setStyle(style_bing_map)
         })
         $("#style_map_outdoors").click(function () {
           map.setStyle('https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd')
@@ -359,68 +415,82 @@ document.addEventListener("turbo:load", function() {
             return squares
         }
         
+        function initBingMaps() {
+            fetch(BingMapsImageryMetadataUrl).then(r => r.json()).then(r => {
+                
+                var tileInfo = r.resourceSets[0].resources[0];
+                
+                //Bing Maps supports subdoamins which can make tile loading faster. Create a tile URL for each subdomain. 
+                var tileUrls = [];
+                
+                tileInfo.imageUrlSubdomains.forEach(sub => {
+                    tileUrls.push(tileInfo.imageUrl.replace('{subdomain}', sub));
+                });
+                
+                //Use the image provider info to create attributions.
+                var attributions = tileInfo.imageryProviders.map(p => {
+                    return p.attribution;
+                }).join(', ');
+            
+                //Create a style using a raster layer for the Bing Maps tiles.
+                var style = {
+                    'version': 8,
+                    'sources': {
+                        'bing-maps-raster-tiles': {
+                            'type': 'raster',
+                            'tiles': tileUrls,
+                            'tileSize': tileInfo.imageWidth,
+                            'attribution': attributions,
+                            
+                            //Offset set min/max zooms by one as Bign Maps is designed are 256 size tiles, while MapLibre is designed for 512 tiles.
+                            'minzoom': 1,
+                            'maxzoom': 20
+                        }
+                    },
+                    'layers': [
+                        {
+                            'id': 'bing-maps-tiles',
+                            'type': 'raster',
+                            'source': 'bing-maps-raster-tiles',
+                            'minzoom': 0,
+                            'maxzoom': 23   //Let the imagery be overscaled to support deeper zoom levels.
+                        }
+                    ]
+                };
+                
+                //If you want to add terrian, you can either append it onto the stlye like this, or add it inline above.
+                
+                //Add the source
+                // style.sources.terrainSource = {
+                //     type: 'raster-dem',
+                //     url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                //     tileSize: 256
+                // };
+                
+                // style.terrain = {
+                //     source: 'terrainSource',
+                //     exaggeration: 1
+                // };
+                
+                //Load MapLibre with this style.
+                // loadMap(style);
+                style_bing_map = style
+            });
+            
+        }
+
         var map = new maplibregl.Map({
                 container: 'map',
                 zoom: 2,
                 center: [100, 65],
                 style:
                 'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd', // Актуальные, бесшовные изображения для всего мира с учетом контекста
+                // 'mapbox://styles/mapbox/satellite-streets-v5', // Актуальные, бесшовные изображения для всего мира с учетом контекста
                 // 'https://api.maptiler.com/maps/3f98f986-5df3-44da-b349-6569ed7b764c/style.json?key=QA99yf3HkkZG97cZrjXd' //Идеальная карта для активного отдыха
                 // 'https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd', // Идеальная базовая карта местности с контурами и заштрихованным рельефом.
-                preserveDrawingBuffer: true
-                // antialias: true // create the gl context with MSAA antialiasing, so custom layers are antialiased
+                // preserveDrawingBuffer: true,
+                antialias: true // create the gl context with MSAA antialiasing, so custom layers are antialiased
         }); 
-
-        var draw = new MapboxDraw({
-            displayControlsDefault: false,
-            controls: {
-                polygon: true,
-                combine_features: true,
-                uncombine_features: true,
-                trash: true,
-            }
-        });
-
-        var geocoder_api = {
-            forwardGeocode: async (config) => {
-                const features = [];
-                try {
-                    let request =
-                        'https://nominatim.openstreetmap.org/search?q=' +
-                        config.query +
-                        '&format=geojson&polygon_geojson=1&addressdetails=1';
-                    const response = await fetch(request);
-                    const geojson = await response.json();
-                    for (let feature of geojson.features) {
-                        let center = [
-                            feature.bbox[0] +
-                                (feature.bbox[2] - feature.bbox[0]) / 2,
-                            feature.bbox[1] +
-                                (feature.bbox[3] - feature.bbox[1]) / 2
-                        ];
-                        let point = {
-                            type: 'Feature',
-                            geometry: {
-                                type: 'Point',
-                                coordinates: center
-                            },
-                            place_name: feature.properties.display_name,
-                            properties: feature.properties,
-                            text: feature.properties.display_name,
-                            place_type: ['place'],
-                            center: center
-                        };
-                        features.push(point);
-                    }
-                } catch (e) {
-                    console.error(`Failed to forwardGeocode with error: ${e}`);
-                }
-
-                return {
-                    features: features
-                };
-            }
-        };
 
         map.addControl(
             new MaplibreGeocoder(geocoder_api, {
@@ -445,6 +515,8 @@ document.addEventListener("turbo:load", function() {
         map.on('load', function () {
           $('#map_styles').fadeTo(500, 1);
         });
+          
+
 
         function deleteAreas(features) {
             features.forEach((item) => { 
