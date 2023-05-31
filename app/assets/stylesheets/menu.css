@@ -1,80 +1,51 @@
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
-* {
+@import url('https://fonts.googleapis.com/css?family=Open+Sans+Condensed:700');
+*{
   margin: 0;
   padding: 0;
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
+}
+.menu{
+  padding: 0 20px;
+  font-family: 'Open Sans Condensed', sans-serif;
 }
 
-/* body {
-  background: #272727;
-  font-family: "Montserrat", sans-serif;
-} */
-
-.navMenu {
-  position: absolute;
-  top: 50px;
-  right: 5%;
-  -webkit-transform: translate(-5%, -50%);
-  transform: translate(-5%, -50%);
+.menu ul{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  text-align: center;
 }
-
-.navMenu a {
-  color: #272727;
-  text-decoration: none;
-  font-size: 1.2em;
-  text-transform: uppercase;
-  font-weight: 500;
+.menu li{
   display: inline-block;
-  width: 100px;
-  -webkit-transition: all 0.2s ease-in-out;
-  transition: all 0.2s ease-in-out;
+  margin: 0 15px;
 }
-
-.navMenu a:hover {
-  color: #666666;
+.menu a{
+  font-size: 22px;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #000000;
+  display: block;
+  position: relative;
+  padding: 4px 0;
 }
-
-.navMenu .dot {
-  width: 8px;
-  height: 8px;
-  background: #ebff3b;
-  border-radius: 50%;
-  opacity: 0;
-  -webkit-transform: translateX(50px);
-  transform: translateX(50px);
-  -webkit-transition: all 0.2s ease-in-out;
-  transition: all 0.2s ease-in-out;
+.menu a::before{
+  content: "";
+  width: 100%;
+  height: 4px;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  background: #fff;
+  transition: 0.5s transform ease;
+  transform: scale3d(0,1,1);
+  transform-origin: 0 50%;
 }
-
-.navMenu a:nth-child(1):hover ~ .dot {
-  -webkit-transform: translateX(50px);
-  transform: translateX(50px);
-  -webkit-transition: all 0.2s ease-in-out;
-  transition: all 0.2s ease-in-out;
-  opacity: 1;
+.menu a:hover::before{
+  transform: scale3d(1,1,1);
 }
-
-.navMenu a:nth-child(2):hover ~ .dot {
-  -webkit-transform: translateX(150px);
-  transform: translateX(150px);
-  -webkit-transition: all 0.2s ease-in-out;
-  transition: all 0.2s ease-in-out;
-  opacity: 1;
+.menu-1 a::before{
+  background: #13a300;
+  transform-origin: 100% 50%;
 }
-
-.navMenu a:nth-child(3):hover ~ .dot {
-  -webkit-transform: translateX(250px);
-  transform: translateX(250px);
-  -webkit-transition: all 0.2s ease-in-out;
-  transition: all 0.2s ease-in-out;
-  opacity: 1;
-}
-
-.navMenu a:nth-child(4):hover ~ .dot {
-  -webkit-transform: translateX(355px);
-  transform: translateX(355px);
-  -webkit-transition: all 0.2s ease-in-out;
-  transition: all 0.2s ease-in-out;
-  opacity: 1;
+.menu-1 a:hover::before{
+  transform-origin: 0 50%;
 }

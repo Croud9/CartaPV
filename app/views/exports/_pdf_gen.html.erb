@@ -1,115 +1,74 @@
-<div class="container-result">
-    <h2>Отчет</h2>
-    <br>
-    <%= form_tag(export_pdf_path(format: :pdf), method: "get", target: '_blank', id: "form_pdf", style: "display: none") do %>
-      <div class="row-group">
-        <label class="item-row-group">
-            Проект
-            <%= select_tag "select_project_pdf", 
-                options_from_collection_for_select(@projects, :id, :title), 
-                prompt: 'Выберите',
-                required: true  
-            %>
-        </label>
-        <label class="item-row-group">
-            Выбор конфигураций помещаемых в отчет 
+<div class="createAccount_wrapper">
+  <div class="container">
+    <%= form_tag(export_pdf_path(format: :pdf), 
+                  method: "get", 
+                  target: '_blank', 
+                  id: "form_pdf", 
+                  class: 'createAccount',
+                  style: "display: none"
+                ) do %>
+      <div class="createAccount_inner">
+      <h3>PDF</h3>
+
+        <div class="form_label">
+          <span class="form_text">Проекты</span>
+          <%= select_tag "select_project_pdf", 
+              options_from_collection_for_select(@projects, :id, :title), 
+              prompt: '',
+              required: true,
+              class: "field_one_select",
+              style: "@media (min-width: 768px) { height: calc(4 * 38px)}"
+          %>
+          <span class="error_text"></span>
+        </div>     
+        
+        <div class="form_label">
+          <span class="form_text">Конфигурации</span>
+          <div class="multiselect_block">
+            <label for="select_config_pdf" class="field_multiselect"></label>
+
+            <input id="checkbox-2" class="multiselect_checkbox" type="checkbox">
+            <label for="checkbox-2" class="multiselect_label"></label>
+
             <%= select_tag "select_config_pdf", 
                 options_from_collection_for_select(@area_configs, :id, :title), 
-                prompt: 'Выберите',
+                # placeholder: 'Выберите',
                 multiple: true,
-                required: true  
+                required: true,
+                class: "field_select",
+                style: "@media (min-width: 768px) { height: calc(4 * 38px)}"
             %>
+            <%# <span class="field_multiselect_help">You can select several items by pressing <b>Ctrl(or Command)+Element</b></span> %>
+          </div>
+          <span class="error_text"></span>
+        </div>
+        
+
+        <span class="form_text">Опции</span>
+        <label class="createAccount_policy">
+          <input class="input_checkbox policy_checkbox" id="policy" type="checkbox">
+          <span class="input_checkbox__decor">Скачать планы</span>
         </label>
-      
-        <div class="item-row-group">
-          <label class="toggler-wrapper">
-              <input type="checkbox" id="download_img">
-              <div class="toggler-slider">
-                  <div class="toggler-knob"></div>
-              </div>
-          </label>
-          <span class="input_checkbox__decor">Скачать PNG</span>
-        </div>
-        <div class="item-row-group">
-          <div class="form_radio_group" id="not_map_styles">
-              <div class="form_radio_group-item">
-                  <%= radio_button_tag('style_not_map', 'satellite', true) %>
-                  <%= label_tag(:style_not_map_satellite, "Спутник") %>
-              </div>
-              <div class="form_radio_group-item">
-                  <%= radio_button_tag('style_not_map', 'outdoors', false) %>
-                  <%= label_tag(:style_not_map_outdoors, "Рельеф") %>
-              </div>
-          </div>
-        </div>
-        </div>
-      <%= submit_tag "PDF", id: "btn_pdf", class: "btn"%>
-    <% end %>
-</div>
 
+        <div class="form_radio_group" id="not_map_styles">
+            <div class="form_radio_group-item">
+                <%= radio_button_tag('style_not_map', 'satellite', true) %>
+                <%= label_tag(:style_not_map_satellite, "Спутник") %>
+            </div>
+            <div class="form_radio_group-item">
+                <%= radio_button_tag('style_not_map', 'outdoors', false) %>
+                <%= label_tag(:style_not_map_outdoors, "Рельеф") %>
+            </div>
+        </div>
 
-  <section class="section_top" id="registration">
-    <div class="createAccount_wrapper">
-      <div class="container">
         
+        <div class="createAccount_buttons">
+          <button class="btn btn_createAccount" type="submit" disabled>Сгенерировать</button>
+          <%# <button class="btn btn-empty  btn_backStep1" type="button">back</button> %>
+          <%= submit_tag "PDF", id: "btn_pdf", class: "btn btn-empty  btn_backStep1"%>
+        </div>
         
-        <form class="createAccount" name="" action="">
-          <div class="createAccount_inner">
-            
-<!--        One ELEMENT of MULTY SELECT  -->
-            <div class="form_label">
-              <span class="form_text">Your technology</span>
-              <div class="multiselect_block">
-                <label for="select-1" class="field_multiselect">Technology</label>
-
-                <input id="checkbox-1" class="multiselect_checkbox" type="checkbox">
-                <label for="checkbox-1" class="multiselect_label"></label>
-
-                <select id="select-1" class="field_select" name="technology" multiple style="@media (min-width: 768px) { height: calc(4 * 38px)}">
-                  <option value="all">All</option>
-                  <option value="HTML">HTML</option>
-                  <option value="CSS">CSS</option>
-                  <option value="JavaScript">Java Script</option>
-                </select>
-                <%# <span class="field_multiselect_help">You can select several items by pressing <b>Ctrl(or Command)+Element</b></span> %>
-              </div>
-              <span class="error_text"></span>
-            </div>
-    <!--   END  -->        
-           
-            <div class="form_label">
-              <span class="form_text">Your Frameworks</span>
-              <div class="multiselect_block">
-                <label for="select-2" class="field_multiselect">Frameworks</label>
-
-                <input id="checkbox-2" class="multiselect_checkbox" type="checkbox">
-                <label for="checkbox-2" class="multiselect_label"></label>
-
-                <select id="select-2" class="field_select" name="frameworks" multiple style="@media (min-width: 768px) { height: calc(4 * 38px)}">
-                  <option value="React">React</option>
-                  <option value="Vue">Vue</option>
-                  <option value="Angular">Angular</option>
-                  <option value="Ember">Ember</option>
-                </select>
-                <%# <span class="field_multiselect_help">You can select several items by pressing <b>Ctrl(or Command)+Element</b></span> %>
-              </div>
-              <span class="error_text"></span>
-            </div>
-            
-            
-            <label class="createAccount_policy">
-              <input class="input_checkbox policy_checkbox" id="policy" type="checkbox">
-              <span class="input_checkbox__decor">I accept Privacy Policy & Affiliate Program T&C</span>
-            </label>
-            
-            
-            <div class="createAccount_buttons">
-              <button class="btn btn_createAccount" type="submit" disabled>Confirm</button>
-              <button class="btn btn-empty  btn_backStep1" type="button">back</button>
-            </div>
-            
-          </div>
-        </form>
       </div>
-    </div>
-  </section>
+    <% end %>
+  </div>
+</div>

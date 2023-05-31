@@ -13,14 +13,15 @@
   <body>
     <header>
         <div>
-            <h2><%= link_to 'CARTA PV', pv_maps_path %></h2>
+            <h2><%= link_to 'CARTA PV', pv_maps_path%></h2>
         </div>
-        <nav class="navMenu">
-          <%= link_to 'ЭКспорт', export_path%>
-          <%= link_to 'Проекты', projects_path%>
-          <%= link_to 'Модули', pv_modules_path%>
-          <a href="#">Профиль</a>
-          <div class="dot"></div>
+        <nav class="menu menu-1">
+          <ul>
+            <li><%= link_to 'Экспорт', export_path%></li>
+            <li><%= link_to 'Проекты', projects_path%></li>
+            <li><%= link_to 'Модули', pv_modules_path%></li>
+            <li><a href="#">Профиль</a></li>
+          </ul>
         </nav>
     </header>
     <div class="main"> 

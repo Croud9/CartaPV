@@ -180,7 +180,7 @@ label {
 
 .container-config {
 	position: absolute;
-	background-color: whitesmoke;
+	background-color: #fff;
 	border: none;
 	max-width: 26.5%;
 	max-height: 100%;
@@ -202,16 +202,6 @@ label {
 	padding: 3% 3%;
 	z-index: 3;
 	overflow: hidden;
-}
-
-.container-result { 
-  background-color: whitesmoke;
-  border: none;
-  border-radius: 15px;
-  // margin: 2% 4% 0 4%;
-  box-shadow: 2px 2px 7px rgba(0, 0, 0, 0.25);
-  padding: 10px 20px;
-  font-weight: bold;
 }
 
 .distance-container {
