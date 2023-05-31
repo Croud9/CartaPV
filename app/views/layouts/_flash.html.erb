@@ -1,7 +1,16 @@
 <div id="flash_notice" class="flash" >
   <% flash.each do |flash_type, message| %>
+    <% 
+      if flash_type == 'notice'
+        cls = "flash__success"
+      elsif flash_type == 'error'
+        cls = "flash__error"
+      elsif flash_type == 'success'
+        cls = "flash__message"
+      end 
+    %>
     <div 
-      class="flash__message"
+      class=<%= cls %>
       data-controller="removals"
       data-action="animationend->removals#remove"
     >

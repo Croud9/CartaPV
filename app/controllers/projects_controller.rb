@@ -16,7 +16,7 @@ class ProjectsController < ApplicationController
     if project.save && area_config.save
       redirect_to projects_path, alert: "Проект успешно создан"
     else
-      flash.now[:notice] = "Проект не создан"
+      flash.now[:error] = "Проект не создан"
       render turbo_stream: turbo_stream.replace("flash_notice", partial: "layouts/flash", locals: { flash: flash })
     end 
   end
@@ -24,7 +24,7 @@ class ProjectsController < ApplicationController
   def update
     input_title = params[:input_project_title]
     if input_title == @project.title || input_title.length == 0
-      flash.now[:notice] = "Название не изменено"
+      flash.now[:error] = "Название не изменено"
       render turbo_stream: turbo_stream.replace("flash_notice", partial: "layouts/flash", locals: { flash: flash })
     else
       @project.update_attribute(:title, input_title)
