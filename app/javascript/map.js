@@ -5,6 +5,7 @@ import area from '@turf/area';
 import bbox from '@turf/bbox';
 import centroid from '@turf/centroid';
 import { polygon, featureCollection } from '@turf/helpers';
+import { turbo_message } from "./flash_message.js";
 import { calcAreaForPV, calcPVs, createPolyWithHole } from "./pv-calc.js";
 
 document.addEventListener("turbo:load", function() {
@@ -60,10 +61,6 @@ document.addEventListener("turbo:load", function() {
                 };
             }
         };
-        var map;
-        var BingMapsKey = 'Ahdsg0_Kxmm_5xKeGvoQzzMeUjhfT-SIAhyQh38t_naexGTgpJLcd3clUu_9VhDL';
-        var BingMapsImagerySet = 'AerialWithLabelsOnDemand'; //Alternatively, use 'AerialWithLabelsOnDemand' if you also want labels on the map.
-        var BingMapsImageryMetadataUrl = `https://dev.virtualearth.net/REST/V1/Imagery/Metadata/${BingMapsImagerySet}?output=json&include=ImageryProviders&key=${BingMapsKey}`;
 
         initBingMaps()
         const check_border_lines = document.getElementById('check-visible-border-lines');
@@ -81,7 +78,6 @@ document.addEventListener("turbo:load", function() {
         check_pv_polygons.addEventListener('change', visibilityLayout);
         $('#select_config').change(get_config_params);
         $('#select_project').change(set_project_area);
-        $('#btn_save_area').click(add_main_area_to_db);
         $("#type-table2").click(function () {
           console.log('ratatatat')
           $('#angle-from-azimut').val(global_params.angle_from_azimut);
@@ -95,27 +91,6 @@ document.addEventListener("turbo:load", function() {
         })
         $("#style_map_outdoors").click(function () {
           map.setStyle('https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd')
-        })
-        $('#downloadLink').click(function () {
-          // snapshotCountry()
-          // map_not_display.setZoom(10)
-
-          // Порядок работы
-          // Добавляем точку на карте страны соответсвующую центру области и зафиксировать координаты
-          // зуум на 2
-          // фотография страны с точкой
-          // удаление точки
-          // fitBounds к области
-          // простройка ФЭМ каждой выбранной конфигурации фотографируя результат соответсвенно
-          
-
-          // draw.changeMode('simple_select')
-          // map.getCanvas().toBlob(function (blob) {
-            //   // saveAs(blob, 'map.png');
-            //   // var objectURL = URL.createObjectURL(blob);
-            //   // console.log(objectURL)
-            //   // document.querySelector("#image").src = objectURL;
-            // })
         })
         // при сохранении еще добавить  get_config_params(
         
@@ -147,24 +122,6 @@ document.addEventListener("turbo:load", function() {
             });
           };
         }
-
-        function add_main_area_to_db() {
-          let areas = []
-          const selected_ids = draw.getSelectedIds();
-          if (selected_ids.length != 0) {
-            selected_ids.forEach((id) => {
-              areas.push(draw.get(id))
-            });
-
-            $.ajax({
-              method: 'post',
-              url: 'update_draw_area',
-              data: {id: $("#select_project option:selected").val(), options: JSON.stringify(featureCollection(areas))},
-              beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
-              success: function(data) { alert('Успешно сохранено'); }
-            });
-          };
-        }
         
         function visibilityLayout(event) {
             const layers_ids = {
@@ -188,9 +145,10 @@ document.addEventListener("turbo:load", function() {
                 }
             });
         };
-
+        
         function clickDrawArea(event) { 
             let all_data = []
+            let areas = []
             const selected_ids = draw.getSelectedIds();
             console.log('selected ids --> ' + selected_ids)
             if (selected_ids.length != 0) {
@@ -198,6 +156,7 @@ document.addEventListener("turbo:load", function() {
                 const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id);
                 let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
                 all_data.push(feature)
+                areas.push(draw.get(id))
                 // const all_tables = drawPVs(item, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
                 // outputAreaData(item, poly_for_pv, all_tables); 
               });
@@ -205,26 +164,30 @@ document.addEventListener("turbo:load", function() {
               $.ajax({
                 method: 'post',
                 url: 'update_configuration',
-                data: {id: $("#select_config option:selected").val(), param: null, geojsons: JSON.stringify(all_data)},
+                data: {
+                  id: $("#select_config option:selected").val(), 
+                  project_areas: JSON.stringify(featureCollection(areas)), 
+                  geojsons: JSON.stringify(all_data)
+                },
                 beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
                 success: function(data) { window.Turbo.renderStreamMessage(data);}
               });
             }
             else {
-              alert('Не выбрана область');
+              window.Turbo.renderStreamMessage(turbo_message('info', 'Не выбрана область'));
             }
         };
 
         function clickDrawPV(event) {
           let all_data = []
           let total_params = {}
-          let bound
+          let areas = []
           const selected_ids = draw.getSelectedIds();
           draw.changeMode('simple_select')
           if (selected_ids.length != 0) {
             if ($('#select-pv-modules option:selected').text() != "Выберите") {
               selected_ids.forEach((id) => {
-                  bound = draw.get(id)
+                  areas.push(draw.get(id))
                   const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id);  
                   const [all_tables, data_pv] = drawPVs(id, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
                   let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
@@ -235,9 +198,10 @@ document.addEventListener("turbo:load", function() {
               });
               const bbox_all = bbox(draw.getAll())
               map.fitBounds(bbox_all, {padding: 80})
-        
+
               const formData = new FormData();
               formData.append('id', $("#select_config option:selected").val());
+              formData.append('project_areas', JSON.stringify(featureCollection(areas)));
               formData.append('geojsons', JSON.stringify(all_data));
               formData.append('total_params', JSON.stringify(total_params));
 
@@ -252,11 +216,11 @@ document.addEventListener("turbo:load", function() {
               });
             }
             else {
-              alert('Не выбран фотоэлектрический модуль! Выберите и сохраните конфигурацию');
+              window.Turbo.renderStreamMessage(turbo_message('info', 'Не выбран фотоэлектрический модуль! Выберите и сохраните конфигурациюь'));
             }
           }
           else {
-            alert('Не выбрана область');
+            window.Turbo.renderStreamMessage(turbo_message('info', 'Не выбрана область'));
           }
         };
 
@@ -350,6 +314,7 @@ document.addEventListener("turbo:load", function() {
               params.type_table = dataForm.get("type-table");
               params.angle_fix = +dataForm.get("angle-fix");
               params.orientation = dataForm.get("orientation");
+              console.log(params.orientation)
   
               if (params.type_table == 'tracker') {
                 params.orientation = (params.orientation == 'vertical') ? 'horizontal' : 'vertical'
@@ -369,7 +334,7 @@ document.addEventListener("turbo:load", function() {
                 url: 'update_configuration',
                 beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
                 method: 'post',
-                data: {id: $("#select_config option:selected").val(), param: params, geojsons: null},
+                data: {id: $("#select_config option:selected").val(), param: params},
                 success: function(data) {
                   window.Turbo.renderStreamMessage(data);
                 }
@@ -377,11 +342,11 @@ document.addEventListener("turbo:load", function() {
               global_params = params
               
               if (params.height_offset_tables < params.height_table) 
-                alert('Расстояние меньше высоты стола, измените');
+                window.Turbo.renderStreamMessage(turbo_message('info', 'Расстояние меньше высоты стола, измените'));
 
             }
             else {
-              alert('Не выбран фотоэлектрический модуль');
+              window.Turbo.renderStreamMessage(turbo_message('info', 'Не выбран фотоэлектрический модуль'));
             }
         }
 
@@ -416,8 +381,10 @@ document.addEventListener("turbo:load", function() {
         }
         
         function initBingMaps() {
+            const BingMapsKey = 'Ahdsg0_Kxmm_5xKeGvoQzzMeUjhfT-SIAhyQh38t_naexGTgpJLcd3clUu_9VhDL';
+            const BingMapsImagerySet = 'AerialWithLabelsOnDemand'; //Alternatively, use 'AerialWithLabelsOnDemand' if you also want labels on the map.
+            const BingMapsImageryMetadataUrl = `https://dev.virtualearth.net/REST/V1/Imagery/Metadata/${BingMapsImagerySet}?output=json&include=ImageryProviders&key=${BingMapsKey}`;
             fetch(BingMapsImageryMetadataUrl).then(r => r.json()).then(r => {
-                
                 var tileInfo = r.resourceSets[0].resources[0];
                 
                 //Bing Maps supports subdoamins which can make tile loading faster. Create a tile URL for each subdomain. 
@@ -457,26 +424,8 @@ document.addEventListener("turbo:load", function() {
                         }
                     ]
                 };
-                
-                //If you want to add terrian, you can either append it onto the stlye like this, or add it inline above.
-                
-                //Add the source
-                // style.sources.terrainSource = {
-                //     type: 'raster-dem',
-                //     url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
-                //     tileSize: 256
-                // };
-                
-                // style.terrain = {
-                //     source: 'terrainSource',
-                //     exaggeration: 1
-                // };
-                
-                //Load MapLibre with this style.
-                // loadMap(style);
                 style_bing_map = style
-            });
-            
+            });  
         }
 
         var map = new maplibregl.Map({
@@ -516,8 +465,6 @@ document.addEventListener("turbo:load", function() {
           $('#map_styles').fadeTo(500, 1);
         });
           
-
-
         function deleteAreas(features) {
             features.forEach((item) => { 
                 const id = `poly_for_pv${item.id}`

@@ -6,10 +6,11 @@ class ExportsController < ApplicationController
 
   def show
     project = Project.find(params[:select_project_pdf])
-
+    title_configs = []
     configs = []
     params[:select_config_pdf].each do |id|
       config = AreaConfig.find(id)
+      title_configs << config.title
       pv_module = PvModule.find(config.configuration['module_id'])
       configs << {config: config, pv_module: pv_module}
     end
@@ -18,9 +19,8 @@ class ExportsController < ApplicationController
       format.pdf do
         pdf = ExportPdf.new(project: project, configs: configs)
         send_data pdf.render,
-          filename: "export.pdf",
+          filename: "Отчет #{project.title} (#{title_configs.to_sentence}).pdf",
           type: 'application/pdf',
-          page_size: 'A4',
           disposition: 'inline'
       end
     end
@@ -33,7 +33,7 @@ class ExportsController < ApplicationController
     not_module = []
     configs.each do |config|
       not_module << config.title if config.configuration['module_id'].blank?
-      out_params[:configs] << {id: config.id, configuration: config.configuration}
+      out_params[:configs] << {id: config.id, title: config.title, configuration: config.configuration}
     end
 
     if not_module.blank?

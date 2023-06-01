@@ -30,6 +30,7 @@ class PvMapsController < ApplicationController
 
   def update_configuration
     config = AreaConfig.find(params[:id])
+    input_project_areas = params[:project_areas]
     input_configuration = params[:param]
     input_geogejson = params[:geojsons]
     input_total_params = params[:total_params]
@@ -38,7 +39,8 @@ class PvMapsController < ApplicationController
     config.update_attribute(:total_params, JSON.parse(input_total_params)) unless input_total_params.blank?
     config.update_attribute(:geojson_area, input_geogejson) unless input_geogejson.blank? 
     config.update_attribute(:configuration, input_configuration) unless input_configuration.blank? 
-    flash.now[:notice] = "Успешно сохранено"
+    config.project.update_attribute(:draw_area, input_project_areas) unless input_project_areas.blank? 
+    flash.now[:notice] = "Конфигурация успешно сохранена"
     render turbo_stream: turbo_stream.replace("flash_notice", partial: "layouts/flash", locals: { flash: flash })
   end
 

@@ -86,7 +86,8 @@ button {
 // }
 
 a[disabled],
-button[disabled] {
+button[disabled],
+input[disabled] {
   background: #e3e8f0 !important;
   color: #b5c3d6;
   border-color: transparent;
@@ -187,6 +188,13 @@ button[disabled] {
   justify-content: space-between;
 }
 
+.createAccount_policy {
+  margin: 10px 0 10px 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
 .btn_createAccount,
 .btn_backStep1 {
   width: 180px;
@@ -225,6 +233,7 @@ button[disabled] {
   font-size: 13px;
   color: #f00;
 }
+
 
 
 .form_label input,
@@ -400,4 +409,13 @@ input.multiselect_checkbox {
   .field_multiselect_help {
     display: none; //// We don't need it on mobile
   }
+}
+
+
+.left_align_form {
+  // display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 70vh;
 }

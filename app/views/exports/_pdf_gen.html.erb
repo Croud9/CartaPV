@@ -25,10 +25,10 @@
         <div class="form_label">
           <span class="form_text">Конфигурации</span>
           <div class="multiselect_block">
-            <label for="select_config_pdf" class="field_multiselect"></label>
+            <label for="select_config_pdf" class="field_multiselect" id="multiselect_field"></label>
 
-            <input id="checkbox-2" class="multiselect_checkbox" type="checkbox">
-            <label for="checkbox-2" class="multiselect_label"></label>
+            <input id="checkbox_config_pdf" class="multiselect_checkbox" type="checkbox">
+            <label for="checkbox_config_pdf" class="multiselect_label"></label>
 
             <%= select_tag "select_config_pdf", 
                 options_from_collection_for_select(@area_configs, :id, :title), 
@@ -46,9 +46,15 @@
 
         <span class="form_text">Опции</span>
         <label class="createAccount_policy">
-          <input class="input_checkbox policy_checkbox" id="policy" type="checkbox">
-          <span class="input_checkbox__decor">Скачать планы</span>
+          <div class="toggler-wrapper">
+              <input type="checkbox" id="dwnld_planes">
+              <div class="toggler-slider">
+                  <div class="toggler-knob"></div>
+              </div>
+          </div>
+          <div class="input_checkbox__decor">Скачать планы конфигураций</div>
         </label>
+
 
         <div class="form_radio_group" id="not_map_styles">
             <div class="form_radio_group-item">
@@ -56,16 +62,14 @@
                 <%= label_tag(:style_not_map_satellite, "Спутник") %>
             </div>
             <div class="form_radio_group-item">
-                <%= radio_button_tag('style_not_map', 'outdoors', false) %>
-                <%= label_tag(:style_not_map_outdoors, "Рельеф") %>
+                <%= radio_button_tag('style_not_map', 'topo', false) %>
+                <%= label_tag(:style_not_map_topo, "Рельеф") %>
             </div>
         </div>
 
-        
         <div class="createAccount_buttons">
-          <button class="btn btn_createAccount" type="submit" disabled>Сгенерировать</button>
-          <%# <button class="btn btn-empty  btn_backStep1" type="button">back</button> %>
-          <%= submit_tag "PDF", id: "btn_pdf", class: "btn btn-empty  btn_backStep1"%>
+          <button class="btn btn-empty btn_backStep1" id="btn_pdf">Сгенерировать</button>
+          <%= submit_tag "Открыть", id: "btn_open_pdf", class: "btn btn_createAccount "%>
         </div>
         
       </div>

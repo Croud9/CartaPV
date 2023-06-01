@@ -2,6 +2,10 @@
 <h2>Новая конфигурация для <%= @project.title %> </h2>
 
 <%= form_tag area_configs_path(project_id: @project) do %>
-  <%= text_field_tag :input_config_title, nil, placeholder: "Введите название конфигурации"  %>
-  <%= submit_tag "Сохранить", class: "btn_text_only" %>
+  <div class="left_align_form">
+    <div class="form_label">
+      <%= text_field_tag :input_config_title, nil, placeholder: "Введите название конфигурации"  %>
+      <%= submit_tag "Сохранить", class: "btn_text_only" %>
+    </div>  
+  </div>
 <% end %>

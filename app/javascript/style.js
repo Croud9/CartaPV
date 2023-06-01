@@ -7,6 +7,7 @@ document.addEventListener("turbo:load", function() {
       let select = parent.querySelector(".field_select");
       let text = label.innerHTML;
       select.addEventListener("change", function(element) {
+          $("#btn_open_pdf").prop('disabled', true);
           let selectedOptions = this.selectedOptions;
           label.innerHTML = "";
           for (let option of selectedOptions) {
@@ -15,6 +16,7 @@ document.addEventListener("turbo:load", function() {
               button.className = "btn_multiselect";
               button.textContent = option.innerHTML;
               button.onclick = _ => {
+                  $("#btn_open_pdf").prop('disabled', true);
                   option.selected = false;
                   button.remove();
                   if (!select.selectedOptions.length) label.innerHTML = text

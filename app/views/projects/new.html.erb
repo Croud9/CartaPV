@@ -2,6 +2,10 @@
 <h2>Новый проект</h2>
 
 <%= form_tag projects_path do %>
-  <%= text_field_tag :input_project_title, nil, placeholder: "Введите название проекта"  %>
-  <%= submit_tag "Сохранить", class: "btn_text_only" %>
+  <div class="left_align_form">
+    <div class="form_label">
+      <%= text_field_tag :input_project_title, nil, placeholder: "Введите название проекта"  %>
+      <%= submit_tag "Сохранить", class: "btn_text_only" %>
+    </div> 
+  </div>
 <% end %>
