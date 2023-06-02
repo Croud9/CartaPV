@@ -11,16 +11,21 @@ $('#offset-pv').val("<%= @config.configuration['offset_pv'] %>");
   $('#select-pv-modules option:first').prop('selected', true);
 <% end %>
 
-<% if @config.configuration['orientation'] == 'vertical'%>
-  $('#orient-v').prop('checked', true);
-<% else %>
-  $('#orient-h').prop('checked', true); 
-<% end %>
 
 <% if @config.configuration['type_table'] == 'tracker'%>
   $('#type-table1').prop('checked', true);
+  <% if @config.configuration['orientation'] == 'vertical'%>
+    $('#orient-h').prop('checked', true);
+  <% else %>
+    $('#orient-v').prop('checked', true); 
+  <% end %>
 <% else %>
   $('#type-table2').prop('checked', true); 
+  <% if @config.configuration['orientation'] == 'vertical'%>
+    $('#orient-v').prop('checked', true);
+  <% else %>
+    $('#orient-h').prop('checked', true); 
+  <% end %>
 <% end %>
 
 $('#angle_fix').val("<%= @config.configuration['angle_fix'] %>");

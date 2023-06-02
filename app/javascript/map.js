@@ -152,14 +152,22 @@ document.addEventListener("turbo:load", function() {
             const selected_ids = draw.getSelectedIds();
             console.log('selected ids --> ' + selected_ids)
             if (selected_ids.length != 0) {
-              selected_ids.forEach((id) => {
-                const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id);
-                let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
-                all_data.push(feature)
-                areas.push(draw.get(id))
-                // const all_tables = drawPVs(item, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
-                // outputAreaData(item, poly_for_pv, all_tables); 
-              });
+              try {
+                selected_ids.forEach((id) => {
+                  const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id);
+                  let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
+                  all_data.push(feature)
+                  areas.push(draw.get(id))
+                  // const all_tables = drawPVs(item, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+                  // outputAreaData(item, poly_for_pv, all_tables); 
+                });
+              } catch (e) {
+                window.Turbo.renderStreamMessage(turbo_message(
+                  'error', 
+                  `Произошла ошибка при отрисовке области под ФЭМ: ${e};`
+                ));
+                return;
+              }
               console.log(all_data)
               $.ajax({
                 method: 'post',
@@ -186,16 +194,27 @@ document.addEventListener("turbo:load", function() {
           draw.changeMode('simple_select')
           if (selected_ids.length != 0) {
             if ($('#select-pv-modules option:selected').text() != "Выберите") {
-              selected_ids.forEach((id) => {
-                  areas.push(draw.get(id))
-                  const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id);  
-                  const [all_tables, data_pv] = drawPVs(id, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
-                  let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
-                  // let feature = {idx: id, poly_features: poly_for_pv, pv_features: data_pv} // очень долго
-                  all_data.push(feature)
-                  const squares = outputAreaData(id, poly_for_pv, all_tables);
-                  total_params = {squares: squares, all_tables: all_tables}
-              });
+              try {
+                selected_ids.forEach((id) => {
+                    areas.push(draw.get(id))
+                    const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id);  
+                    const [all_tables, data_pv] = drawPVs(id, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+                    let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
+                    // let feature = {idx: id, poly_features: poly_for_pv, pv_features: data_pv} // очень долго
+                    all_data.push(feature)
+                    const squares = outputAreaData(id, poly_for_pv, all_tables);
+                    total_params = {squares: squares, all_tables: all_tables}
+                });
+              } catch (e) {
+                window.Turbo.renderStreamMessage(turbo_message(
+                  'error', 
+                  `Произошла ошибка при отрисовке ФЭМ: ${e};
+                  Временное решение: Изменить угол относительно азимута / 
+                  Изменить нижнюю (при 90°) или левую границу (при 0°/180°) области, сгладить угловатые выступы / 
+                  Изменить конфигурацию стола`
+                ));
+                return;
+              }
               const bbox_all = bbox(draw.getAll())
               map.fitBounds(bbox_all, {padding: 80})
 
@@ -234,6 +253,7 @@ document.addEventListener("turbo:load", function() {
               url: "get_config_params",
               data: "id=" + $("#select_config option:selected").val(),
               success: function(data) {
+                deleteAreas(draw.getAll().features)
                 if (data.geojson !== null) {
                   data.geojson.forEach((json) => {
                     console.log(json.idx)
@@ -241,9 +261,6 @@ document.addEventListener("turbo:load", function() {
                     // if (json.pv_featuren !== null) setPVPolyOnMap(json.idx, json.pv_features) 
                   });
                 }
-                else {
-                  deleteAreas(draw.getAll().features)
-                };
                 global_params = data.configuration
                 params_to_num()
               },
@@ -315,7 +332,7 @@ document.addEventListener("turbo:load", function() {
               params.angle_fix = +dataForm.get("angle-fix");
               params.orientation = dataForm.get("orientation");
               console.log(params.orientation)
-  
+            
               if (params.type_table == 'tracker') {
                 params.orientation = (params.orientation == 'vertical') ? 'horizontal' : 'vertical'
               };

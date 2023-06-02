@@ -10,11 +10,12 @@ import { calcAreaForPV, calcPVs, createPolyWithHole } from "./pv-calc.js";
 
 document.addEventListener("turbo:load", function() {
     if (document.getElementById("map_not_display") !== null) {
-      let style_bing_map
+      let style_bing_map, map_not_display
+      const style_topo = 'https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd'
       initBingMaps()
       accessToFormElements(false)
       $('#select_config_pdf').empty();
-      $('#form_pdf').fadeTo(500, 0);
+      $('#form_pdf').fadeTo(500, 1);
       $('#select_project_pdf').change(function() {
         $('#multiselect_field').empty();
         $('#select_config_pdf').empty();
@@ -42,10 +43,10 @@ document.addEventListener("turbo:load", function() {
         map_not_display.setStyle('https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd')
       })
       $("#style_not_map_topo").click(function () {
-        map_not_display.setStyle('https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd')
+        map_not_display.setStyle(style_topo)
       })
 
-      var map_not_display = new maplibregl.Map({
+      map_not_display = new maplibregl.Map({
         container: 'map_not_display',
         zoom: 3,
         center: [100, 65],
@@ -53,13 +54,14 @@ document.addEventListener("turbo:load", function() {
         'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd', 
         preserveDrawingBuffer: true,
         trackResize: false,
+        interactive: false,
+        fadeDuration: 0,
+        attributionControl: false
       });
 
       $('#map_not_display').css("display", "none")
 
       map_not_display.on('load', function () {
-        $('#form_pdf').fadeTo(500, 1);
-
         map_not_display.loadImage(
           'sun.png',
           function (error, image) {
@@ -82,6 +84,7 @@ document.addEventListener("turbo:load", function() {
             else {
               console.log(data)
               accessToFormElements(false)
+              // init_map(data)
               drawPointInCountry(data)
             }
           },
@@ -114,12 +117,11 @@ document.addEventListener("turbo:load", function() {
           zoom: 2,
           animate: false,
         });
-
-        map_not_display.once('idle',function(){
+        
+        map_not_display.once('idle', function(){
           map_not_display.getCanvas().toBlob(function (blob) {
             data['project_img'] = blob
-            // var objectURL = URL.createObjectURL(blob);
-            // document.querySelector("#image_project").src = objectURL
+
             if (map_not_display.getLayer('pt_geolocation')) {
               map_not_display.removeLayer('pt_geolocation');
             }
@@ -144,9 +146,7 @@ document.addEventListener("turbo:load", function() {
           padding: 20,
           animate: false,
         })
-        if ($('#style_not_map_satellite').is(':checked')){
-          map_not_display.setStyle(style_bing_map)
-        } 
+        if ($('#style_not_map_satellite').is(':checked')) map_not_display.setStyle(style_bing_map)
 
         const current_source_poly = map_not_display.getSource('project_area')
         if (current_source_poly === undefined) {
@@ -177,17 +177,33 @@ document.addEventListener("turbo:load", function() {
         params_to_num(config.configuration)  
         drawTable(config)
 
-        data.project_areas.features.forEach((item) => {
-          const id_area = item.id
-          const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_area, item, config.configuration);  
-          const [tables, data_pv] = drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord, config.configuration);
-          const squares = outputAreaData(item, poly_for_pv);
-          all_squares.all_area.meters += squares.all_area.meters
-          all_squares.all_area.hectares += squares.all_area.hectares
-          all_squares.pv_area.meters += squares.pv_area.meters
-          all_squares.pv_area.hectares += squares.pv_area.hectares
-          all_tables += tables
-        })
+        try {
+          data.project_areas.features.forEach((item) => {
+            const id_area = item.id
+            const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_area, item, config.configuration, map_not_display);  
+            const [tables, data_pv] = drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord, config.configuration, map_not_display);
+            const squares = outputAreaData(item, poly_for_pv);
+            all_squares.all_area.meters += squares.all_area.meters
+            all_squares.all_area.hectares += squares.all_area.hectares
+            all_squares.pv_area.meters += squares.pv_area.meters
+            all_squares.pv_area.hectares += squares.pv_area.hectares
+            all_tables += tables
+          })
+        } catch (e) {
+          window.Turbo.renderStreamMessage(turbo_message(
+            'error', 
+            `Произошла ошибка при отрисовке конфигурации: ${config.title};
+            Ошибка ${e}; 
+            Временное решение: Изменить угол относительно азимута / 
+            Изменить нижнюю (при 90°) или левую границу (при 0°/180°) области, сгладить угловатые выступы / 
+            Изменить конфигурацию стола`
+          ));
+          accessToFormElements(true)
+          if ($('#style_not_map_satellite').is(':checked')){
+            map_not_display.setStyle('https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd')
+          }
+          return;
+        }
 
         const total_params = {
           squares: all_squares, 
@@ -195,14 +211,11 @@ document.addEventListener("turbo:load", function() {
         }
 
         map_not_display.once('idle', function(){
-          map_not_display.getCanvas().toBlob( function (blob) {
+          map_not_display.getCanvas().toBlob(function (blob) {
             config['config_img'] = blob
             config['total_params'] = total_params
-            if ($('#dwnld_planes').is(':checked')){
-              downloadImage(blob, config.title)
-            }
-
-            deleteAreas(data.project_areas.features)
+          
+            deleteAreas(data.project_areas.features, map_not_display)
             if (i != data.configs.length - 1 ) {
               i++
               snapshot_PV(data, i)
@@ -235,11 +248,14 @@ document.addEventListener("turbo:load", function() {
           processData: false,
           contentType: false,
           beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
-          success: function(data) { 
-            accessToFormElements(true)
-            $("#btn_open_pdf").prop('disabled', false);
+          success: function() { 
             window.Turbo.renderStreamMessage(turbo_message('notice', 'Отчет сгенерирован!'));
-            // $("#form_pdf").submit();
+            if ($('#dwnld_planes').is(':checked')) {
+              createPrintMap(data)
+            } else {
+              $("#btn_open_pdf").prop('disabled', false);
+              accessToFormElements(true)
+            }
           }
         });
       };
@@ -302,7 +318,7 @@ document.addEventListener("turbo:load", function() {
         params.height_table = +params.height_table;
       }
 
-      function deleteAreas(features) {
+      function deleteAreas(features, map) {
         features.forEach((item) => { 
             const id = `poly_for_pv${item.id}`
             const id_pvs = `pvs${item.id}`
@@ -310,28 +326,28 @@ document.addEventListener("turbo:load", function() {
             const id_pvs_line = `pvs_line${item.id}`
             const id_pvs_dash_line = `pvs_dash_line${item.id}`
 
-            if (map_not_display.getLayer(id)) {
-                map_not_display.removeLayer(id);
+            if (map.getLayer(id)) {
+                map.removeLayer(id);
             }
-            if (map_not_display.getSource(id)) {
-                map_not_display.removeSource(id);
+            if (map.getSource(id)) {
+                map.removeSource(id);
             }
-            if (map_not_display.getLayer(id_pvs_poly)) {
-                map_not_display.removeLayer(id_pvs_poly);
+            if (map.getLayer(id_pvs_poly)) {
+                map.removeLayer(id_pvs_poly);
             }
-            if (map_not_display.getLayer(id_pvs_line)) {
-                map_not_display.removeLayer(id_pvs_line);
+            if (map.getLayer(id_pvs_line)) {
+                map.removeLayer(id_pvs_line);
             }
-            if (map_not_display.getLayer(id_pvs_dash_line)) {
-                map_not_display.removeLayer(id_pvs_dash_line);
+            if (map.getLayer(id_pvs_dash_line)) {
+                map.removeLayer(id_pvs_dash_line);
             }
-            if (map_not_display.getSource(id_pvs)) {
-                map_not_display.removeSource(id_pvs);
+            if (map.getSource(id_pvs)) {
+                map.removeSource(id_pvs);
             }
         });
       }
 
-      function drawAreaForPV(id_area, main_area, config) {
+      function drawAreaForPV(id_area, main_area, config, map) {
         let poly_for_pv, top_coord, lower_coord, left_coord, right_coord, large_area
         const start_area = main_area
         const all_areas = start_area.geometry.coordinates
@@ -352,25 +368,25 @@ document.addEventListener("turbo:load", function() {
         }
         if (area(poly_for_pv) < 0) alert('Полезная площадь слишком мала')
 
-        setAreaPolyOnMap(id_area, poly_for_pv)
+        setAreaPolyOnMap(id_area, poly_for_pv, map)
 
         return [poly_for_pv, top_coord, lower_coord, left_coord, right_coord]
       }
 
-      function drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord, config) {
+      function drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord, config, map) {
           const [lines_for_PV , all_tables] = calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, config);
           
-          setPVPolyOnMap(id_area, lines_for_PV)
+          setPVPolyOnMap(id_area, lines_for_PV, map)
 
           return [all_tables, lines_for_PV]
       }
 
-      function setAreaPolyOnMap(id_area, data) {
+      function setAreaPolyOnMap(id_area, data, map) {
         let opacity_pv_area = $('#style_not_map_satellite').is(':checked') ? 0.9 : 0.4;
-        let current_source_poly = map_not_display.getSource(`poly_for_pv${id_area}`)
+        let current_source_poly = map.getSource(`poly_for_pv${id_area}`)
         if (current_source_poly === undefined) {
-          map_not_display.addSource(`poly_for_pv${id_area}`, { 'type': 'geojson', 'data': data });
-          map_not_display.addLayer({
+          map.addSource(`poly_for_pv${id_area}`, { 'type': 'geojson', 'data': data });
+          map.addLayer({
                 'id': `poly_for_pv${id_area}`,
                 'type': 'fill',
                 'source': `poly_for_pv${id_area}`,
@@ -386,17 +402,17 @@ document.addEventListener("turbo:load", function() {
         }
       }
 
-      function setPVPolyOnMap(id_area, data) {
-        let current_source_pvs = map_not_display.getSource(`pvs${id_area}`);
+      function setPVPolyOnMap(id_area, data, map) {
+        let current_source_pvs = map.getSource(`pvs${id_area}`);
         if (current_source_pvs === undefined) {
-          map_not_display.addSource(`pvs${id_area}`, {
+          map.addSource(`pvs${id_area}`, {
                 'type': 'geojson',
                 'data': {
                     'type': 'FeatureCollection',
                     'features': data
                 }
             });
-            map_not_display.addLayer({
+            map.addLayer({
                 'id': `pvs_line${id_area}`,
                 'type': 'line',
                 'source': `pvs${id_area}`,
@@ -411,7 +427,7 @@ document.addEventListener("turbo:load", function() {
                 },
                 'filter': ['==', 'name', 'borderline']
             });
-            map_not_display.addLayer({
+            map.addLayer({
                 'id': `pvs_dash_line${id_area}`,
                 'type': 'line',
                 'source': `pvs${id_area}`,
@@ -423,11 +439,11 @@ document.addEventListener("turbo:load", function() {
                 'paint': {
                     'line-dasharray': [3, 3],
                     'line-color': '#fff', //'#B42222'
-                    'line-width': 1
+                    'line-width': 0.1
                 },
                 'filter': ['==', 'name', 'dashline']
             });
-            map_not_display.addLayer({
+            map.addLayer({
                 'id': `pvs_poly${id_area}`,
                 'type': 'fill',
                 'source': `pvs${id_area}`,
@@ -465,12 +481,19 @@ document.addEventListener("turbo:load", function() {
               height_pv: 0,
               scale: 1,
           };
-
+          let orientation
           if (config.configuration.type_table == 'fix') {
               [col_tables, row_tables] = [row_tables, col_tables]
+              orientation = config.configuration.orientation
+          } else {
+              if (config.configuration.orientation == 'horizontal') {
+                orientation = 'vertical'
+              } else {
+                orientation = 'horizontal'
+              }
           }
 
-          if (config.configuration.orientation == 'horizontal') {
+          if (orientation == 'horizontal') {
               [params.col_cells, params.row_cells] = [params.row_cells, params.col_cells]
           };
 
@@ -611,6 +634,112 @@ document.addEventListener("turbo:load", function() {
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
+      };
+
+      async function createPrintMap(data) {
+        let style
+    
+        var hidden = document.createElement('div');
+        hidden.className = 'hidden-map';
+        document.body.appendChild(hidden);
+        var container = document.createElement('div');
+        container.style.width = `${1000}px`;
+        container.style.height = `${600}px`;
+        hidden.appendChild(container);
+        if ($('#style_not_map_satellite').is(':checked')) {
+          style = style_bing_map
+        } else {
+          style = style_topo
+        }
+
+        var actualPixelRatio = window.devicePixelRatio;
+        Object.defineProperty(window, 'devicePixelRatio', {
+            get: function() {return 576 / 96}
+        });
+
+        var renderMap = new maplibregl.Map({
+            container: container,
+            zoom: 3,
+            center: [100, 65],
+            style: style,
+            preserveDrawingBuffer: true,
+            trackResize: false,
+            interactive: false,
+            fadeDuration: 0,
+            attributionControl: false
+        });
+        container.style.display = 'none';
+
+        renderMap.once('load', function() {
+            const bbox_all = bbox(data.project_areas)
+            renderMap.fitBounds(bbox_all, {
+              padding: 20,
+              animate: false,
+            })
+    
+            const current_source_poly = renderMap.getSource('project_area')
+            if (current_source_poly === undefined) {
+              renderMap.addSource('project_area', { 'type': 'geojson', 'data': data.project_areas });
+              renderMap.addLayer({
+                'id': 'project_area',
+                'type': 'line',
+                'source': 'project_area',
+                'paint': {
+                  'line-color': 'rgb(128, 172, 255)',
+                  'line-width': 3
+                }
+              });
+            }
+            else {
+                current_source_poly.setData(data.project_areas );
+            }
+            best_quality_snapshot_PV(renderMap, actualPixelRatio, hidden, data, 0)
+        });
+      }
+
+      function best_quality_snapshot_PV(renderMap, actualPixelRatio, hidden, data, i) {
+        const config = data.configs[i]
+        params_to_num(config.configuration)  
+
+        try {
+          data.project_areas.features.forEach((item) => {
+            const id_area = item.id
+            const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id_area, item, config.configuration, renderMap);  
+            const [tables, data_pv] = drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord, config.configuration, renderMap);
+          })
+        } catch (e) {
+          window.Turbo.renderStreamMessage(turbo_message(
+            'error', 
+            `Произошла ошибка при отрисовке конфигурации для фото: ${config.title};
+            Ошибка ${e}; 
+            Временное решение: Изменить угол относительно азимута / 
+            Изменить нижнюю (при 90°) или левую границу (при 0°/180°) области, сгладить угловатые выступы / 
+            Изменить конфигурацию стола`
+          ));
+          accessToFormElements(true)
+          return;
+        }
+
+        renderMap.once('idle', function(){
+          renderMap.getCanvas().toBlob(function (blob) {
+            downloadImage(blob, config.title)
+
+            deleteAreas(data.project_areas.features, renderMap)
+            if (i != data.configs.length - 1 ) {
+              i++
+              best_quality_snapshot_PV(renderMap, actualPixelRatio, hidden, data, i)
+            } else {
+              renderMap.remove();
+              hidden.parentNode.removeChild(hidden);
+              Object.defineProperty(window, 'devicePixelRatio', {
+                  get: function() {return actualPixelRatio}
+              });
+              $("#btn_open_pdf").prop('disabled', false);
+              accessToFormElements(true)
+              window.Turbo.renderStreamMessage(turbo_message('notice', 'Планы загружены!'));
+            }
+          })
+        })
       };
   };
 })

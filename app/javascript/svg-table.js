@@ -22,7 +22,7 @@ document.addEventListener("turbo:load", function() {
         check_type_tracker.addEventListener('click', drawTable);
         check_type_fix.addEventListener('click', drawTable);
         btn_svg_show.addEventListener('click', drawTable);
-
+        $('#select_config').change(drawTable);
         const svg = Snap("#svg");
 
         function getOrientationPV() {
@@ -42,7 +42,6 @@ document.addEventListener("turbo:load", function() {
         };
 
         function drawTable(e) {
-            
             var height = svg.node.clientHeight;
             var width = svg.node.clientWidth;
             svg.attr({ viewBox: '0 0' + ' ' + width + ' ' +  height});
