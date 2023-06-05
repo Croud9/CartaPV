@@ -19,5 +19,5 @@ test:
 production:
   <<: *default
   database: carta_production
-  username: pixel_place
-  password: <%= ENV['PIXEL_PLACE_DATABASE_PASSWORD'] %>
+  username: croud9
+  password: <%= ENV['CROUD9_DATABASE_PASSWORD'] %>

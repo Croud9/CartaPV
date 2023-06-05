@@ -1,0 +1,16 @@
+# postgresql 
+service postgresql status
+sudo pg_ctlcluster 12 main start
+
+# kill inst rails app
+sudo lsof -i tcp:3000
+kill -9 356
+
+rails active_storage:install
+
+# for rmagick
+sudo apt-get install imagemagick
+sudo apt-get install imagemagick libmagickcore-dev
+or
+sudo apt update
+sudo apt-get install libmagickwand-dev
