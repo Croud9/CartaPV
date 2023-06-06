@@ -18,6 +18,4 @@ test:
 
 production:
   <<: *default
-  database: carta_production
-  username: croud9
-  password: <%= ENV['CROUD9_DATABASE_PASSWORD'] %>
+  url: <%= ENV['DATABASE_URL'] %>
