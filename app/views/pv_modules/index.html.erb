@@ -1,10 +1,10 @@
 <h2>Фотоэлектрические модули</h2>
 <%= form_tag import_pv_modules_path, :multipart => true do %>
    <%# <label for="file">Загрузить файл модуля</label>  %>
-   <div class="row-group">
     <%= file_field_tag "file", accept: ".PAN" %>
-    <%= submit_tag "Обработать", class: "btn_text_only" %>
-   </div>
+    <%= submit_tag "Обработать", class: "btn" %>
+   <%# <div class="row-group">
+   </div> %>
 <% end %>
 
 <table>
@@ -24,8 +24,10 @@
         <td><%= pv_module.manufacturer %></td>
         <td>
           <%= form_tag update_model_path(pv_module) do %>
-            <%= text_field_tag :input_pv_model, value = pv_module.model, class: "input_text_only"  %>
-            <%= submit_tag "Изменить", class: "btn_text_only" %>
+            <div class="row-group">
+              <%= text_field_tag :input_pv_model, value = pv_module.model, class: "input_text_only"  %>
+              <%= submit_tag "Изменить", class: "btn_text_only" %>
+            </div>
           <% end %>
         </td>
         <td><%= pv_module.power %></td>
