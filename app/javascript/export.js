@@ -17,6 +17,8 @@ document.addEventListener("turbo:load", function() {
       $('#select_config_pdf').empty();
       $('#form_pdf').fadeTo(500, 1);
       $('#select_project_pdf').change(function() {
+        const actualPixelRatio = window.devicePixelRatio;
+        console.log(actualPixelRatio)
         $('#multiselect_field').empty();
         $('#select_config_pdf').empty();
         $.ajax({
@@ -45,6 +47,7 @@ document.addEventListener("turbo:load", function() {
       $("#style_not_map_topo").click(function () {
         map_not_display.setStyle(style_topo)
       })
+      change_dpi('low_res') 
 
       map_not_display = new maplibregl.Map({
         container: 'map_not_display',
@@ -84,7 +87,8 @@ document.addEventListener("turbo:load", function() {
             else {
               console.log(data)
               accessToFormElements(false)
-              // init_map(data)
+              data['actual_dpi'] = window.devicePixelRatio;
+              change_dpi('low_res') 
               drawPointInCountry(data)
             }
           },
@@ -250,6 +254,7 @@ document.addEventListener("turbo:load", function() {
           beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
           success: function() { 
             window.Turbo.renderStreamMessage(turbo_message('notice', 'Отчет сгенерирован!'));
+            change_dpi(data.actual_dpi) 
             if ($('#dwnld_planes').is(':checked')) {
               createPrintMap(data)
             } else {
@@ -653,9 +658,7 @@ document.addEventListener("turbo:load", function() {
         }
 
         var actualPixelRatio = window.devicePixelRatio;
-        Object.defineProperty(window, 'devicePixelRatio', {
-            get: function() {return 576 / 96}
-        });
+        change_dpi('high_res') 
 
         var renderMap = new maplibregl.Map({
             container: container,
@@ -731,9 +734,7 @@ document.addEventListener("turbo:load", function() {
             } else {
               renderMap.remove();
               hidden.parentNode.removeChild(hidden);
-              Object.defineProperty(window, 'devicePixelRatio', {
-                  get: function() {return actualPixelRatio}
-              });
+              change_dpi(actualPixelRatio) 
               $("#btn_open_pdf").prop('disabled', false);
               accessToFormElements(true)
               window.Turbo.renderStreamMessage(turbo_message('notice', 'Планы загружены!'));
@@ -741,6 +742,21 @@ document.addEventListener("turbo:load", function() {
           })
         })
       };
+
+      function change_dpi(param) {
+        let pixelRatio
+        if (param == 'low_res') {
+          pixelRatio = 120 / 96
+        } else if (param == 'high_res'){
+          pixelRatio = 576 / 96
+        } else {
+          pixelRatio = param
+        }
+        console.log('pixelRatio: ' + pixelRatio)
+        Object.defineProperty(window, 'devicePixelRatio', {
+          get: function() {return pixelRatio}
+      });
+      }
   };
 })
 
