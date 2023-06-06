@@ -400,17 +400,17 @@ document.addEventListener("turbo:load", function() {
         function initBingMaps() {
             const BingMapsKey = 'Ahdsg0_Kxmm_5xKeGvoQzzMeUjhfT-SIAhyQh38t_naexGTgpJLcd3clUu_9VhDL';
             const BingMapsImagerySet = 'AerialWithLabelsOnDemand'; //Alternatively, use 'AerialWithLabelsOnDemand' if you also want labels on the map.
-            const BingMapsImageryMetadataUrl = `https://dev.virtualearth.net/REST/V1/Imagery/Metadata/${BingMapsImagerySet}?output=json&include=ImageryProviders&key=${BingMapsKey}/`;
+            const BingMapsImageryMetadataUrl = `https://dev.virtualearth.net/REST/V1/Imagery/Metadata/${BingMapsImagerySet}?output=json&uriScheme=https&include=ImageryProviders&key=${BingMapsKey}`;
             fetch(BingMapsImageryMetadataUrl).then(r => r.json()).then(r => {
                 var tileInfo = r.resourceSets[0].resources[0];
-                
+
                 //Bing Maps supports subdoamins which can make tile loading faster. Create a tile URL for each subdomain. 
                 var tileUrls = [];
                 
                 tileInfo.imageUrlSubdomains.forEach(sub => {
                     tileUrls.push(tileInfo.imageUrl.replace('{subdomain}', sub));
-                });
-                
+                  });
+                  
                 //Use the image provider info to create attributions.
                 var attributions = tileInfo.imageryProviders.map(p => {
                     return p.attribution;
