@@ -47,7 +47,6 @@ class PvMapsController < ApplicationController
   def update_draw_area
     project = Project.find(params[:id])
     input_params = params[:options]
-    print "adewwwww --> #{input_params}"
     project.update_attribute(:draw_area, input_params)
   end
 

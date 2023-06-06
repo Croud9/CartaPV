@@ -9,13 +9,13 @@ class AreaConfigsController < ApplicationController
     project = Project.find(params[:project_id])
     area_config = project.area_configs.create(title: params[:input_config_title], configuration: DEFAULT_AREA_PARAMS)
 
-    redirect_to project_path(project), alert: "Конфигурация успешно создана"
+    redirect_to project_path(project), notice: "Конфигурация успешно создана"
   end
 
   def update
     input_title = params[:input_config_title]
     if input_title == @config.title || input_title.length == 0
-      flash.now[:notice] = "Название не изменено"
+      flash.now[:success] = "Название не изменено"
       render turbo_stream: turbo_stream.replace("flash_notice", partial: "layouts/flash", locals: { flash: flash })
     else
       @config.update_attribute(:title, input_title)
@@ -27,7 +27,7 @@ class AreaConfigsController < ApplicationController
     if @config.destroy
       redirect_to project_path(@config.project), notice: "Конфигурация успешно удалена"
     else
-      flash.now[:notice] = "Конфигурация не удалена"
+      flash.now[:success] = "Конфигурация не удалена"
       render turbo_stream: turbo_stream.replace("flash_notice", partial: "layouts/flash", locals: { flash: flash })
       
     end

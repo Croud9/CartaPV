@@ -20,9 +20,11 @@ class PvModulesController < ApplicationController
   def import 
     params_module = PvModule.import(params[:file])
     if params_module == nil
-      redirect_to pv_modules_path, alert: "Данный модуль уже существует"
+      flash.now[:success] = "Данный модуль уже существует"
+      render turbo_stream: turbo_stream.replace("flash_notice", partial: "layouts/flash", locals: { flash: flash })
     elsif params_module == 'file_error'
-      redirect_to pv_modules_path, alert: "Ошибка в файле"
+      flash.now[:error] = "Ошибка в файле"
+      render turbo_stream: turbo_stream.replace("flash_notice", partial: "layouts/flash", locals: { flash: flash })
     else
       params_module.save!
       redirect_to pv_modules_path, notice: "Параметры модуля успешно добавлены"
@@ -32,7 +34,7 @@ class PvModulesController < ApplicationController
   def update_model
     input_name = params[:input_pv_model]
     if input_name == @pv_module.model || input_name.length == 0
-      flash.now[:notice] = "Имя не изменено"
+      flash.now[:success] = "Имя не изменено"
       render turbo_stream: turbo_stream.replace("flash_notice", partial: "layouts/flash", locals: { flash: flash })
     else
       @pv_module.update_attribute(:model, input_name)
