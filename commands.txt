@@ -14,3 +14,6 @@ sudo apt-get install imagemagick libmagickcore-dev
 or
 sudo apt update
 sudo apt-get install libmagickwand-dev
+
+
+bin/importmap pin jquery

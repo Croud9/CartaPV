@@ -1,10 +1,7 @@
 <h2>Фотоэлектрические модули</h2>
 <%= form_tag import_pv_modules_path, :multipart => true do %>
-   <%# <label for="file">Загрузить файл модуля</label>  %>
     <%= file_field_tag "file", accept: ".PAN" %>
     <%= submit_tag "Обработать", class: "btn" %>
-   <%# <div class="row-group">
-   </div> %>
 <% end %>
 
 <table>

@@ -69,3 +69,5 @@ pin "polygon-clipping", to: "https://ga.jspm.io/npm:polygon-clipping@0.15.3/dist
 pin "process", to: "https://ga.jspm.io/npm:@jspm/core@2.0.1/nodelibs/browser/process-production.js"
 pin "@turf/difference", to: "https://ga.jspm.io/npm:@turf/difference@6.5.0/dist/es/index.js"
 pin "jquery", to: "https://ga.jspm.io/npm:jquery@3.6.4/dist/jquery.js", preload: true
+pin "@turf/point-grid", to: "https://ga.jspm.io/npm:@turf/point-grid@6.5.0/dist/es/index.js"
+pin "dom-to-image", to: "https://ga.jspm.io/npm:dom-to-image@2.6.0/src/dom-to-image.js"

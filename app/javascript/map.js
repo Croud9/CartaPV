@@ -3,6 +3,7 @@ import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import MaplibreGeocoder from '@maplibre/maplibre-gl-geocoder';
 import area from '@turf/area';
 import bbox from '@turf/bbox';
+import pointGrid from '@turf/point-grid';
 import centroid from '@turf/centroid';
 import { polygon, featureCollection } from '@turf/helpers';
 import { turbo_message } from "./flash_message.js";
@@ -21,6 +22,62 @@ document.addEventListener("turbo:load", function() {
         });
         let style_bing_map
         let global_params
+        // let elevationArea = []
+        // const terrain_style = {
+        //   version: 8,
+        //   name: "OSM Mecklenburg GeoPortal",
+        //   // maxPitch: 70,
+        //   // zoom: 13.5,
+        //   // center: [-80.846, 35.223],
+        //   sources: {
+        //     osm: {
+        //       type: "raster",
+        //       tiles: ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
+        //       tileSize: 256,
+        //       attribution: "&copy; OpenStreetMap Contributors",
+        //       maxzoom: 19
+        //     },
+        //     hillshade_source: {
+        //      type: "raster-dem",
+        //       encoding: "terrarium",
+        //       tiles: [
+        //         "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
+        //       ],
+        //       tileSize: 256,
+        //       minzoom: 0,
+        //       maxzoom: 14
+        //     },
+        //     terrain_source: {
+        //       type: "raster-dem",
+        //       encoding: "terrarium",
+        //       tiles: [
+        //         "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
+        //       ],
+        //       tileSize: 256,
+        //       minzoom: 0,
+        //       maxzoom: 14
+        //     }
+        //   },
+        //   layers: [
+        //     {
+        //       id: "osm",
+        //       type: "raster",
+        //       source: "osm"
+        //     },
+        //     {
+        //       id: "hills",
+        //       type: "hillshade",
+        //       source: "hillshade_source",
+        //       layout: { visibility: 'visible' },
+        //       paint: { 'hillshade-shadow-color': '#473B24' }
+        //     }
+        //   ],
+        //   terrain: {
+        //     source: 'terrain_source',
+        //     exaggeration: 5
+        //   }
+        // }
+
         var geocoder_api = {
             forwardGeocode: async (config) => {
                 const features = [];
@@ -92,6 +149,78 @@ document.addEventListener("turbo:load", function() {
         $("#style_map_outdoors").click(function () {
           map.setStyle('https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd')
         })
+        $("#style_map_terrain").click(function () {
+          // const terrain_style = {
+          //   version: 8,
+          //   name: "OSM Mecklenburg GeoPortal",
+          //   maxPitch: 70,
+          //   zoom: 13.5,
+          //   center: [-80.846, 35.223],
+          //   sources: {
+          //     osm: {
+          //       type: "raster",
+          //       tiles: ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
+          //       tileSize: 256,
+          //       attribution: "&copy; OpenStreetMap Contributors",
+          //       maxzoom: 19
+          //     },
+          //     hillshade_source: {
+          //     type: "raster-dem",
+          //       encoding: "terrarium",
+          //       tiles: [
+          //         "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
+          //       ],
+          //       tileSize: 256,
+          //       minzoom: 0,
+          //       maxzoom: 14
+          //   },
+          //     terrain_source: {
+          //       type: "raster-dem",
+          //       encoding: "terrarium",
+          //       tiles: [
+          //         "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
+          //       ],
+          //       tileSize: 256,
+          //       minzoom: 0,
+          //       maxzoom: 14
+          //     }
+          //   },
+          //   layers: [
+          //     {
+          //       id: "osm",
+          //       type: "raster",
+          //       source: "osm"
+          //     },
+          //     {
+          //       id: "hills",
+          //       type: "hillshade",
+          //       source: "hillshade_source",
+          //       layout: { visibility: 'visible' },
+          //       paint: { 'hillshade-shadow-color': '#473B24' }
+          //     }
+          //   ],
+          //   terrain: {
+          //     source: 'terrain_source',
+          //     exaggeration: 5
+          //   }
+          // }
+
+          // map.setStyle(terrain_style)
+          
+          // let elevationArea2 = map.queryTerrainElevation([95.9345,41.2565])
+          console.log($('.maplibregl-ctrl-scale').text())
+          console.log($('.maplibregl-ctrl-scale').width()) // может + 14 нужно
+
+          console.log(map.getCanvas()) // может + 14 нужно
+          console.log(map.getCanvas().getContext('2d')) // может + 14 нужно
+          map.getCanvas().fillText('Mine!',0,0)
+          var canvas = document.getElementById('map').getCanvas();
+          var ctx = canvas.getContext('2d');
+          console.log(ctx)
+          // $('canvas')[0].getContext('2d').fillText('Mine!',0,0)
+          // $('canvas')[0].getContext('2d').fillText('Mine!',0,0)
+          // console.log(map.queryTerrainElevation([95.9345, 41.2565]))
+        })
         // при сохранении еще добавить  get_config_params(
         
         function set_project_area() {
@@ -150,7 +279,6 @@ document.addEventListener("turbo:load", function() {
             let all_data = []
             let areas = []
             const selected_ids = draw.getSelectedIds();
-            console.log('selected ids --> ' + selected_ids)
             if (selected_ids.length != 0) {
               try {
                 selected_ids.forEach((id) => {
@@ -158,6 +286,41 @@ document.addEventListener("turbo:load", function() {
                   let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
                   all_data.push(feature)
                   areas.push(draw.get(id))
+
+                  // выгрузка высот
+                  // const bbox_all = bbox(draw.get(id))
+                  // var extent = bbox_all;
+                  // var cellSide = 3;
+                  // var options = {units: 'meters', mask: poly_for_pv};
+
+                  // var grid = pointGrid(extent, cellSide, options);
+                  // console.log(grid)
+                  
+
+                  // map.addSource('national-park', {
+                  //   'type': 'geojson',
+                  //   'data': grid
+                  // });
+                  // map.addLayer({
+                  //   'id': 'park-volcanoes',
+                  //   'type': 'circle',
+                  //   'source': 'national-park',
+                  //   'paint': {
+                  //   'circle-radius': 3,
+                  //   'circle-color': '#B42222'
+                  //   },
+                  //   'filter': ['==', '$type', 'Point']
+                  // });
+                  // elevationArea = map.queryTerrainElevation(grid.features[0].geometry.coordinates)
+                  
+                  // grid.features.forEach((el) => {
+                  //   elevationArea.push({
+                  //     long: el.geometry.coordinates[1], 
+                  //     lat:  el.geometry.coordinates[0],
+                  //     elevat: map.queryTerrainElevation([el.geometry.coordinates[1], el.geometry.coordinates[0]])
+                  //   })
+                  // })
+                  // console.log(elevationArea)
                   // const all_tables = drawPVs(item, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
                   // outputAreaData(item, poly_for_pv, all_tables); 
                 });
@@ -168,7 +331,7 @@ document.addEventListener("turbo:load", function() {
                 ));
                 return;
               }
-              console.log(all_data)
+
               $.ajax({
                 method: 'post',
                 url: 'update_configuration',
@@ -441,23 +604,25 @@ document.addEventListener("turbo:load", function() {
                         }
                     ]
                 };
+                
                 style_bing_map = style
             });  
         }
 
+        const scale = new maplibregl.ScaleControl();
         var map = new maplibregl.Map({
                 container: 'map',
                 zoom: 2,
                 center: [100, 65],
+                maxPitch: 70,
+                // hash: true,
+                fadeDuration: 0,
+                validateStyle: false,
                 style:
                 'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd', // Актуальные, бесшовные изображения для всего мира с учетом контекста
-                // 'mapbox://styles/mapbox/satellite-streets-v5', // Актуальные, бесшовные изображения для всего мира с учетом контекста
-                // 'https://api.maptiler.com/maps/3f98f986-5df3-44da-b349-6569ed7b764c/style.json?key=QA99yf3HkkZG97cZrjXd' //Идеальная карта для активного отдыха
-                // 'https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd', // Идеальная базовая карта местности с контурами и заштрихованным рельефом.
-                // preserveDrawingBuffer: true,
-                antialias: true // create the gl context with MSAA antialiasing, so custom layers are antialiased
+                // terrain_style
         }); 
-
+        
         map.addControl(
             new MaplibreGeocoder(geocoder_api, {
                 maplibregl: maplibregl
@@ -471,6 +636,8 @@ document.addEventListener("turbo:load", function() {
                 showCompass: true
             })
         );
+
+        map.addControl(scale);
         map.addControl(draw);
         // map.on('draw.create', updateArea);
         map.on('draw.delete', updateArea);
@@ -480,8 +647,19 @@ document.addEventListener("turbo:load", function() {
 
         map.on('load', function () {
           $('#map_styles').fadeTo(500, 1);
+          console.log($('.maplibregl-ctrl-scale').val())
+          console.log($('.maplibregl-ctrl-scale').text())
+          console.log($('.maplibregl-ctrl-scale').html())
+          console.log($('.maplibregl-ctrl-scale').width())
         });
-          
+        
+        // map.addControl(
+        //   new maplibregl.TerrainControl({
+        //     source: "terrainSource",
+        //     exaggeration: 1,
+        //   })
+        // );
+
         function deleteAreas(features) {
             features.forEach((item) => { 
                 const id = `poly_for_pv${item.id}`

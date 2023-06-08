@@ -3,6 +3,7 @@ import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import MaplibreGeocoder from '@maplibre/maplibre-gl-geocoder';
 import area from '@turf/area';
 import bbox from '@turf/bbox';
+import domtoimage from 'dom-to-image';
 import centroid from '@turf/centroid';
 import { polygon, featureCollection } from '@turf/helpers';
 import { turbo_message } from "./flash_message.js";
@@ -11,6 +12,7 @@ import { calcAreaForPV, calcPVs, createPolyWithHole } from "./pv-calc.js";
 document.addEventListener("turbo:load", function() {
     if (document.getElementById("map_not_display") !== null) {
       let style_bing_map, map_not_display
+      document.getElementById('canvas').style.display = 'none';
       const style_topo = 'https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd'
       initBingMaps()
       accessToFormElements(false)
@@ -49,6 +51,7 @@ document.addEventListener("turbo:load", function() {
       })
       change_dpi('low_res') 
 
+      const scale = new maplibregl.ScaleControl({maxWidth: 500});
       map_not_display = new maplibregl.Map({
         container: 'map_not_display',
         zoom: 3,
@@ -61,10 +64,10 @@ document.addEventListener("turbo:load", function() {
         fadeDuration: 0,
         attributionControl: false
       });
-
       $('#map_not_display').css("display", "none")
-
+      
       map_not_display.on('load', function () {
+        map_not_display.addControl(scale);
         map_not_display.loadImage(
           'sun.png',
           function (error, image) {
@@ -118,7 +121,7 @@ document.addEventListener("turbo:load", function() {
 
         map_not_display.flyTo({
           center: center_pt.geometry.coordinates,
-          zoom: 2,
+          zoom: 3.5,
           animate: false,
         });
         
@@ -669,9 +672,9 @@ document.addEventListener("turbo:load", function() {
             trackResize: false,
             interactive: false,
             fadeDuration: 0,
-            attributionControl: false
         });
         container.style.display = 'none';
+        renderMap.addControl(scale);
 
         renderMap.once('load', function() {
             const bbox_all = bbox(data.project_areas)
@@ -722,24 +725,57 @@ document.addEventListener("turbo:load", function() {
           accessToFormElements(true)
           return;
         }
+        
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const node = $('.maplibregl-ctrl-scale')[0];
+        console.log(node)
+        console.log($('.maplibregl-ctrl-scale').width())
 
+        var rect = "<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' xml:space='preserve'  height='50' width='" +
+        $('.maplibregl-ctrl-scale').width() + 
+        "'><rect width='" +
+        $('.maplibregl-ctrl-scale').width() +
+        "' height='50' style='fill:rgb(0,0,255)'/></svg> ";
+        console.log(rect)
+        var scale_blob = new Blob([rect], {type: "image/svg+xml;charset=utf-8"});
+
+        
         renderMap.once('idle', function(){
-          renderMap.getCanvas().toBlob(function (blob) {
-            downloadImage(blob, config.title)
+            renderMap.getCanvas().toBlob(function (map_blob) {
+                  console.log(map_blob)
+                  console.log(scale_blob)
 
-            deleteAreas(data.project_areas.features, renderMap)
-            if (i != data.configs.length - 1 ) {
-              i++
-              best_quality_snapshot_PV(renderMap, actualPixelRatio, hidden, data, i)
-            } else {
-              renderMap.remove();
-              hidden.parentNode.removeChild(hidden);
-              change_dpi(actualPixelRatio) 
-              $("#btn_open_pdf").prop('disabled', false);
-              accessToFormElements(true)
-              window.Turbo.renderStreamMessage(turbo_message('notice', 'Планы загружены!'));
-            }
-          })
+                  var img1 = new Image();
+                  img1.src = URL.createObjectURL(map_blob);
+                  img1.onload = function(){ 
+                    ctx.drawImage(img1, 0, 0) 
+                    var img2 = new Image();
+                    img2.src = URL.createObjectURL(scale_blob);
+                    img2.onload = function(){ 
+                      ctx.drawImage(img2, 50, 50) 
+                      canvas.toBlob(function (blob) {
+                        downloadImage(blob, config.title)
+            
+                        deleteAreas(data.project_areas.features, renderMap)
+                        if (i != data.configs.length - 1 ) {
+                          i++
+                          best_quality_snapshot_PV(renderMap, actualPixelRatio, hidden, data, i)
+                        } else {
+                          // renderMap.remove();
+                          // hidden.parentNode.removeChild(hidden);
+                          change_dpi(actualPixelRatio) 
+                          $("#btn_open_pdf").prop('disabled', false);
+                          accessToFormElements(true)
+                          window.Turbo.renderStreamMessage(turbo_message('notice', 'Планы загружены!'));
+                        }
+                      })
+                    }
+                  }
+
+                  // renderImage(map_blob, 0, 0)
+                  // renderImage(scale_blob, 5000, 3000)
+            })
         })
       };
 
@@ -757,6 +793,8 @@ document.addEventListener("turbo:load", function() {
           get: function() {return pixelRatio}
       });
       }
+
+
   };
 })
 
