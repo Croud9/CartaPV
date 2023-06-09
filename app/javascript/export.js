@@ -51,7 +51,6 @@ document.addEventListener("turbo:load", function() {
       })
       change_dpi('low_res') 
 
-      const scale = new maplibregl.ScaleControl({maxWidth: 500});
       map_not_display = new maplibregl.Map({
         container: 'map_not_display',
         zoom: 3,
@@ -67,7 +66,6 @@ document.addEventListener("turbo:load", function() {
       $('#map_not_display').css("display", "none")
       
       map_not_display.on('load', function () {
-        map_not_display.addControl(scale);
         map_not_display.loadImage(
           'sun.png',
           function (error, image) {
@@ -659,7 +657,7 @@ document.addEventListener("turbo:load", function() {
         } else {
           style = style_topo
         }
-
+        const scale = new maplibregl.ScaleControl({maxWidth: 100});
         var actualPixelRatio = window.devicePixelRatio;
         change_dpi('high_res') 
 
@@ -731,16 +729,19 @@ document.addEventListener("turbo:load", function() {
         const node = $('.maplibregl-ctrl-scale')[0];
         console.log(node)
         console.log($('.maplibregl-ctrl-scale').width())
-
-        var rect = "<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' xml:space='preserve'  height='50' width='" +
-        $('.maplibregl-ctrl-scale').width() + 
-        "'><rect width='" +
-        $('.maplibregl-ctrl-scale').width() +
-        "' height='50' style='fill:rgb(0,0,255)'/></svg> ";
-        console.log(rect)
-        var scale_blob = new Blob([rect], {type: "image/svg+xml;charset=utf-8"});
-
+        const width_scale_frame = ($('.maplibregl-ctrl-scale').width() + 14) * 6
+        const text_scale_frame = $('.maplibregl-ctrl-scale').text()
+        console.log(width_scale_frame)
+        console.log(text_scale_frame)
         
+        const rect = "<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' xml:space='preserve'  height='50' width='" + 
+        width_scale_frame + "'>" +
+        "<rect width='" + width_scale_frame + "' height='50' rx='12' style='fill:rgba(0, 0, 0, 0.6)'/>" +
+        "<text x='30' y='35' fill='white' font-size='35' font-family='sans-serif'>"+ text_scale_frame + "</text>" +
+        "</svg> ";
+        console.log(rect)
+        const scale_blob = new Blob([rect], {type: "image/svg+xml;charset=utf-8"});
+
         renderMap.once('idle', function(){
             renderMap.getCanvas().toBlob(function (map_blob) {
                   console.log(map_blob)
@@ -762,8 +763,8 @@ document.addEventListener("turbo:load", function() {
                           i++
                           best_quality_snapshot_PV(renderMap, actualPixelRatio, hidden, data, i)
                         } else {
-                          // renderMap.remove();
-                          // hidden.parentNode.removeChild(hidden);
+                          renderMap.remove();
+                          hidden.parentNode.removeChild(hidden);
                           change_dpi(actualPixelRatio) 
                           $("#btn_open_pdf").prop('disabled', false);
                           accessToFormElements(true)
@@ -772,9 +773,6 @@ document.addEventListener("turbo:load", function() {
                       })
                     }
                   }
-
-                  // renderImage(map_blob, 0, 0)
-                  // renderImage(scale_blob, 5000, 3000)
             })
         })
       };
@@ -788,7 +786,7 @@ document.addEventListener("turbo:load", function() {
         } else {
           pixelRatio = param
         }
-        console.log('pixelRatio: ' + pixelRatio)
+
         Object.defineProperty(window, 'devicePixelRatio', {
           get: function() {return pixelRatio}
       });
