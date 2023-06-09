@@ -14,13 +14,14 @@ document.addEventListener("turbo:load", function() {
       let style_bing_map, map_not_display
       document.getElementById('canvas').style.display = 'none';
       const style_topo = 'https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd'
+      const style_satellite = 'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd'
       initBingMaps()
       accessToFormElements(false)
+      $("#btn_png").prop('disabled', true);
       $('#select_config_pdf').empty();
       $('#form_pdf').fadeTo(500, 1);
       $('#select_project_pdf').change(function() {
         const actualPixelRatio = window.devicePixelRatio;
-        console.log(actualPixelRatio)
         $('#multiselect_field').empty();
         $('#select_config_pdf').empty();
         $.ajax({
@@ -30,7 +31,14 @@ document.addEventListener("turbo:load", function() {
           dataType: "script",
         });
         accessToFormElements(true)
-        $("#btn_open_pdf").prop('disabled', true);
+        $("#btn_png").prop('disabled', false);
+        $("#btn_open_pdf").hide();
+      });
+
+      $("#btn_open_pdf").click(function(e) {
+        $('#btn_open_pdf').fadeTo(500, 0,function() {
+          $('#btn_open_pdf').hide()
+        });
       });
 
       $("#btn_pdf").click(function(e) {
@@ -39,15 +47,30 @@ document.addEventListener("turbo:load", function() {
           $('#form_pdf')[0].reportValidity();
         } else {
           e.preventDefault();
-          get_config_params()
+          get_config_params('pdf')
+        }
+      });
+
+      $("#btn_png").click(function(e) {
+        let isFormValid = $('#form_pdf')[0].checkValidity();
+        if(!isFormValid) {
+          $('#form_pdf')[0].reportValidity();
+        } else {
+          e.preventDefault();
+          get_config_params('png')
         }
       });
 
       $("#style_not_map_satellite").click(function () {
-        map_not_display.setStyle('https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd')
+        map_not_display.setStyle(style_satellite)
+        $('#high_res_checkblock').fadeTo(750, 1)
       })
       $("#style_not_map_topo").click(function () {
         map_not_display.setStyle(style_topo)
+        // $('#high_res_checkblock').hide()
+        $('#high_res_checkblock').fadeTo(500, 0,function() {
+          $('#high_res_checkblock').hide()
+        });
       })
       change_dpi('low_res') 
 
@@ -55,13 +78,13 @@ document.addEventListener("turbo:load", function() {
         container: 'map_not_display',
         zoom: 3,
         center: [100, 65],
-        style:
-        'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd', 
+        style: style_satellite, 
         preserveDrawingBuffer: true,
         trackResize: false,
         interactive: false,
         fadeDuration: 0,
-        attributionControl: false
+        attributionControl: false,
+        validateStyle: false,
       });
       $('#map_not_display').css("display", "none")
       
@@ -75,22 +98,29 @@ document.addEventListener("turbo:load", function() {
         );
       });
 
-      function get_config_params() {
+      function get_config_params(requester) {
         const selected_config = $("#select_config_pdf").val()
         $.ajax({
           url: "get_params_for_snapshots",
           data: {id: selected_config},
           success: function(data) {
             if (typeof(data) == 'string'){
-              console.log(data)
               window.Turbo.renderStreamMessage(data);
             }
             else {
-              console.log(data)
-              accessToFormElements(false)
+              // accessToFormElements(false)
               data['actual_dpi'] = window.devicePixelRatio;
-              change_dpi('low_res') 
-              drawPointInCountry(data)
+              if (requester == 'pdf') {
+                $("#btn_open_pdf").hide();
+                $("#btn_pdf").prop('disabled', true);
+                $("#btn_pdf").text('Анализ конфигураций');
+                $('#loader').fadeTo(700, 1);
+                change_dpi('low_res') 
+                drawPointInCountry(data)
+              } else {
+                $("#btn_png").prop('disabled', true);
+                createPrintMap(data)
+              }
             }
           },
         });
@@ -151,7 +181,8 @@ document.addEventListener("turbo:load", function() {
           padding: 20,
           animate: false,
         })
-        if ($('#style_not_map_satellite').is(':checked')) map_not_display.setStyle(style_bing_map)
+        if ($('#style_not_map_satellite').is(':checked') &&
+        $('#high_res_plane').is(':checked')) map_not_display.setStyle(style_bing_map)
 
         const current_source_poly = map_not_display.getSource('project_area')
         if (current_source_poly === undefined) {
@@ -203,9 +234,12 @@ document.addEventListener("turbo:load", function() {
             Изменить нижнюю (при 90°) или левую границу (при 0°/180°) области, сгладить угловатые выступы / 
             Изменить конфигурацию стола`
           ));
+          $('#loader').fadeTo(500, 0,function() {
+            $('#loader').hide()
+          });
           accessToFormElements(true)
           if ($('#style_not_map_satellite').is(':checked')){
-            map_not_display.setStyle('https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd')
+            map_not_display.setStyle(style_satellite)
           }
           return;
         }
@@ -227,7 +261,7 @@ document.addEventListener("turbo:load", function() {
             } else {
               saveRequestParams(data)
               if ($('#style_not_map_satellite').is(':checked')){
-                map_not_display.setStyle('https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd')
+                map_not_display.setStyle(style_satellite)
               }
             }
           })
@@ -235,6 +269,7 @@ document.addEventListener("turbo:load", function() {
       };
 
       function saveRequestParams(data) {
+        $("#btn_pdf").text('Создание отчета');
         const formData = new FormData();
         // formData.append('id', $("#select_config option:selected").val());
         // formData.append('data', JSON.stringify(data));
@@ -253,13 +288,21 @@ document.addEventListener("turbo:load", function() {
           processData: false,
           contentType: false,
           beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
-          success: function() { 
-            window.Turbo.renderStreamMessage(turbo_message('notice', 'Отчет сгенерирован!'));
-            change_dpi(data.actual_dpi) 
-            if ($('#dwnld_planes').is(':checked')) {
-              createPrintMap(data)
-            } else {
-              $("#btn_open_pdf").prop('disabled', false);
+          success: function(data_response) { 
+            if (typeof(data_response) == 'string'){
+              window.Turbo.renderStreamMessage(data_response);
+              $('#loader').fadeTo(500, 0,function() {
+                $('#loader').hide()
+              });
+              accessToFormElements(true)
+            }
+            else {
+              window.Turbo.renderStreamMessage(turbo_message('notice', 'Отчет сгенерирован!'));
+              change_dpi(data.actual_dpi) 
+              $('#btn_open_pdf').fadeTo(500, 1);
+              $('#loader').fadeTo(500, 0,function() {
+                $('#loader').hide()
+              });
               accessToFormElements(true)
             }
           }
@@ -611,23 +654,20 @@ document.addEventListener("turbo:load", function() {
       function accessToFormElements(access) {
         if (access == true) {
           $("#btn_pdf").prop('disabled', false);
-          $("#btn_pdf").text('Сгенерировать');
+          $("#btn_pdf").text('Cоздать PDF ');
           $("#multiselect_field").prop('disabled', false);
           $("#checkbox_config_pdf").prop('disabled', false);
           $("#select_config_pdf").prop('disabled', false);
           $("#style_not_map_satellite").prop('disabled', false);
           $("#style_not_map_topo").prop('disabled', false);
-          $("#dwnld_planes").prop('disabled', false);
         } else {
-          $("#btn_open_pdf").prop('disabled', true);
+          $("#btn_open_pdf").hide();
           $("#btn_pdf").prop('disabled', true);
-          $("#btn_pdf").text('Подождите...');
           $("#multiselect_field").prop('disabled', true);
           $("#checkbox_config_pdf").prop('disabled', true);
           $("#select_config_pdf").prop('disabled', true);
           $("#style_not_map_satellite").prop('disabled', true);
           $("#style_not_map_topo").prop('disabled', true);
-          $("#dwnld_planes").prop('disabled', true);
         }
       };
       
@@ -652,8 +692,11 @@ document.addEventListener("turbo:load", function() {
         container.style.width = `${1000}px`;
         container.style.height = `${600}px`;
         hidden.appendChild(container);
-        if ($('#style_not_map_satellite').is(':checked')) {
+        if ($('#style_not_map_satellite').is(':checked') &&
+        $('#high_res_plane').is(':checked')) {
           style = style_bing_map
+        } else if ($('#style_not_map_satellite').is(':checked')){
+          style = style_satellite
         } else {
           style = style_topo
         }
@@ -727,26 +770,18 @@ document.addEventListener("turbo:load", function() {
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const node = $('.maplibregl-ctrl-scale')[0];
-        console.log(node)
-        console.log($('.maplibregl-ctrl-scale').width())
         const width_scale_frame = ($('.maplibregl-ctrl-scale').width() + 14) * 6
         const text_scale_frame = $('.maplibregl-ctrl-scale').text()
-        console.log(width_scale_frame)
-        console.log(text_scale_frame)
         
         const rect = "<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' xml:space='preserve'  height='50' width='" + 
         width_scale_frame + "'>" +
         "<rect width='" + width_scale_frame + "' height='50' rx='12' style='fill:rgba(0, 0, 0, 0.6)'/>" +
         "<text x='30' y='35' fill='white' font-size='35' font-family='sans-serif'>"+ text_scale_frame + "</text>" +
         "</svg> ";
-        console.log(rect)
         const scale_blob = new Blob([rect], {type: "image/svg+xml;charset=utf-8"});
 
         renderMap.once('idle', function(){
             renderMap.getCanvas().toBlob(function (map_blob) {
-                  console.log(map_blob)
-                  console.log(scale_blob)
-
                   var img1 = new Image();
                   img1.src = URL.createObjectURL(map_blob);
                   img1.onload = function(){ 
@@ -766,9 +801,12 @@ document.addEventListener("turbo:load", function() {
                           renderMap.remove();
                           hidden.parentNode.removeChild(hidden);
                           change_dpi(actualPixelRatio) 
-                          $("#btn_open_pdf").prop('disabled', false);
-                          accessToFormElements(true)
+                          $("#btn_png").prop('disabled', false);
+                          // accessToFormElements(true)
                           window.Turbo.renderStreamMessage(turbo_message('notice', 'Планы загружены!'));
+                          // $('#loader').fadeTo(500, 0,function() {
+                          //   $('#loader').hide()
+                          // });
                         }
                       })
                     }

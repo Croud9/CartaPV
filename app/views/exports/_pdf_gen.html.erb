@@ -45,14 +45,14 @@
         
 
         <span class="form_text">Опции</span>
-        <label class="createAccount_policy">
+        <label class="createAccount_policy" id="high_res_checkblock">
           <div class="toggler-wrapper">
-              <input type="checkbox" id="dwnld_planes">
+              <input type="checkbox" id="high_res_plane" checked>
               <div class="toggler-slider">
                   <div class="toggler-knob"></div>
               </div>
           </div>
-          <div class="input_checkbox__decor">Скачать планы конфигураций</div>
+          <div class="input_checkbox__decor">Спутниковые снимки хорошего качества</div>
         </label>
 
 
@@ -68,11 +68,10 @@
         </div>
 
         <div class="createAccount_buttons">
-          <button class="btn btn-empty" title="Скачать планы конфигураций">PNG</button>
-          <button class="btn btn-empty btn_backStep1" id="btn_pdf">Создать</button>
-          <%= submit_tag "Открыть", id: "btn_open_pdf", class: "btn btn_createAccount "%>
+          <button class="btn btn_createAccount" id="btn_png" title="Скачать планы конфигураций">Скачать PNG</button>
+          <button class="btn btn-empty btn_backStep1" id="btn_pdf">Создать PDF</button>
+          <%= submit_tag "Открыть", id: "btn_open_pdf", class: "btn btn-empty ", style: "display: none" %>
         </div>
-        
       </div>
     <% end %>
   </div>

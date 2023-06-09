@@ -18,7 +18,13 @@
             <%= submit_tag "Изменить", class: "btn_text_only" %>
           <% end %>
         </td>
-        <td>Кол-во конфигураций: <%= project.area_configs.count %>,
+        <td>
+          Кол-во конфигураций: <%= project.area_configs.count %>
+          <% if project.total_params %>
+            <%= 
+              ", Место:  #{project.total_params}"
+            %>
+          <% end %>
         </td>
         <td>
           <%= link_to 'Удалить', 

@@ -5,6 +5,7 @@ class ExportPdf
   def initialize(params)
     @project = params[:project]
     @configs = params[:configs]
+    @project_img = params[:project_img]
     
     set_fonts
     header()
@@ -51,7 +52,8 @@ class ExportPdf
     text "Адрес: #{@project.total_params['location']['address'] || ''}", align: :left, size: 11
 
     move_down(20)
-    image StringIO.open(@project.point_on_map.download), position: :center, scale: 0.43
+
+    image StringIO.open(@project_img.tempfile.read), position: :center, scale: 0.43
     move_down(10)
     text "Рис. 1 - Местоположение области", align: :center, style: :italic, size: 10
   end
@@ -59,6 +61,7 @@ class ExportPdf
   def single_config
     config = @configs[0][:config]
     pv_module = @configs[0][:pv_module]
+    pv_image = @configs[0][:img].tempfile.read
     
     step_table = "vendor/assets/step_table.png"
     distance_table = "vendor/assets/distance_table.png"
@@ -66,7 +69,7 @@ class ExportPdf
     start_new_page
     page_num()
     move_down(35)
-    image StringIO.open(config.pv_config_on_map.download), position: :center, scale: 0.43
+    image StringIO.open(pv_image), position: :center, scale: 0.43
 
     move_down(10)
     text "Рис. 2 - Конфигурация опорных конструкций на местности", align: :center, style: :italic, size: 10
@@ -168,7 +171,6 @@ class ExportPdf
       remain = count_config % 5
       pages = gen_table(pages, remain)
     end
-    print pages
     
     index_config = 0
     pages.each do |page|
@@ -179,10 +181,7 @@ class ExportPdf
       col_params = get_column_width_and_scale(columns)
 
       columns.times do |n|
-        config = @configs[index_config][:config]
-        pv_module = @configs[index_config][:pv_module]
-  
-        data = add_data_column(config, pv_module, col_params[:scale], data, index_config)
+        data = add_data_column(col_params[:scale], data, index_config)
         index_config += 1
       end
       
@@ -237,7 +236,11 @@ class ExportPdf
     end
   end
 
-  def add_data_column config, pv_module, scale, data, index_config
+  def add_data_column scale, data, index_config
+    config = @configs[index_config][:config]
+    pv_module = @configs[index_config][:pv_module]
+    pv_image = @configs[index_config][:img].tempfile.read
+    
     img_table = "vendor/assets/scrin_table.png"
     if config.total_params
       pvs_in_table = config.configuration['row_pv_in_table'].to_i * config.configuration['column_pv_in_table'].to_i
@@ -253,7 +256,7 @@ class ExportPdf
       pv_square = "#{config.total_params['squares']['pv_area']['meters']} м² /  #{config.total_params['squares']['pv_area']['hectares']} га"
     end
 
-    img_point_on_map = StringIO.open(config.pv_config_on_map.download)
+    img_point_on_map = StringIO.open(pv_image)
     outputter = config.total_params['svg']['img']
     outputter.slice!('style="display: none;"')
     image_table = StringIO.open(get_png_from_svg(outputter))
