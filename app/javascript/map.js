@@ -5,6 +5,7 @@ import area from '@turf/area';
 import bbox from '@turf/bbox';
 import pointGrid from '@turf/point-grid';
 import centroid from '@turf/centroid';
+import length from '@turf/length';
 import { polygon, featureCollection } from '@turf/helpers';
 import { turbo_message } from "./flash_message.js";
 import { calcAreaForPV, calcPVs, createPolyWithHole } from "./pv-calc.js";
@@ -18,6 +19,7 @@ document.addEventListener("turbo:load", function() {
                 combine_features: true,
                 uncombine_features: true,
                 trash: true,
+                point: true,
             }
         });
         let style_bing_map
@@ -120,6 +122,20 @@ document.addEventListener("turbo:load", function() {
         };
 
         initBingMaps()
+        var distanceContainer = document.getElementById('distance');
+        var geojson = {
+          'type': 'FeatureCollection',
+          'features': []
+        };
+        
+        var linestring = {
+            'type': 'Feature',
+            'geometry': {
+                'type': 'LineString',
+                'coordinates': []
+            }
+        };
+        const btn_distance = $("#btn-draw-distance");
         const check_border_lines = document.getElementById('check-visible-border-lines');
         const check_dash_lines = document.getElementById('check-visible-dash-lines');
         const check_pv_polygons = document.getElementById('check-visible-pv-polygons');
@@ -133,21 +149,24 @@ document.addEventListener("turbo:load", function() {
         check_border_lines.addEventListener('change', visibilityLayout);
         check_dash_lines.addEventListener('change', visibilityLayout);
         check_pv_polygons.addEventListener('change', visibilityLayout);
+        btn_distance.click(distance_btn_logic);
         $('#select_config').change(get_config_params);
         $('#select_project').change(set_project_area);
         $("#type-table2").click(function () {
-          console.log('ratatatat')
           $('#angle-from-azimut').val(global_params.angle_from_azimut);
           $('#rangevalue2').text(global_params.angle_from_azimut);
         })
         $("#style_map_satellite").click(function () {
           map.setStyle('https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd')
+          distance_btn_logic(true)
         })
         $("#style_map_streets").click(function () {
           map.setStyle(style_bing_map)
+          distance_btn_logic(true)
         })
         $("#style_map_outdoors").click(function () {
           map.setStyle('https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd')
+          distance_btn_logic(true)
         })
         $("#style_map_terrain").click(function () {
           // const terrain_style = {
@@ -622,24 +641,7 @@ document.addEventListener("turbo:load", function() {
                 'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd', // Актуальные, бесшовные изображения для всего мира с учетом контекста
                 // terrain_style
         }); 
-        
-        map.addControl(
-            new MaplibreGeocoder(geocoder_api, {
-                maplibregl: maplibregl
-            })
-        );
-        map.addControl(new maplibregl.FullscreenControl());
-        map.addControl(
-            new maplibregl.NavigationControl({
-                visualizePitch: true,
-                showZoom: true,
-                showCompass: true
-            })
-        );
-
-        map.addControl(scale);
-        map.addControl(draw);
-        // map.on('draw.create', updateArea);
+      
         map.on('draw.delete', updateArea);
         map.on('draw.update', updateArea);
         map.on('draw.combine', combineArea);
@@ -647,12 +649,34 @@ document.addEventListener("turbo:load", function() {
 
         map.on('load', function () {
           $('#map_styles').fadeTo(500, 1);
-          console.log($('.maplibregl-ctrl-scale').val())
-          console.log($('.maplibregl-ctrl-scale').text())
-          console.log($('.maplibregl-ctrl-scale').html())
-          console.log($('.maplibregl-ctrl-scale').width())
+          map.addControl(
+              new MaplibreGeocoder(geocoder_api, {
+                  maplibregl: maplibregl
+              })
+          );
+          map.addControl(new maplibregl.FullscreenControl());
+          map.addControl(
+              new maplibregl.NavigationControl({
+                  visualizePitch: true,
+                  showZoom: true,
+                  showCompass: true
+              })
+          );
+          map.addControl(scale);
+          map.addControl(draw);
+          btn_distance.show()
+          $('#btn-load-image').show()
         });
-        
+
+        map.on('draw.modechange', function (e) {
+          const cursor = (e.mode == 'draw_polygon') ? 'crosshair' : '';
+          map.getCanvas().style.cursor = cursor;
+        });
+
+        map.on('draw.selectionchange', function (e) {
+          map.getCanvas().style.cursor = '';
+        });
+
         // map.addControl(
         //   new maplibregl.TerrainControl({
         //     source: "terrainSource",
@@ -837,181 +861,122 @@ document.addEventListener("turbo:load", function() {
               });
           }
         }
+
+        function distance_btn_logic(remove = false) {
+          if (btn_distance.hasClass("active_btn") || remove == true) {
+            btn_distance.removeClass("active_btn")
+            map.getCanvas().style.cursor = ''
+            if (map.getLayer('measure-points')) {
+              map.removeLayer('measure-points');
+            }
+            if (map.getLayer('measure-lines')) {
+              map.removeLayer('measure-lines');
+            }
+            if (map.getSource('geojson_dist')) {
+                map.removeSource('geojson_dist');
+            }
+            geojson.features = []
+            distanceContainer.innerHTML = '';
+            return
+          } else {
+            btn_distance.addClass("active_btn")
+  
+            let current_source_poly = map.getSource('geojson_dist')
+            if (current_source_poly === undefined) {
+                map.addSource('geojson_dist', {
+                  'type': 'geojson',
+                  'data': geojson
+                });
+                map.addLayer({
+                  id: 'measure-points',
+                  type: 'circle',
+                  source: 'geojson_dist',
+                  paint: {
+                      'circle-radius': 5,
+                      'circle-color': '#000'
+                  },
+                  filter: ['in', '$type', 'Point']
+                });
+                map.addLayer({
+                    id: 'measure-lines',
+                    type: 'line',
+                    source: 'geojson_dist',
+                    layout: {
+                        'line-cap': 'round',
+                        'line-join': 'round'
+                    },
+                    paint: {
+                        'line-color': '#000',
+                        'line-width': 2.5
+                    },
+                    filter: ['in', '$type', 'LineString']
+                });
+            }
+            else {
+                current_source_poly.setData(geojson);
+            }
+          }
+        }
+
+        map.on('click', function (e) {
+            if (btn_distance.hasClass("active_btn")) {
+              var features = map.queryRenderedFeatures(e.point, {
+                  layers: ['measure-points']
+              });
+              if (geojson.features.length > 1) geojson.features.pop();
+      
+              distanceContainer.innerHTML = '';
+      
+              if (features.length) {
+                  var id = features[0].properties.id;
+                  geojson.features = geojson.features.filter(function (point) {
+                      return point.properties.id !== id;
+                  });
+              } else {
+                  var point = {
+                      'type': 'Feature',
+                      'geometry': {
+                          'type': 'Point',
+                          'coordinates': [e.lngLat.lng, e.lngLat.lat]
+                      },
+                      'properties': {
+                          'id': String(new Date().getTime())
+                      }
+                  };
+      
+                  geojson.features.push(point);
+              }
+              if (geojson.features.length > 1) {
+                  linestring.geometry.coordinates = geojson.features.map(
+                      function (point) {
+                          return point.geometry.coordinates;
+                      }
+                  );
+      
+                  geojson.features.push(linestring);
+                  // Populate the distanceContainer with total distance
+                  var value = document.createElement('pre');
+                  var length_meters = length(linestring) * 1000
+                  value.textContent =
+                      'Расстояние: ' + length_meters.toLocaleString() + 'm';
+                  distanceContainer.appendChild(value);
+              }
+              map.getSource('geojson_dist').setData(geojson);
+            }
+        });
+        map.on('mousemove', function (e) {
+            if (btn_distance.hasClass("active_btn")) {
+              var features = map.queryRenderedFeatures(e.point, {
+                  layers: ['measure-points']
+              });
+              // UI indicator for clicking/hovering a point on the map
+              map.getCanvas().style.cursor = features.length
+                  ? 'pointer'
+                  : 'crosshair';
+            }
+        });
+        
     };
 })
-
-
-
-// data from OpenStreetMap.
-// map.on('load', function () {
-//     // Insert the layer beneath any symbol layer.
-//     var layers = map.getStyle().layers;
-
-//     var labelLayerId;
-//     for (var i = 0; i < layers.length; i++) {
-//         if (layers[i].type === 'symbol' && layers[i].layout['text-field']) {
-//             labelLayerId = layers[i].id;
-//             break;
-//         }
-//     }
-
-//     map.addLayer(
-//         {
-//             'id': '3d-buildings',
-//             'source': 'openmaptiles',
-//             'source-layer': 'building',
-//             'filter': ['==', 'extrude', 'true'],
-//             'type': 'fill-extrusion',
-//             'minzoom': 15,
-//             'paint': {
-//                 'fill-extrusion-color': '#aaa',
-
-//                 // use an 'interpolate' expression to add a smooth transition effect to the
-//                 // buildings as the user zooms in
-//                 'fill-extrusion-height': [
-//                     'interpolate',
-//                     ['linear'],
-//                     ['zoom'],
-//                     15,
-//                     0,
-//                     15.05,
-//                     ['get', 'height']
-//                 ],
-//                 'fill-extrusion-base': [
-//                     'interpolate',
-//                     ['linear'],
-//                     ['zoom'],
-//                     15,
-//                     0,
-//                     15.05,
-//                     ['get', 'min_height']
-//                 ],
-//                 'fill-extrusion-opacity': 0.6
-//             }
-//         },
-//         labelLayerId
-//     );
-// });
-
-
-
-
-
-
-
-
-
-
-
-// var distanceContainer = document.getElementById('distance');
-// // GeoJSON object to hold our measurement features
-// var geojson = {
-//     'type': 'FeatureCollection',
-//     'features': []
-// };
-
-// // Used to draw a line between points
-// var linestring = {
-//     'type': 'Feature',
-//     'geometry': {
-//         'type': 'LineString',
-//         'coordinates': []
-//     }
-// };
-
-// map.on('load', function () {
-//     map.addSource('geojson', {
-//         'type': 'geojson',
-//         'data': geojson
-//     });
-
-//     // Add styles to the map
-//     map.addLayer({
-//         id: 'measure-points',
-//         type: 'circle',
-//         source: 'geojson',
-//         paint: {
-//             'circle-radius': 5,
-//             'circle-color': '#000'
-//         },
-//         filter: ['in', '$type', 'Point']
-//     });
-//     map.addLayer({
-//         id: 'measure-lines',
-//         type: 'line',
-//         source: 'geojson',
-//         layout: {
-//             'line-cap': 'round',
-//             'line-join': 'round'
-//         },
-//         paint: {
-//             'line-color': '#000',
-//             'line-width': 2.5
-//         },
-//         filter: ['in', '$type', 'LineString']
-//     });
-
-//     map.on('click', function (e) {
-//         var features = map.queryRenderedFeatures(e.point, {
-//             layers: ['measure-points']
-//         });
-
-//         // Remove the linestring from the group
-//         // So we can redraw it based on the points collection
-//         if (geojson.features.length > 1) geojson.features.pop();
-
-//         // Clear the Distance container to populate it with a new value
-//         distanceContainer.innerHTML = '';
-
-//         // If a feature was clicked, remove it from the map
-//         if (features.length) {
-//             var id = features[0].properties.id;
-//             geojson.features = geojson.features.filter(function (point) {
-//                 return point.properties.id !== id;
-//             });
-//         } else {
-//             var point = {
-//                 'type': 'Feature',
-//                 'geometry': {
-//                     'type': 'Point',
-//                     'coordinates': [e.lngLat.lng, e.lngLat.lat]
-//                 },
-//                 'properties': {
-//                     'id': String(new Date().getTime())
-//                 }
-//             };
-
-//             geojson.features.push(point);
-//         }
-
-//         if (geojson.features.length > 1) {
-//             linestring.geometry.coordinates = geojson.features.map(
-//                 function (point) {
-//                     return point.geometry.coordinates;
-//                 }
-//             );
-
-//             geojson.features.push(linestring);
-//             console.log('linestring линия __>> ', linestring);
-//             // Populate the distanceContainer with total distance
-//             var value = document.createElement('pre');
-//             var length_meters = length(linestring) * 1000
-//             value.textContent =
-//                 'Total distance: ' + length_meters.toLocaleString() + 'm';
-//             distanceContainer.appendChild(value);
-//         }
-//         map.getSource('geojson').setData(geojson);
-//     });
-// });
-
-// map.on('mousemove', function (e) {
-//     var features = map.queryRenderedFeatures(e.point, {
-//         layers: ['measure-points']
-//     });
-//     // UI indicator for clicking/hovering a point on the map
-//     map.getCanvas().style.cursor = features.length
-//         ? 'pointer'
-//         : 'crosshair';
-// });
 
 

@@ -10,7 +10,7 @@ class ProjectsController < ApplicationController
   end
 
   def create 
-    area_config = AreaConfig.new(title: "Дефолтная", configuration: DEFAULT_AREA_PARAMS)
+    area_config = AreaConfig.new(title: "Стандарт", configuration: DEFAULT_AREA_PARAMS)
     project = area_config.build_project(title: params[:input_project_title])
 
     if project.save && area_config.save

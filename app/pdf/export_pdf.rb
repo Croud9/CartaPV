@@ -29,7 +29,12 @@ class ExportPdf
     img_logo = "vendor/assets/uni_logo.png"
 
     image img_logo, position: :right, scale: 0.235
-    text_box "Отчет параметров СЭС по проекту: <br> #{@project.title.upcase}", size: 14.5, align: :left, inline_format: true, text_color: "374156"
+    text_box "Отчет параметров СЭС по проекту: <br> #{@project.title.upcase}", 
+              size: 14.5, 
+              align: :left, 
+              inline_format: true, 
+              text_color: "374156", 
+              width: 400
     move_down(35)
   end
 

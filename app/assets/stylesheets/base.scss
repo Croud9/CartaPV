@@ -119,14 +119,6 @@ label {
     }
 }
 
-.icon {
-	width: 12px;
-}
-
-.icon-draw {
-	width: 17px;
-}
-
 .icon-header {
 	width: 30px;
 }
@@ -141,11 +133,12 @@ label {
 	display: flex;
   margin: 0 -5px;
   justify-content: flex-start;
+  align-items: center;
 	// flex-direction: column;
 }
 
 .item-row-group {
-  flex: 0 1 25%;
+  flex: 0 1 30%;
   margin: 0 5px 10px 0;
 }
 
@@ -201,9 +194,9 @@ label {
 }
 
 .distance-container {
-	position: absolute;
-	top: 10px;
-	left: 10px;
+	position: relative;
+	// top: 10px;
+	// left: 10px;
 	z-index: 1;
 }
 

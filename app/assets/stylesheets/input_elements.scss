@@ -178,34 +178,6 @@ input[type="range"] {
 	transition: all 0.25s;
 }
 
-#btn-draw-area {
-	position: absolute;
-	z-index: 1;
-	background: whitesmoke;
-	color: #000000;
-	padding: 7px 10px 5px 10px;
-	border: none;
-	border-radius: 10px;
-	bottom: 115px;
-	right: 8px;
-	font-size: large;
-	transition: all 0.25s;
-}
-
-#btn-draw-pv {
-	position: absolute;
-	z-index: 1;
-	background: whitesmoke;
-	color: #000000;
-	padding: 6px 10px 6px 10px;
-	border: none;
-	border-radius: 10px;
-	bottom: 70px;
-	right: 8px;
-	font-size: large;
-	transition: all 0.25s;
-}
-
 #btn-config-hide {
 	position: absolute;
 	// z-index: 2;
@@ -219,6 +191,56 @@ input[type="range"] {
 	// margin-right: 10px;
 	font-size: large;
 	transition: all 0.25s;
+}
+
+.icon {
+	width: 12px;
+}
+
+.icon-draw {
+	width: 15px;
+}
+
+#btn-draw-area {
+	padding: 6px 7.5px 5px 7.5px;
+	bottom: 105px;
+}
+
+#btn-draw-pv {
+	padding: 5px 7.5px 5px 7.5px;
+	bottom: 70px;
+}
+
+#btn-draw-distance {
+	padding: 6px 7.5px 5px 7.5px;
+	bottom: 140px;
+}
+
+#btn-load-image {
+	padding: 6px 7.5px 5px 7.5px;
+	bottom: 175px;
+}
+
+
+.btns_map_right {
+  position: absolute;
+	z-index: 1;
+	background: whitesmoke;
+	color: #000000;
+	border: none;
+	border-radius: 6px;
+	font-size: large;
+	transition: all 0.25s;
+  right: 8.5px;
+}
+
+.active_btn {
+  background:rgb(119, 119, 119);
+}
+
+.btns_map_right:hover{
+  cursor: pointer;
+  background: #cacaca;
 }
 
 .btn_text_only {
@@ -235,4 +257,5 @@ input[type="range"] {
   padding: 0;
   background-color: transparent;
   border: none;
+  width: 100%;
 }

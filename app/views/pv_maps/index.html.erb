@@ -1,29 +1,32 @@
 <%= render "map" %>
-<div class="form_radio_group" id="map_styles" style="display: none;">
-    <div class="form_radio_group-item">
-        <%= radio_button_tag('style_map', 'satellite', true) %>
-        <%= label_tag(:style_map_satellite, "Спутник") %>
-    </div>
-    <div class="form_radio_group-item">
-        <%= radio_button_tag('style_map', 'streets', false) %>
-        <%= label_tag(:style_map_streets, "Bing Maps") %>
-    </div>
-    <div class="form_radio_group-item">
-        <%= radio_button_tag('style_map', 'outdoors', false) %>
-        <%= label_tag(:style_map_outdoors, "Рельеф") %>
-    </div>
-    <div class="form_radio_group-item">
-        <%= radio_button_tag('style_map', 'terrain', false) %> 
-        <%= label_tag(:style_map_terrain, "3D") %> 
-    </div>
+<div class='row-group'>
+  <div class="form_radio_group item-row-group" id="map_styles" style="display: none;">
+      <div class="form_radio_group-item">
+          <%= radio_button_tag('style_map', 'satellite', true) %>
+          <%= label_tag(:style_map_satellite, "Спутник") %>
+      </div>
+      <div class="form_radio_group-item">
+          <%= radio_button_tag('style_map', 'streets', false) %>
+          <%= label_tag(:style_map_streets, "Bing Maps") %>
+      </div>
+      <div class="form_radio_group-item">
+          <%= radio_button_tag('style_map', 'outdoors', false) %>
+          <%= label_tag(:style_map_outdoors, "Рельеф") %>
+      </div>
+      <div class="form_radio_group-item">
+          <%= radio_button_tag('style_map', 'terrain', false) %> 
+          <%= label_tag(:style_map_terrain, "3D") %> 
+      </div>
+  </div>
+  <div id="distance" class="distance-container item-row-group"></div>
 </div>
-<br>
-<br>
-<%= form_tag import_pv_modules_path do %>
-    <%= file_field_tag "file", accept: ".KML", disabled: true%>
-    <%= submit_tag "Импорт KML", class: "btn", disabled: true%>
-<% end %>
-<br>
-<div>
-  <%= link_to 'Выгрузка рельефа в CSV', export_path, class: 'btn', disabled: true %>
-</div>
+<%# <br> %>
+<%# <br> %>
+<%# <%= form_tag import_pv_modules_path do %>
+    <%# <%= file_field_tag "file", accept: ".KML", disabled: true%>
+    <%# <%= submit_tag "Импорт KML", class: "btn", disabled: true%>
+<%# <% end %>
+<%# <br> %>
+<%# <div> %>
+  <%# <%= link_to 'Выгрузка рельефа в CSV', export_path, class: 'btn', disabled: true %>
+<%# </div> %>

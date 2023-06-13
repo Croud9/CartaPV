@@ -7,8 +7,24 @@ class ExportsController < ApplicationController
 
   def get_params_for_snapshots
     configs = AreaConfig.find(params[:id])
-    project_area = configs[0].project.draw_area
-    out_params = {project_areas: project_area.present? ? JSON.parse(project_area) : project_area, configs: []}
+    project = configs[0].project
+    project_area = project.draw_area
+    project_title = project.title
+    if project_area.blank? 
+      flash.now[:error] = "Не создана область проекта"
+      render turbo_stream: turbo_stream.replace("flash_notice", 
+        partial: "layouts/flash", 
+        locals: { flash: flash }
+      )
+      return
+    end
+
+    out_params = {
+      project_areas: JSON.parse(project_area), 
+      project_title: project_title, 
+      configs: []
+    }
+
     not_module = []
     configs.each do |config|
       not_module << config.title if config.configuration['module_id'].blank?
@@ -76,10 +92,11 @@ class ExportsController < ApplicationController
   end
 
   def show
+    pdf_file = get_pdf_file()
     respond_to do |format|
       format.pdf do
-        send_data @@pdf_file[:file],
-          filename: @@pdf_file[:name],
+        send_data pdf_file[:file],
+          filename: pdf_file[:name],
           type: 'application/pdf',
           disposition: 'inline'
       end
@@ -90,6 +107,10 @@ class ExportsController < ApplicationController
 
   def set_pdf_file file 
     @@pdf_file = file
+  end
+
+  def get_pdf_file
+    @@pdf_file
   end
 end
 

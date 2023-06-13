@@ -127,52 +127,68 @@ document.addEventListener("turbo:load", function() {
       };
 
       function drawPointInCountry(data) {
-        const center_pt = centroid(data.project_areas)
+        try {
+          const center_pt = centroid(data.project_areas)
         
-        let current_source_poly = map_not_display.getSource('pt_geolocation')
-        if (current_source_poly === undefined) {
-          map_not_display.addSource('pt_geolocation', { 'type': 'geojson', 'data': center_pt });
-          map_not_display.addLayer({
-                'id': 'pt_geolocation',
-                'type': 'symbol',
-                'source': 'pt_geolocation',
-                'layout': {},
-                'layout': {
-                  'icon-image': 'sun',
-                  'icon-size': 0.16
-                }
-          });
-        }
-        else {
-            current_source_poly.setData(center_pt);
-        }
-
-        map_not_display.flyTo({
-          center: center_pt.geometry.coordinates,
-          zoom: 3.5,
-          animate: false,
-        });
-        
-        map_not_display.once('idle', function(){
-          map_not_display.getCanvas().toBlob(function (blob) {
-            data['project_img'] = blob
-
-            if (map_not_display.getLayer('pt_geolocation')) {
-              map_not_display.removeLayer('pt_geolocation');
-            }
-            if (map_not_display.getSource('pt_geolocation')) {
-              map_not_display.removeSource('pt_geolocation');
-            }
-
-            reverseGeocode(center_pt.geometry.coordinates).then(function(result) {
-              data['location'] = {
-                latlong: [result.address.lat, result.address.lon],
-                address: result.address.display_name
-              }
-              drawPolyPV(data)
+          let current_source_poly = map_not_display.getSource('pt_geolocation')
+          if (current_source_poly === undefined) {
+            map_not_display.addSource('pt_geolocation', { 'type': 'geojson', 'data': center_pt });
+            map_not_display.addLayer({
+                  'id': 'pt_geolocation',
+                  'type': 'symbol',
+                  'source': 'pt_geolocation',
+                  'layout': {},
+                  'layout': {
+                    'icon-image': 'sun',
+                    'icon-size': 0.16
+                  }
             });
+          }
+          else {
+              current_source_poly.setData(center_pt);
+          }
+
+          map_not_display.flyTo({
+            center: center_pt.geometry.coordinates,
+            zoom: 3.5,
+            animate: false,
+          });
+          
+          map_not_display.once('idle', function(){
+            map_not_display.getCanvas().toBlob(function (blob) {
+              data['project_img'] = blob
+
+              if (map_not_display.getLayer('pt_geolocation')) {
+                map_not_display.removeLayer('pt_geolocation');
+              }
+              if (map_not_display.getSource('pt_geolocation')) {
+                map_not_display.removeSource('pt_geolocation');
+              }
+
+              reverseGeocode(center_pt.geometry.coordinates).then(function(result) {
+                data['location'] = {
+                  latlong: [result.address.lat, result.address.lon],
+                  address: result.address.display_name
+                }
+                drawPolyPV(data)
+              });
+            })
           })
-        })
+        } catch (e) {
+          window.Turbo.renderStreamMessage(turbo_message(
+            'error', 
+            `Произошла ошибка при отрисовке проекта; Ошибка ${e}; а`
+          ));
+          $('#loader').fadeTo(500, 0,function() {
+            $('#loader').hide()
+          });
+          accessToFormElements(true)
+          if ($('#style_not_map_satellite').is(':checked')){
+            map_not_display.setStyle(style_satellite)
+          }
+          return;
+        }
+
       };
 
       function drawPolyPV(data) {
@@ -676,7 +692,7 @@ document.addEventListener("turbo:load", function() {
       
         const link = document.createElement('a')
         link.href = imageURL
-        link.download = `План конфигурации ${title}`
+        link.download = `План ${title}`
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
@@ -791,7 +807,8 @@ document.addEventListener("turbo:load", function() {
                     img2.onload = function(){ 
                       ctx.drawImage(img2, 50, 50) 
                       canvas.toBlob(function (blob) {
-                        downloadImage(blob, config.title)
+                        const title_img = data.project_title + ' ' + config.title
+                        downloadImage(blob, title_img)
             
                         deleteAreas(data.project_areas.features, renderMap)
                         if (i != data.configs.length - 1 ) {
