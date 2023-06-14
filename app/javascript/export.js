@@ -692,7 +692,7 @@ document.addEventListener("turbo:load", function() {
       
         const link = document.createElement('a')
         link.href = imageURL
-        link.download = `План ${title}`
+        link.download = `План ${title}.png`
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
