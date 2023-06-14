@@ -19,11 +19,10 @@ document.addEventListener("turbo:load", function() {
                 combine_features: true,
                 uncombine_features: true,
                 trash: true,
-                point: true,
             }
         });
-        let style_bing_map
-        let global_params
+        let style_bing_map, global_params, image_plane_URL
+
         // let elevationArea = []
         // const terrain_style = {
         //   version: 8,
@@ -139,17 +138,20 @@ document.addEventListener("turbo:load", function() {
         const check_border_lines = document.getElementById('check-visible-border-lines');
         const check_dash_lines = document.getElementById('check-visible-dash-lines');
         const check_pv_polygons = document.getElementById('check-visible-pv-polygons');
-        const answer = document.getElementById('calculated-area');
+        const calculated_area = document.getElementById('calculated-area');
         const draw_area = document.getElementById('btn-draw-area');
         const draw_pv = document.getElementById('btn-draw-pv');
         const form_config = document.getElementById('data');
+        const field_image_file = document.getElementById("load_image_file")
         form_config.addEventListener('submit', handleFormSubmit);
         draw_area.addEventListener('click', clickDrawArea);
-        draw_pv.addEventListener('click', clickDrawPV);
+        draw_pv.addEventListener('click', clickDrawPV );
         check_border_lines.addEventListener('change', visibilityLayout);
         check_dash_lines.addEventListener('change', visibilityLayout);
         check_pv_polygons.addEventListener('change', visibilityLayout);
+        field_image_file.addEventListener("change", handleFiles);
         btn_distance.click(distance_btn_logic);
+        $("#btn-load-image").click(set_image_one_map);
         $('#select_config').change(get_config_params);
         $('#select_project').change(set_project_area);
         $("#type-table2").click(function () {
@@ -168,7 +170,7 @@ document.addEventListener("turbo:load", function() {
           map.setStyle('https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd')
           distance_btn_logic(true)
         })
-        $("#style_map_terrain").click(function () {
+        // $("#style_map_terrain").click(function () {
           // const terrain_style = {
           //   version: 8,
           //   name: "OSM Mecklenburg GeoPortal",
@@ -227,21 +229,81 @@ document.addEventListener("turbo:load", function() {
           // map.setStyle(terrain_style)
           
           // let elevationArea2 = map.queryTerrainElevation([95.9345,41.2565])
-          console.log($('.maplibregl-ctrl-scale').text())
-          console.log($('.maplibregl-ctrl-scale').width()) // может + 14 нужно
+          // console.log($('.maplibregl-ctrl-scale').text())
+          // console.log($('.maplibregl-ctrl-scale').width()) // может + 14 нужно
 
-          console.log(map.getCanvas()) // может + 14 нужно
-          console.log(map.getCanvas().getContext('2d')) // может + 14 нужно
-          map.getCanvas().fillText('Mine!',0,0)
-          var canvas = document.getElementById('map').getCanvas();
-          var ctx = canvas.getContext('2d');
-          console.log(ctx)
+          // console.log(map.getCanvas()) // может + 14 нужно
+          // console.log(map.getCanvas().getContext('2d')) // может + 14 нужно
+          // map.getCanvas().fillText('Mine!',0,0)
+          // var canvas = document.getElementById('map').getCanvas();
+          // var ctx = canvas.getContext('2d');
+          // console.log(ctx)
           // $('canvas')[0].getContext('2d').fillText('Mine!',0,0)
           // $('canvas')[0].getContext('2d').fillText('Mine!',0,0)
           // console.log(map.queryTerrainElevation([95.9345, 41.2565]))
-        })
+        // })
         // при сохранении еще добавить  get_config_params(
-        
+      
+        const scale = new maplibregl.ScaleControl();
+        var map = new maplibregl.Map({
+                container: 'map',
+                zoom: 2,
+                center: [100, 65],
+                maxPitch: 70,
+                // hash: true,
+                fadeDuration: 0,
+                validateStyle: false,
+                style:
+                'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd', // Актуальные, бесшовные изображения для всего мира с учетом контекста
+                // terrain_style
+        }); 
+      
+        map.on('draw.delete', updateArea);
+        map.on('draw.update', updateArea);
+        map.on('draw.combine', combineArea);
+        map.on('draw.uncombine', uncombineAreas);
+        map.on('click', measure_distance);
+        map.on('mousemove', change_cursor);
+
+        map.on('load', function () {
+          $('#map_styles').fadeTo(500, 1);
+          map.addControl(
+              new MaplibreGeocoder(geocoder_api, {
+                  maplibregl: maplibregl
+              })
+          );
+          map.addControl(new maplibregl.FullscreenControl());
+          map.addControl(
+              new maplibregl.NavigationControl({
+                  visualizePitch: true,
+                  showZoom: true,
+                  showCompass: true
+              })
+          );
+          map.addControl(scale);
+          map.addControl(draw);
+          btn_distance.show()
+          $('#btn-load-image').show()
+          $('#block_load_image').show()
+        });
+
+        map.on('draw.modechange', function (e) {
+          const cursor = (e.mode == 'draw_polygon') ? 'crosshair' : '';
+          map.getCanvas().style.cursor = cursor;
+        });
+
+        map.on('draw.selectionchange', function (e) {
+          map.getCanvas().style.cursor = '';
+        });
+
+        // map.addControl(
+        //   new maplibregl.TerrainControl({
+        //     source: "terrainSource",
+        //     exaggeration: 1,
+        //   })
+        // );
+
+
         function set_project_area() {
           if ($('#select_project option:selected').text() != "Выберите") {
             $.ajax({
@@ -265,6 +327,7 @@ document.addEventListener("turbo:load", function() {
                       padding: 80,
                       animate: true,
                   })
+                  calculated_area.innerHTML = ''
                 }
               },
             });
@@ -295,6 +358,7 @@ document.addEventListener("turbo:load", function() {
         };
         
         function clickDrawArea(event) { 
+            calculated_area.innerHTML = ''
             let all_data = []
             let areas = []
             const selected_ids = draw.getSelectedIds();
@@ -302,9 +366,17 @@ document.addEventListener("turbo:load", function() {
               try {
                 selected_ids.forEach((id) => {
                   const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id);
-                  let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
-                  all_data.push(feature)
-                  areas.push(draw.get(id))
+                  if (poly_for_pv == 'error_square') {
+                    window.Turbo.renderStreamMessage(turbo_message('error', 'Полезная площадь равна 0, измените параметры участка'));
+                  } else if (poly_for_pv == 'error_hole') {
+                    window.Turbo.renderStreamMessage(turbo_message('error', 'Область исключения не должна полностью пересекать полезную площадь'));
+                  } else {
+                    let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
+                    all_data.push(feature)
+                    areas.push(draw.get(id))
+                    outputAreaData(id, poly_for_pv)
+                  }
+
 
                   // выгрузка высот
                   // const bbox_all = bbox(draw.get(id))
@@ -360,7 +432,7 @@ document.addEventListener("turbo:load", function() {
                   geojsons: JSON.stringify(all_data)
                 },
                 beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
-                success: function(data) { window.Turbo.renderStreamMessage(data);}
+                // success: function(data) { window.Turbo.renderStreamMessage(data);}
               });
             }
             else {
@@ -369,51 +441,74 @@ document.addEventListener("turbo:load", function() {
         };
 
         function clickDrawPV(event) {
+          calculated_area.innerHTML = ''
           let all_data = []
           let total_params = {}
           let areas = []
           const selected_ids = draw.getSelectedIds();
-          draw.changeMode('simple_select')
+          // draw.changeMode('simple_select')
           if (selected_ids.length != 0) {
             if ($('#select-pv-modules option:selected').text() != "Выберите") {
-              try {
-                selected_ids.forEach((id) => {
-                    areas.push(draw.get(id))
-                    const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id);  
-                    const [all_tables, data_pv] = drawPVs(id, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
-                    let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
-                    // let feature = {idx: id, poly_features: poly_for_pv, pv_features: data_pv} // очень долго
-                    all_data.push(feature)
-                    const squares = outputAreaData(id, poly_for_pv, all_tables);
-                    total_params = {squares: squares, all_tables: all_tables}
+              $('#loader').fadeTo(500, 1, function() {
+                try {
+                  selected_ids.forEach((id) => {
+                      areas.push(draw.get(id))
+                      const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id);
+                      if (poly_for_pv == 'error_square') {
+                        window.Turbo.renderStreamMessage(turbo_message('error', 'Полезная площадь равна 0, измените параметры участка'));
+                      } else if (poly_for_pv == 'error_hole') {
+                        window.Turbo.renderStreamMessage(turbo_message('error', 'Область исключения не должна полностью пересекать полезную площадь'));
+                      } else {
+                        const squares = outputAreaData(id, poly_for_pv)
+                        if (squares.pv_area.hectares > 1600) {
+                          window.Turbo.renderStreamMessage(turbo_message('error', 'Большой участок! Приложение обрабатывает участки с полезной площадью до 1600 га'));
+                        } else {
+                          const [all_tables, data_pv] = drawPVs(id, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+                          let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
+                          // let feature = {idx: id, poly_features: poly_for_pv, pv_features: data_pv} // очень долго
+                          all_data.push(feature)
+                          const squares = outputAreaData(id, poly_for_pv);
+                          total_params = {squares: squares, all_tables: all_tables}
+                        }
+                      };
+                  });
+                } catch (e) {
+                  // console.log(e.stack)
+                  $('#loader').fadeTo(500, 0, function() {
+                    $('#loader').hide()
+                  });
+                  window.Turbo.renderStreamMessage(turbo_message(
+                    'error', 
+                    `Произошла ошибка при отрисовке ФЭМ: ${e};
+                    Временное решение: Изменить угол относительно азимута / 
+                    Изменить нижнюю (при 90°) или левую границу (при 0°/180°) области, сгладить угловатые выступы / 
+                    Изменить конфигурацию стола`
+                  ));
+                  return;
+                }
+                const bbox_all = bbox(draw.getAll())
+                map.fitBounds(bbox_all, {padding: 80})
+  
+                const formData = new FormData();
+                formData.append('id', $("#select_config option:selected").val());
+                formData.append('project_areas', JSON.stringify(featureCollection(areas)));
+                formData.append('geojsons', JSON.stringify(all_data));
+                formData.append('total_params', JSON.stringify(total_params));
+  
+                $.ajax({
+                  method: 'post',
+                  url: 'update_configuration',
+                  data: formData,
+                  processData: false,
+                  contentType: false,
+                  beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+                  // success: function(data) {window.Turbo.renderStreamMessage(data);}
                 });
-              } catch (e) {
-                window.Turbo.renderStreamMessage(turbo_message(
-                  'error', 
-                  `Произошла ошибка при отрисовке ФЭМ: ${e};
-                  Временное решение: Изменить угол относительно азимута / 
-                  Изменить нижнюю (при 90°) или левую границу (при 0°/180°) области, сгладить угловатые выступы / 
-                  Изменить конфигурацию стола`
-                ));
-                return;
-              }
-              const bbox_all = bbox(draw.getAll())
-              map.fitBounds(bbox_all, {padding: 80})
-
-              const formData = new FormData();
-              formData.append('id', $("#select_config option:selected").val());
-              formData.append('project_areas', JSON.stringify(featureCollection(areas)));
-              formData.append('geojsons', JSON.stringify(all_data));
-              formData.append('total_params', JSON.stringify(total_params));
-
-              $.ajax({
-                method: 'post',
-                url: 'update_configuration',
-                data: formData,
-                processData: false,
-                contentType: false,
-                beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
-                success: function(data) { window.Turbo.renderStreamMessage(data);}
+                map.once('idle', function(){
+                  $('#loader').fadeTo(500, 0,function() {
+                    $('#loader').hide()
+                  });
+                });
               });
             }
             else {
@@ -438,8 +533,8 @@ document.addEventListener("turbo:load", function() {
                 deleteAreas(draw.getAll().features)
                 if (data.geojson !== null) {
                   data.geojson.forEach((json) => {
-                    console.log(json.idx)
                     setAreaPolyOnMap(json.idx, json.poly_features)
+                    calculated_area.innerHTML = ''
                     // if (json.pv_featuren !== null) setPVPolyOnMap(json.idx, json.pv_features) 
                   });
                 }
@@ -513,7 +608,6 @@ document.addEventListener("turbo:load", function() {
               params.type_table = dataForm.get("type-table");
               params.angle_fix = +dataForm.get("angle-fix");
               params.orientation = dataForm.get("orientation");
-              console.log(params.orientation)
             
               if (params.type_table == 'tracker') {
                 params.orientation = (params.orientation == 'vertical') ? 'horizontal' : 'vertical'
@@ -566,16 +660,19 @@ document.addEventListener("turbo:load", function() {
             '</strong> га / <strong>' + 
             rounded_area_m + 
             '</strong> м²';
-            
-            [rounded_area_ga, rounded_area_m] = calcSquareArea(poly_for_pv);
-            squares.pv_area.meters = rounded_area_m
-            squares.pv_area.hectares = rounded_area_ga
-            const square_pv_area = 'Полезная площадь: <strong>' + 
-                                    rounded_area_ga + 
-                                    '</strong> га / <strong>' + 
-                                    rounded_area_m + 
-                                    '</strong> м²';           
-            answer.innerHTML = square_text + '<p> ' + square_pv_area + '</p>' // + '<p>Столов: <strong>' + all_tables + ' </strong>шт.</p>'
+            let text_out = square_text
+            if (poly_for_pv) {
+              [rounded_area_ga, rounded_area_m] = calcSquareArea(poly_for_pv);
+              squares.pv_area.meters = rounded_area_m
+              squares.pv_area.hectares = rounded_area_ga
+              const square_pv_area = 'Полезная площадь: <strong>' + 
+                                      rounded_area_ga + 
+                                      '</strong> га / <strong>' + 
+                                      rounded_area_m + 
+                                      '</strong> м²'; 
+              text_out = text_out + '<p> ' + square_pv_area + '</p>'
+            }
+            calculated_area.innerHTML = text_out // + '<p>Столов: <strong>' + all_tables + ' </strong>шт.</p>'
             return squares
         }
         
@@ -628,62 +725,6 @@ document.addEventListener("turbo:load", function() {
             });  
         }
 
-        const scale = new maplibregl.ScaleControl();
-        var map = new maplibregl.Map({
-                container: 'map',
-                zoom: 2,
-                center: [100, 65],
-                maxPitch: 70,
-                // hash: true,
-                fadeDuration: 0,
-                validateStyle: false,
-                style:
-                'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd', // Актуальные, бесшовные изображения для всего мира с учетом контекста
-                // terrain_style
-        }); 
-      
-        map.on('draw.delete', updateArea);
-        map.on('draw.update', updateArea);
-        map.on('draw.combine', combineArea);
-        map.on('draw.uncombine', uncombineAreas);
-
-        map.on('load', function () {
-          $('#map_styles').fadeTo(500, 1);
-          map.addControl(
-              new MaplibreGeocoder(geocoder_api, {
-                  maplibregl: maplibregl
-              })
-          );
-          map.addControl(new maplibregl.FullscreenControl());
-          map.addControl(
-              new maplibregl.NavigationControl({
-                  visualizePitch: true,
-                  showZoom: true,
-                  showCompass: true
-              })
-          );
-          map.addControl(scale);
-          map.addControl(draw);
-          btn_distance.show()
-          $('#btn-load-image').show()
-        });
-
-        map.on('draw.modechange', function (e) {
-          const cursor = (e.mode == 'draw_polygon') ? 'crosshair' : '';
-          map.getCanvas().style.cursor = cursor;
-        });
-
-        map.on('draw.selectionchange', function (e) {
-          map.getCanvas().style.cursor = '';
-        });
-
-        // map.addControl(
-        //   new maplibregl.TerrainControl({
-        //     source: "terrainSource",
-        //     exaggeration: 1,
-        //   })
-        // );
-
         function deleteAreas(features) {
             features.forEach((item) => { 
                 const id = `poly_for_pv${item.id}`
@@ -710,6 +751,12 @@ document.addEventListener("turbo:load", function() {
                 if (map.getSource(id_pvs)) {
                     map.removeSource(id_pvs);
                 }
+                if (map.getLayer('image_plan')) {
+                    map.removeLayer('image_plan');
+                }
+                if (map.getSource('image_plan')) {
+                    map.removeSource('image_plan');
+                }
             });
         }
 
@@ -734,7 +781,7 @@ document.addEventListener("turbo:load", function() {
               // outputAreaData(id_area, poly_for_pv);
               // const all_tables = drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
           } else {
-              answer.innerHTML = '';
+              calculated_area.innerHTML = '';
               if (e.type !== 'draw.delete') {
                   alert('Use the draw tools to draw a polygon!');
               }
@@ -758,10 +805,13 @@ document.addEventListener("turbo:load", function() {
                     }
                 });
                 [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(large_area, global_params)
+                if (poly_for_pv == 'error') return ['error_square']
                 poly_for_pv = createPolyWithHole(poly_for_pv.geometry.coordinates, large_area.geometry.coordinates, all_areas)
-            }
-            else if (all_areas.length == 1) {
+                if (poly_for_pv == 'error') return ['error_hole']
+              }
+              else if (all_areas.length == 1) {
                 [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = calcAreaForPV(start_area, global_params)
+                if (poly_for_pv == 'error') return ['error_square']
             }
             if (area(poly_for_pv) < 0) alert('Полезная площадь слишком мала')
 
@@ -795,6 +845,50 @@ document.addEventListener("turbo:load", function() {
           }
           else {
               current_source_poly.setData(data);
+          }
+        }
+
+        function handleFiles() {
+          const fileList = this.files;
+          if (fileList.length == 1) {
+            image_plane_URL = window.URL.createObjectURL(fileList[0])
+          }
+        }
+
+        function set_image_one_map() {
+          const selected_obj = draw.getSelected().features
+          if (image_plane_URL !== undefined) {
+            if (selected_obj.length != 0) {
+              const box_poly = selected_obj[0].geometry.coordinates[0].slice(0, 4)
+    
+              let imageSource = map.getSource('image_plan')
+              if (imageSource === undefined) {
+                map.addSource('image_plan', {
+                  'type': 'image',
+                  'url': image_plane_URL,
+                  'coordinates': box_poly
+                });
+                map.addLayer({
+                  id: 'image_plan',
+                  'type': 'raster',
+                  'source': 'image_plan',
+                  'paint': {
+                    'raster-fade-duration': 0,
+                    'raster-opacity': 0.5
+                  }
+                });
+              }
+              else {
+                  imageSource.updateImage({
+                    url: image_plane_URL,
+                    coordinates: box_poly
+                  });
+              }
+            } else {
+              window.Turbo.renderStreamMessage(turbo_message('info', 'Не выбрана область для загрузки в неё изображения'));
+            }
+          } else {
+            window.Turbo.renderStreamMessage(turbo_message('info', 'Не загружено изображение'));
           }
         }
 
@@ -893,7 +987,7 @@ document.addEventListener("turbo:load", function() {
                   source: 'geojson_dist',
                   paint: {
                       'circle-radius': 5,
-                      'circle-color': '#000'
+                      'circle-color': '#5c64ff'
                   },
                   filter: ['in', '$type', 'Point']
                 });
@@ -906,7 +1000,7 @@ document.addEventListener("turbo:load", function() {
                         'line-join': 'round'
                     },
                     paint: {
-                        'line-color': '#000',
+                        'line-color': '#696969',
                         'line-width': 2.5
                     },
                     filter: ['in', '$type', 'LineString']
@@ -917,64 +1011,66 @@ document.addEventListener("turbo:load", function() {
             }
           }
         }
+        
+        function measure_distance(e) {
+          if (btn_distance.hasClass("active_btn")) {
+            var features = map.queryRenderedFeatures(e.point, {
+                layers: ['measure-points']
+            });
+            if (geojson.features.length > 1) geojson.features.pop();
+    
+            distanceContainer.innerHTML = '';
+    
+            if (features.length) {
+                var id = features[0].properties.id;
+                geojson.features = geojson.features.filter(function (point) {
+                    return point.properties.id !== id;
+                });
+            } else {
+                var point = {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [e.lngLat.lng, e.lngLat.lat]
+                    },
+                    'properties': {
+                        'id': String(new Date().getTime())
+                    }
+                };
+    
+                geojson.features.push(point);
+            }
+            if (geojson.features.length > 1) {
+                linestring.geometry.coordinates = geojson.features.map(
+                    function (point) {
+                        return point.geometry.coordinates;
+                    }
+                );
+    
+                geojson.features.push(linestring);
+                // Populate the distanceContainer with total distance
+                var value = document.createElement('pre');
+                var length_meters = length(linestring) * 1000
+                value.textContent =
+                    'Расстояние: ' + length_meters.toLocaleString() + 'm';
+                distanceContainer.appendChild(value);
+            }
+            map.getSource('geojson_dist').setData(geojson);
+          }
 
-        map.on('click', function (e) {
-            if (btn_distance.hasClass("active_btn")) {
-              var features = map.queryRenderedFeatures(e.point, {
-                  layers: ['measure-points']
-              });
-              if (geojson.features.length > 1) geojson.features.pop();
-      
-              distanceContainer.innerHTML = '';
-      
-              if (features.length) {
-                  var id = features[0].properties.id;
-                  geojson.features = geojson.features.filter(function (point) {
-                      return point.properties.id !== id;
-                  });
-              } else {
-                  var point = {
-                      'type': 'Feature',
-                      'geometry': {
-                          'type': 'Point',
-                          'coordinates': [e.lngLat.lng, e.lngLat.lat]
-                      },
-                      'properties': {
-                          'id': String(new Date().getTime())
-                      }
-                  };
-      
-                  geojson.features.push(point);
-              }
-              if (geojson.features.length > 1) {
-                  linestring.geometry.coordinates = geojson.features.map(
-                      function (point) {
-                          return point.geometry.coordinates;
-                      }
-                  );
-      
-                  geojson.features.push(linestring);
-                  // Populate the distanceContainer with total distance
-                  var value = document.createElement('pre');
-                  var length_meters = length(linestring) * 1000
-                  value.textContent =
-                      'Расстояние: ' + length_meters.toLocaleString() + 'm';
-                  distanceContainer.appendChild(value);
-              }
-              map.getSource('geojson_dist').setData(geojson);
-            }
-        });
-        map.on('mousemove', function (e) {
-            if (btn_distance.hasClass("active_btn")) {
-              var features = map.queryRenderedFeatures(e.point, {
-                  layers: ['measure-points']
-              });
-              // UI indicator for clicking/hovering a point on the map
-              map.getCanvas().style.cursor = features.length
-                  ? 'pointer'
-                  : 'crosshair';
-            }
-        });
+        };
+
+        function change_cursor(e) {
+          if (btn_distance.hasClass("active_btn")) {
+            var features = map.queryRenderedFeatures(e.point, {
+                layers: ['measure-points']
+            });
+            // UI indicator for clicking/hovering a point on the map
+            map.getCanvas().style.cursor = features.length
+                ? 'pointer'
+                : 'crosshair';
+          }
+        };
         
     };
 })

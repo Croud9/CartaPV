@@ -37,6 +37,7 @@ function createPolyWithHole(l_area_for_pv, l_area, union_areas){
     polygons_within.forEach((item) => { 
         xy_poly_with_holes.push(item[0]) 
     });
+    if (xy_poly_with_holes[0].length < 4) return 'error'
     poly_for_pv = polygon(xy_poly_with_holes)
     return poly_for_pv
 };
@@ -99,32 +100,49 @@ function calcAreaForPV(area_initial, params) {
         const line_parallel = lineString([pt_start.geometry['coordinates'], pt_end.geometry['coordinates']])
         border_lines.push(line_parallel)
     }
-    
-    for (var i = 0; i < border_lines.length; i++) {
-        const next = (i != border_lines.length - 1) ? i + 1 : 0
-        const isParallel = booleanParallel(border_lines[i], border_lines[next]) 
-        const isInter = booleanIntersects(border_lines[i], border_lines[next])
+    let ln = 0
+    while (ln < border_lines.length) {
+        const next = (ln != border_lines.length - 1) ? ln + 1 : 0
+        const isParallel = booleanParallel(border_lines[ln], border_lines[next]) 
+        const isInter = booleanIntersects(border_lines[ln], border_lines[next])
         let intersect
         if (isParallel == false){
             if (isInter == true) {
-                intersect = lineIntersect(border_lines[i], border_lines[next])
+                intersect = lineIntersect(border_lines[ln], border_lines[next])
             }
             else {
-                const angle_first = bearing(border_lines[i].geometry['coordinates'][0], border_lines[i].geometry['coordinates'][1]);
+                const angle_first = bearing(border_lines[ln].geometry['coordinates'][0], border_lines[ln].geometry['coordinates'][1]);
                 const angle_second = bearing(border_lines[next].geometry['coordinates'][0], border_lines[next].geometry['coordinates'][1]);
-                const len_first  = length(border_lines[i], {units: 'kilometers'});
+                const len_first  = length(border_lines[ln], {units: 'kilometers'});
                 const len_second  = length(border_lines[next], {units: 'kilometers'});
-                const extend_first = rhumbDestination(border_lines[i].geometry['coordinates'][1], len_first * 4, angle_first, {units: 'kilometers'});
+                const extend_first = rhumbDestination(border_lines[ln].geometry['coordinates'][1], len_first * 4, angle_first, {units: 'kilometers'});
                 const extend_second = rhumbDestination(border_lines[next].geometry['coordinates'][0], -len_second * 4, angle_second, {units: 'kilometers'});
-                const line_extend_first = lineString([border_lines[i].geometry['coordinates'][1], extend_first.geometry['coordinates']])
+                const line_extend_first = lineString([border_lines[ln].geometry['coordinates'][1], extend_first.geometry['coordinates']])
                 const line_extend_second = lineString([border_lines[next].geometry['coordinates'][0], extend_second.geometry['coordinates']])
                 intersect = lineIntersect(line_extend_first, line_extend_second)
-                // добавить проверку на выход из полигона при очень остром угле, выдавать предупреждение и советовать изменить участок
+                if (intersect.features.length == 0) {
+                  const second = (ln + 1 != border_lines.length - 1) ? ln + 2 : 0
+                  if (border_lines[second] === undefined) return ['error']
+                  const angle_first = bearing(border_lines[ln].geometry['coordinates'][0], border_lines[ln].geometry['coordinates'][1]);
+                  const angle_second = bearing(border_lines[second].geometry['coordinates'][0], border_lines[second].geometry['coordinates'][1]);
+                  const len_first  = length(border_lines[ln], {units: 'kilometers'});
+                  const len_second  = length(border_lines[second], {units: 'kilometers'});
+                  const extend_first = rhumbDestination(border_lines[ln].geometry['coordinates'][1], len_first * 4, angle_first, {units: 'kilometers'});
+                  const extend_second = rhumbDestination(border_lines[second].geometry['coordinates'][0], -len_second * 4, angle_second, {units: 'kilometers'});
+                  const line_extend_first = lineString([border_lines[ln].geometry['coordinates'][1], extend_first.geometry['coordinates']])
+                  const line_extend_second = lineString([border_lines[second].geometry['coordinates'][0], extend_second.geometry['coordinates']])
+                  intersect = lineIntersect(line_extend_first, line_extend_second)
+                  ln++
+                }
             }
         }
-        points_intersect.push(intersect.features[0].geometry['coordinates'])
+        if (intersect.features.length != 0) {
+          points_intersect.push(intersect.features[0].geometry['coordinates'])
+          ln++
+        }
     }
     points_intersect.push(points_intersect[0])
+    if (points_intersect.length < 4) return ['error']
     let [top_coord, lower_coord, left_coord, right_coord] = farPoints(points_intersect)
     const poly_for_pv = polygon([points_intersect]);
     return [poly_for_pv, top_coord, lower_coord, left_coord, right_coord]
