@@ -6,6 +6,7 @@ import bbox from '@turf/bbox';
 import pointGrid from '@turf/point-grid';
 import centroid from '@turf/centroid';
 import length from '@turf/length';
+import { kml } from '@tmcw/togeojson'; 
 import { polygon, featureCollection } from '@turf/helpers';
 import { turbo_message } from "./flash_message.js";
 import { calcAreaForPV, calcPVs, createPolyWithHole } from "./pv-calc.js";
@@ -151,7 +152,8 @@ document.addEventListener("turbo:load", function() {
         check_pv_polygons.addEventListener('change', visibilityLayout);
         field_image_file.addEventListener("change", handleFiles);
         btn_distance.click(distance_btn_logic);
-        $("#btn-load-image").click(set_image_one_map);
+        $("#btn-load-image").click(set_image_on_map);
+        $("#btn_load_kml").click(load_kml);
         $('#select_config').change(get_config_params);
         $('#select_project').change(set_project_area);
         $("#type-table2").click(function () {
@@ -284,7 +286,7 @@ document.addEventListener("turbo:load", function() {
           map.addControl(draw);
           btn_distance.show()
           $('#btn-load-image').show()
-          $('#block_load_image').show()
+          $('.block_load').show()
         });
 
         map.on('draw.modechange', function (e) {
@@ -311,17 +313,13 @@ document.addEventListener("turbo:load", function() {
               data: "id=" + $("#select_project option:selected").val(),
               dataType: "json",
               success: function(data) {
+                console.log(data)
                 deleteAreas(draw.getAll().features)
                 draw.deleteAll()
                 if (data !== null) {
                   data.features.forEach((area) => {
                     draw.add(area)
                   });
-                  // map.flyTo({
-                  //   center: centroid(data).geometry.coordinates,
-                  //   zoom: 3,
-                  //   essential: true // this animation is considered essential with respect to prefers-reduced-motion
-                  // });
                   const bbox_all = bbox(data)
                   map.fitBounds(bbox_all, {
                       padding: 80,
@@ -332,7 +330,7 @@ document.addEventListener("turbo:load", function() {
               },
             });
           };
-        }
+        };
         
         function visibilityLayout(event) {
             const layers_ids = {
@@ -365,18 +363,22 @@ document.addEventListener("turbo:load", function() {
             if (selected_ids.length != 0) {
               try {
                 selected_ids.forEach((id) => {
-                  const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id);
-                  if (poly_for_pv == 'error_square') {
-                    window.Turbo.renderStreamMessage(turbo_message('error', 'Полезная площадь равна 0, измените параметры участка'));
-                  } else if (poly_for_pv == 'error_hole') {
-                    window.Turbo.renderStreamMessage(turbo_message('error', 'Область исключения не должна полностью пересекать полезную площадь'));
+                  const map_feature = draw.get(id)
+                  if (map_feature.geometry.type == "MultiPolygon" || map_feature.geometry.type == "Polygon") {
+                    const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id);
+                    if (poly_for_pv == 'error_square') {
+                      window.Turbo.renderStreamMessage(turbo_message('error', 'Полезная площадь равна 0, измените параметры участка'));
+                    } else if (poly_for_pv == 'error_hole') {
+                      window.Turbo.renderStreamMessage(turbo_message('error', 'Область исключения не должна полностью пересекать полезную площадь'));
+                    } else {
+                      let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
+                      all_data.push(feature)
+                      areas.push(map_feature)
+                      outputAreaData(id, poly_for_pv)
+                    }
                   } else {
-                    let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
-                    all_data.push(feature)
-                    areas.push(draw.get(id))
-                    outputAreaData(id, poly_for_pv)
-                  }
-
+                    window.Turbo.renderStreamMessage(turbo_message('info', 'Приложение работает только с полигонами'));
+                  };
 
                   // выгрузка высот
                   // const bbox_all = bbox(draw.get(id))
@@ -416,6 +418,7 @@ document.addEventListener("turbo:load", function() {
                   // outputAreaData(item, poly_for_pv, all_tables); 
                 });
               } catch (e) {
+                console.log(e.stack)
                 window.Turbo.renderStreamMessage(turbo_message(
                   'error', 
                   `Произошла ошибка при отрисовке области под ФЭМ: ${e};`
@@ -452,24 +455,29 @@ document.addEventListener("turbo:load", function() {
               $('#loader').fadeTo(500, 1, function() {
                 try {
                   selected_ids.forEach((id) => {
-                      areas.push(draw.get(id))
-                      const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id);
-                      if (poly_for_pv == 'error_square') {
-                        window.Turbo.renderStreamMessage(turbo_message('error', 'Полезная площадь равна 0, измените параметры участка'));
-                      } else if (poly_for_pv == 'error_hole') {
-                        window.Turbo.renderStreamMessage(turbo_message('error', 'Область исключения не должна полностью пересекать полезную площадь'));
-                      } else {
-                        const squares = outputAreaData(id, poly_for_pv)
-                        if (squares.pv_area.hectares > 1600) {
-                          window.Turbo.renderStreamMessage(turbo_message('error', 'Большой участок! Приложение обрабатывает участки с полезной площадью до 1600 га'));
+                      const map_feature = draw.get(id)
+                      if (map_feature.geometry.type == "MultiPolygon" || map_feature.geometry.type == "Polygon") {
+                        const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id);
+                        if (poly_for_pv == 'error_square') {
+                          window.Turbo.renderStreamMessage(turbo_message('error', 'Полезная площадь равна 0, измените параметры участка'));
+                        } else if (poly_for_pv == 'error_hole') {
+                          window.Turbo.renderStreamMessage(turbo_message('error', 'Область исключения не должна полностью пересекать полезную площадь'));
                         } else {
-                          const [all_tables, data_pv] = drawPVs(id, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
-                          let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
-                          // let feature = {idx: id, poly_features: poly_for_pv, pv_features: data_pv} // очень долго
-                          all_data.push(feature)
-                          const squares = outputAreaData(id, poly_for_pv);
-                          total_params = {squares: squares, all_tables: all_tables}
-                        }
+                          const squares = outputAreaData(id, poly_for_pv)
+                          if (squares.pv_area.hectares > 1600) {
+                            window.Turbo.renderStreamMessage(turbo_message('error', 'Большой участок! Приложение обрабатывает участки с полезной площадью до 1600 га'));
+                          } else {
+                            const [all_tables, data_pv] = drawPVs(id, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
+                            let feature = {idx: id, poly_features: poly_for_pv, pv_features: null}
+                            // let feature = {idx: id, poly_features: poly_for_pv, pv_features: data_pv} // очень долго
+                            areas.push(map_feature)
+                            all_data.push(feature)
+                            const squares = outputAreaData(id, poly_for_pv);
+                            total_params = {squares: squares, all_tables: all_tables}
+                          }
+                        };
+                      } else {
+                        window.Turbo.renderStreamMessage(turbo_message('info', 'Приложение работает только с полигонами'));
                       };
                   });
                 } catch (e) {
@@ -522,7 +530,7 @@ document.addEventListener("turbo:load", function() {
 
         function serializeForm(formNode) {
             return new FormData(formNode)
-        }
+        };
 
         function get_config_params() {
           if ($('#select_config option:selected').text() != "Выберите") {
@@ -544,7 +552,7 @@ document.addEventListener("turbo:load", function() {
               dataType: "json",
             });
           };
-        }
+        };
 
         function params_to_num() {
           global_params.offset_pv = +global_params.offset_pv;
@@ -558,7 +566,7 @@ document.addEventListener("turbo:load", function() {
           global_params.row_pv_in_table = +global_params.row_pv_in_table;
           global_params.width_table = +global_params.width_table;
           global_params.height_table = +global_params.height_table;
-        }
+        };
 
         function handleFormSubmit(event) {
             event.preventDefault()
@@ -641,14 +649,14 @@ document.addEventListener("turbo:load", function() {
             else {
               window.Turbo.renderStreamMessage(turbo_message('info', 'Не выбран фотоэлектрический модуль'));
             }
-        }
+        };
 
         function calcSquareArea(poly_area) {
             const square = area(poly_area);
             const rounded_area_ga = Math.round((square / 10000) * 100) / 100;
             const rounded_area_m = Math.round(square * 100) / 100;
             return [rounded_area_ga, rounded_area_m]
-        }
+        };
 
         function outputAreaData(id_area_initial, poly_for_pv) {
             let squares = {all_area: {meters: null, hectares: null}, pv_area: {meters: null, hectares: null}}
@@ -674,7 +682,7 @@ document.addEventListener("turbo:load", function() {
             }
             calculated_area.innerHTML = text_out // + '<p>Столов: <strong>' + all_tables + ' </strong>шт.</p>'
             return squares
-        }
+        };
         
         function initBingMaps() {
             const BingMapsKey = 'Ahdsg0_Kxmm_5xKeGvoQzzMeUjhfT-SIAhyQh38t_naexGTgpJLcd3clUu_9VhDL';
@@ -723,7 +731,7 @@ document.addEventListener("turbo:load", function() {
                 
                 style_bing_map = style
             });  
-        }
+        };
 
         function deleteAreas(features) {
             features.forEach((item) => { 
@@ -758,11 +766,11 @@ document.addEventListener("turbo:load", function() {
                     map.removeSource('image_plan');
                 }
             });
-        }
+        };
 
         function uncombineAreas(e){
             deleteAreas(e.deletedFeatures)
-        }
+        };
 
         function combineArea(e){
             deleteAreas(e.deletedFeatures)
@@ -789,7 +797,7 @@ document.addEventListener("turbo:load", function() {
                   deleteAreas(e.features)
               }
           }
-        }
+        };
 
         function drawAreaForPV(id_area) {
             let poly_for_pv, top_coord, lower_coord, left_coord, right_coord, large_area
@@ -818,7 +826,7 @@ document.addEventListener("turbo:load", function() {
             setAreaPolyOnMap(id_area, poly_for_pv)
 
             return [poly_for_pv, top_coord, lower_coord, left_coord, right_coord]
-        }
+        };
 
         function drawPVs(id_area, poly_for_pv, top_coord, lower_coord, left_coord, right_coord) {
             const [lines_for_PV , all_tables] = calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, global_params);
@@ -826,7 +834,7 @@ document.addEventListener("turbo:load", function() {
             setPVPolyOnMap(id_area, lines_for_PV)
 
             return [all_tables, lines_for_PV]
-        }
+        };
 
         function setAreaPolyOnMap(id_area, data) {
           let current_source_poly = map.getSource(`poly_for_pv${id_area}`)
@@ -853,9 +861,9 @@ document.addEventListener("turbo:load", function() {
           if (fileList.length == 1) {
             image_plane_URL = window.URL.createObjectURL(fileList[0])
           }
-        }
+        };
 
-        function set_image_one_map() {
+        function set_image_on_map() {
           const selected_obj = draw.getSelected().features
           if (image_plane_URL !== undefined) {
             if (selected_obj.length != 0) {
@@ -889,8 +897,9 @@ document.addEventListener("turbo:load", function() {
             }
           } else {
             window.Turbo.renderStreamMessage(turbo_message('info', 'Не загружено изображение'));
+            document.getElementById("load_image_file").scrollIntoView({behavior: "smooth", block: "center"});
           }
-        }
+        };
 
         function setPVPolyOnMap(id_area, data) {
           let current_source_pvs = map.getSource(`pvs${id_area}`);
@@ -954,7 +963,7 @@ document.addEventListener("turbo:load", function() {
                   'features': data
               });
           }
-        }
+        };
 
         function distance_btn_logic(remove = false) {
           if (btn_distance.hasClass("active_btn") || remove == true) {
@@ -1010,7 +1019,7 @@ document.addEventListener("turbo:load", function() {
                 current_source_poly.setData(geojson);
             }
           }
-        }
+        };
         
         function measure_distance(e) {
           if (btn_distance.hasClass("active_btn")) {
@@ -1072,6 +1081,35 @@ document.addEventListener("turbo:load", function() {
           }
         };
         
+        function load_kml() {
+          const files = document.getElementById("load_kml_file").files
+          if (files.length == 1) {
+              const kml_URL = window.URL.createObjectURL(files[0])
+              fetch(kml_URL)
+              .then(function (response) {
+                return response.text();
+              })
+              .then(function (xml) {
+                const geo_kml = kml(new DOMParser().parseFromString(xml, "text/xml"))
+                kml_in_map(geo_kml)
+              });
+          } else {
+            window.Turbo.renderStreamMessage(turbo_message('info', 'Не загружен KML файл'));
+          }
+        };
+
+        function kml_in_map(geo_kml) {
+          geo_kml.features.forEach((area) => {
+            draw.add(area)
+          });
+          const bbox_all = bbox(geo_kml)
+          document.getElementById("logo_text").scrollIntoView({behavior: "smooth", block: "center"});
+          map.fitBounds(bbox_all, {
+            padding: 80,
+            animate: true,
+          })
+        };
+
     };
 })
 

@@ -71,3 +71,4 @@ pin "@turf/difference", to: "https://ga.jspm.io/npm:@turf/difference@6.5.0/dist/
 pin "jquery", to: "https://ga.jspm.io/npm:jquery@3.6.4/dist/jquery.js", preload: true
 pin "@turf/point-grid", to: "https://ga.jspm.io/npm:@turf/point-grid@6.5.0/dist/es/index.js"
 pin "dom-to-image", to: "https://ga.jspm.io/npm:dom-to-image@2.6.0/src/dom-to-image.js"
+pin "@tmcw/togeojson", to: "https://ga.jspm.io/npm:@tmcw/togeojson@5.6.2/dist/togeojson.es.mjs"
