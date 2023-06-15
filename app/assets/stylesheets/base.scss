@@ -21,8 +21,8 @@ body {
 header, footer {
 	display: flex;
 	justify-content: space-between;
-	height: 70px;
-	padding: 2% 4% 0 4%;
+	height: 50px;
+	padding: 1% 2% 1% 2%;
 }
 
 table {
@@ -131,7 +131,7 @@ label {
 
 .row-group {
 	display: flex;
-  margin: 0 -5px;
+  // margin: 0 -5px;
   justify-content: flex-start;
   align-items: center;
 	// flex-direction: column;
@@ -149,7 +149,7 @@ label {
 
 .main {
   flex: 1;
-  padding: 1% 4%;
+  padding: 1% 2%;
 }
 
 .calculation-box {
@@ -184,8 +184,8 @@ label {
 	// backdrop-filter: blur(8px);
 	border: none;
 	// border: 1px solid #333;
-	left: 26.5%;
-	width: 73.5%;
+	left: 24%;
+	width: 76%;
 	height: 100%;
 	// width: 100%;
 	padding: 3% 3%;
@@ -230,6 +230,30 @@ label {
   transform: translate(0);
   float: right;
   margin: 10px 10px;
+}
+
+.map_options {
+	display: flex;
+  // margin: 0 -5px;
+  justify-content: flex-start;
+  align-items: top;
+  padding: 0 6%;
+	// flex-direction: column;
+}
+
+.option {
+  flex: 0 1 33.33333333333%;
+  margin: 0 10px 10px 0;
+  // max-width: 500px;
+  padding: 30px 30px;
+  background: #fff;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  color: #001b38;
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 #notice {

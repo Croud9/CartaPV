@@ -9,10 +9,12 @@ import length from '@turf/length';
 import { kml } from '@tmcw/togeojson'; 
 import { polygon, featureCollection } from '@turf/helpers';
 import { turbo_message } from "./flash_message.js";
-import { calcAreaForPV, calcPVs, createPolyWithHole } from "./pv-calc.js";
+import { calcAreaForPV, calcPVs, createPolyWithHole, createRectPolygon } from "./pv-calc.js";
 
 document.addEventListener("turbo:load", function() {
     if (document.getElementById("map") !== null) {
+      // $('.map_options').fadeOut();
+      
         var draw = new MapboxDraw({
             displayControlsDefault: false,
             controls: {
@@ -20,6 +22,7 @@ document.addEventListener("turbo:load", function() {
                 combine_features: true,
                 uncombine_features: true,
                 trash: true,
+                point: true
             }
         });
         let style_bing_map, global_params, image_plane_URL
@@ -152,6 +155,7 @@ document.addEventListener("turbo:load", function() {
         check_pv_polygons.addEventListener('change', visibilityLayout);
         field_image_file.addEventListener("change", handleFiles);
         btn_distance.click(distance_btn_logic);
+        $("#btn_create_rect").click(create_rect);
         $("#btn-load-image").click(set_image_on_map);
         $("#btn_load_kml").click(load_kml);
         $('#select_config').change(get_config_params);
@@ -249,8 +253,8 @@ document.addEventListener("turbo:load", function() {
         const scale = new maplibregl.ScaleControl();
         var map = new maplibregl.Map({
                 container: 'map',
-                zoom: 2,
-                center: [100, 65],
+                zoom: 1.75,
+                center: [45, 65],
                 maxPitch: 70,
                 // hash: true,
                 fadeDuration: 0,
@@ -284,18 +288,18 @@ document.addEventListener("turbo:load", function() {
           );
           map.addControl(scale);
           map.addControl(draw);
-          btn_distance.show()
-          $('#btn-load-image').show()
-          $('.block_load').show()
+          btn_distance.fadeTo(500, 1)
+          $('#btn-load-image').fadeTo(500, 1)
+          $('.map_options').fadeTo(500, 1);
         });
 
         map.on('draw.modechange', function (e) {
-          const cursor = (e.mode == 'draw_polygon') ? 'crosshair' : '';
+          const cursor = (e.mode == 'draw_polygon' || e.mode == 'draw_point') ? 'crosshair' : '';
           map.getCanvas().style.cursor = cursor;
         });
-
+        
         map.on('draw.selectionchange', function (e) {
-          map.getCanvas().style.cursor = '';
+          if (e.features.length != 0) map.getCanvas().style.cursor = '';
         });
 
         // map.addControl(
@@ -1108,6 +1112,35 @@ document.addEventListener("turbo:load", function() {
             padding: 80,
             animate: true,
           })
+        };
+
+        function create_rect() {
+          const params = {
+            point: null,
+            length: null,
+            width: null,
+            angle: null
+          } 
+          const select_pt = draw.getSelected().features
+          if (select_pt.length == 1 && select_pt[0].geometry.type == 'Point') {
+            if ($('#in_rect_length').val() != '' && $('#in_rect_width').val() != '') {
+              params.point = select_pt[0]
+              params.length = +$('#in_rect_length').val()
+              params.width = +$('#in_rect_width').val()
+              params.angle = +$('#in_rect_angle').val()
+              const rect_poly = createRectPolygon(params)
+              draw.add(rect_poly)
+              document.getElementById("logo_text").scrollIntoView({behavior: "smooth", block: "center"});
+              map.fitBounds(bbox(rect_poly), {
+                padding: 80,
+                animate: true,
+              })
+            } else {
+              window.Turbo.renderStreamMessage(turbo_message('info', 'Введите длину и ширину требуемой области'));
+            }
+          } else {
+            window.Turbo.renderStreamMessage(turbo_message('info', 'Выберите точку'));
+          }
         };
 
     };

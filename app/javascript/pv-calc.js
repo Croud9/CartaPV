@@ -548,4 +548,19 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, p
     return [lines_for_PV , all_tables]
 };
 
-export { calcAreaForPV, calcPVs, createPolyWithHole }
+function createRectPolygon(params) {
+  const options = {units: 'meters'}
+  const pt1 = rhumbDestination(params.point, params.length, params.angle, options);
+  const pt2 = rhumbDestination(params.point, params.width, params.angle + 90, options);
+  const pt3 = rhumbDestination(pt2, params.length, params.angle, options);
+  const coords_poly = [
+    params.point.geometry.coordinates,
+    pt1.geometry.coordinates,
+    pt3.geometry.coordinates,
+    pt2.geometry.coordinates,
+    params.point.geometry.coordinates
+  ]
+  return polygon([coords_poly])
+}
+
+export { calcAreaForPV, calcPVs, createPolyWithHole, createRectPolygon }

@@ -5,32 +5,32 @@ $orange: #ff8964;
 $orange-hover: #ff8964;
 $orange-disabled: rgba(255, 137, 100, 0.8);
 
-body {
-  position: relative;
-  font-family: "Inter", sans-serif;
-  font-size: 16px;
-  line-height: 1.4;
-  font-weight: 400;
-  min-width: 270px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  min-height: 100vh;
-  height: 100%;
-  width: 100%;
-  max-width: 100vw;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  // color: #001b38ff;
-  // background: rgb(140, 9, 98);
-  // background: linear-gradient(
-  //   342deg,
-  //   rgba(140, 9, 98, 1) 0%,
-  //   rgba(21, 117, 189, 1) 50%,
-  //   rgba(255, 255, 255, 1) 100%
-  // );
-}
+// body {
+//   position: relative;
+//   font-family: "Inter", sans-serif;
+//   font-size: 16px;
+//   line-height: 1.4;
+//   font-weight: 400;
+//   min-width: 270px;
+//   display: flex;
+//   flex-direction: column;
+//   justify-content: flex-start;
+  // min-height: 100vh;
+//   height: 100%;
+//   width: 100%;
+//   max-width: 100vw;
+//   margin: 0;
+//   padding: 0;
+//   overflow-x: hidden;
+//   // color: #001b38ff;
+//   // background: rgb(140, 9, 98);
+//   // background: linear-gradient(
+//   //   342deg,
+//   //   rgba(140, 9, 98, 1) 0%,
+//   //   rgba(21, 117, 189, 1) 50%,
+//   //   rgba(255, 255, 255, 1) 100%
+//   // );
+// }
 
 button {
   cursor: pointer;
