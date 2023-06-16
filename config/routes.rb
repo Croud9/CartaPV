@@ -7,6 +7,7 @@ Rails.application.routes.draw do
   get "get_params_for_snapshots", to: "exports#get_params_for_snapshots"
   get "export_pdf", to: "exports#show"
   get "export", to: "exports#index"
+  post "export_csv", to: "exports#show"
   post "update_files", to: "exports#update_files"
   post "update_draw_area", to: "pv_maps#update_draw_area"
   post "update_configuration", to: "pv_maps#update_configuration"

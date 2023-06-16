@@ -45,7 +45,6 @@ class ExportsController < ApplicationController
   end
 
   def update_files
-    @@pdf_file
     configs_ajax = params[:configs]
     images = params[:config_imgs]
     location = params[:location]
@@ -92,13 +91,19 @@ class ExportsController < ApplicationController
   end
 
   def show
-    pdf_file = get_pdf_file()
+    # print params
     respond_to do |format|
       format.pdf do
+        pdf_file = get_pdf_file()
         send_data pdf_file[:file],
           filename: pdf_file[:name],
           type: 'application/pdf',
           disposition: 'inline'
+      end
+      format.csv do
+        send_data ExportsHelper.to_csv(params[:pvsyst]), 
+        filename: "users-#{Date.today}.csv",
+        disposition: 'attachment'
       end
     end
   end

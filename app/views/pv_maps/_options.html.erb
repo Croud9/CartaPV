@@ -1,0 +1,61 @@
+<div class="map_options" style="display: none;">
+  <div class="option">
+    <div class='form_label'>
+    <h3>Импорт</h3>
+      <span class="form_text">Загрузка изображения для плана</span>
+      <input type="file" id="load_image_file" accept="image/*" />
+    </div>
+    <br>
+    <div class='form_label'>
+      <span class="form_text">Загрузка контуров из KML</span>
+      <input type="file" id="load_kml_file" accept=".kml" />
+    </div>
+    <div class='form_label'>
+      <button class='btn' id='btn_load_kml'>Загрузить на карту</button>
+    </div>
+  </div>
+
+  <div class="option">
+    <div class='form_label'>
+      <h3>Создание прямоугольной области</h3>
+      <span class="form_text">Длина, м</span>
+      <input type="number" id='in_rect_length'>
+      <span class="form_text">Ширина, м</span>
+      <input type="number" id='in_rect_width'>
+      <span class="form_text">Угол</span>
+      <div>
+          <input type="range" value="0" min="0" max="180" id='in_rect_angle' style='padding:0;' oninput="rangevalue3.value=value"/>
+          <output id="rangevalue3">0</output>
+      </div>
+      <button class='btn' id='btn_create_rect'>Создать область</button>
+    </div>
+  </div>
+
+  <div class="option">
+    <div class='form_label'>
+      <h3>Выгрузка рельефа</h3>
+      <span class="form_text">Область</span>
+      <div class="form_radio_group item-row-group" id="type_area">
+        <div class="form_radio_group-item">
+            <%= radio_button_tag('type_area', 'single', true) %>
+            <%= label_tag(:type_area_single, "Одиночная") %>
+        </div>
+        <div class="form_radio_group-item">
+            <%= radio_button_tag('type_area', 'project', false) %>
+            <%= label_tag(:type_area_project, "Проектная") %>
+        </div>
+      </div>
+      <span class="form_text">Отступ между точками, м</span>
+      <div>
+          <input type="range" value="50" min="1" max="250" id='offset_pt' style='padding:0;' oninput="rangevalue4.value=value"/>
+          <output id="rangevalue4">50</output>
+      </div>
+      <%# <button class='btn' id='btn_create_rect'>Создать область</button> %>
+      <div>
+        <button class='btn' id='btn_set_grid'>Точки</button>
+        <button class='btn' id='btn_get_elevation' >Выгрузить</button>
+        <button class='btn' id='btn_csv_to_pvsyst' style="display: none;">CSV PVsyst</button>
+      </div>
+    </div>
+  </div>
+</div>
