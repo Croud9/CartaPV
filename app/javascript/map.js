@@ -10,6 +10,7 @@ import { kml } from '@tmcw/togeojson';
 import { polygon, featureCollection } from '@turf/helpers';
 import { turbo_message } from "./flash_message.js";
 import { calcAreaForPV, calcPVs, createPolyWithHole, createRectPolygon } from "./pv-calc.js";
+import { ElevationProvider } from "./elevationProvider.js";
 
 document.addEventListener("turbo:load", function() {
     if (document.getElementById("map") !== null) {
@@ -138,6 +139,10 @@ document.addEventListener("turbo:load", function() {
                 'coordinates': []
             }
         };
+
+        const apiKey = 'QA99yf3HkkZG97cZrjXd';
+        const elevationProvider = new ElevationProvider(apiKey);
+
         const btn_distance = $("#btn-draw-distance");
         const check_border_lines = document.getElementById('check-visible-border-lines');
         const check_dash_lines = document.getElementById('check-visible-dash-lines');
@@ -155,6 +160,8 @@ document.addEventListener("turbo:load", function() {
         check_pv_polygons.addEventListener('change', visibilityLayout);
         field_image_file.addEventListener("change", handleFiles);
         btn_distance.click(distance_btn_logic);
+        $("#btn_set_grid").click(get_selected_polygon);
+        $("#btn_get_elevation").click(getRelief);
         $("#btn_create_rect").click(create_rect);
         $("#btn-load-image").click(set_image_on_map);
         $("#btn_load_kml").click(load_kml);
@@ -176,79 +183,6 @@ document.addEventListener("turbo:load", function() {
           map.setStyle('https://api.maptiler.com/maps/975e75f4-3585-4226-8c52-3c84815d6f2a/style.json?key=QA99yf3HkkZG97cZrjXd')
           distance_btn_logic(true)
         })
-        // $("#style_map_terrain").click(function () {
-          // const terrain_style = {
-          //   version: 8,
-          //   name: "OSM Mecklenburg GeoPortal",
-          //   maxPitch: 70,
-          //   zoom: 13.5,
-          //   center: [-80.846, 35.223],
-          //   sources: {
-          //     osm: {
-          //       type: "raster",
-          //       tiles: ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
-          //       tileSize: 256,
-          //       attribution: "&copy; OpenStreetMap Contributors",
-          //       maxzoom: 19
-          //     },
-          //     hillshade_source: {
-          //     type: "raster-dem",
-          //       encoding: "terrarium",
-          //       tiles: [
-          //         "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
-          //       ],
-          //       tileSize: 256,
-          //       minzoom: 0,
-          //       maxzoom: 14
-          //   },
-          //     terrain_source: {
-          //       type: "raster-dem",
-          //       encoding: "terrarium",
-          //       tiles: [
-          //         "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
-          //       ],
-          //       tileSize: 256,
-          //       minzoom: 0,
-          //       maxzoom: 14
-          //     }
-          //   },
-          //   layers: [
-          //     {
-          //       id: "osm",
-          //       type: "raster",
-          //       source: "osm"
-          //     },
-          //     {
-          //       id: "hills",
-          //       type: "hillshade",
-          //       source: "hillshade_source",
-          //       layout: { visibility: 'visible' },
-          //       paint: { 'hillshade-shadow-color': '#473B24' }
-          //     }
-          //   ],
-          //   terrain: {
-          //     source: 'terrain_source',
-          //     exaggeration: 5
-          //   }
-          // }
-
-          // map.setStyle(terrain_style)
-          
-          // let elevationArea2 = map.queryTerrainElevation([95.9345,41.2565])
-          // console.log($('.maplibregl-ctrl-scale').text())
-          // console.log($('.maplibregl-ctrl-scale').width()) // может + 14 нужно
-
-          // console.log(map.getCanvas()) // может + 14 нужно
-          // console.log(map.getCanvas().getContext('2d')) // может + 14 нужно
-          // map.getCanvas().fillText('Mine!',0,0)
-          // var canvas = document.getElementById('map').getCanvas();
-          // var ctx = canvas.getContext('2d');
-          // console.log(ctx)
-          // $('canvas')[0].getContext('2d').fillText('Mine!',0,0)
-          // $('canvas')[0].getContext('2d').fillText('Mine!',0,0)
-          // console.log(map.queryTerrainElevation([95.9345, 41.2565]))
-        // })
-        // при сохранении еще добавить  get_config_params(
       
         const scale = new maplibregl.ScaleControl();
         var map = new maplibregl.Map({
@@ -256,12 +190,10 @@ document.addEventListener("turbo:load", function() {
                 zoom: 1.75,
                 center: [45, 65],
                 maxPitch: 70,
-                // hash: true,
                 fadeDuration: 0,
                 validateStyle: false,
                 style:
-                'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd', // Актуальные, бесшовные изображения для всего мира с учетом контекста
-                // terrain_style
+                'https://api.maptiler.com/maps/hybrid/style.json?key=QA99yf3HkkZG97cZrjXd',
         }); 
       
         map.on('draw.delete', updateArea);
@@ -302,14 +234,6 @@ document.addEventListener("turbo:load", function() {
           if (e.features.length != 0) map.getCanvas().style.cursor = '';
         });
 
-        // map.addControl(
-        //   new maplibregl.TerrainControl({
-        //     source: "terrainSource",
-        //     exaggeration: 1,
-        //   })
-        // );
-
-
         function set_project_area() {
           if ($('#select_project option:selected').text() != "Выберите") {
             $.ajax({
@@ -317,7 +241,6 @@ document.addEventListener("turbo:load", function() {
               data: "id=" + $("#select_project option:selected").val(),
               dataType: "json",
               success: function(data) {
-                console.log(data)
                 deleteAreas(draw.getAll().features)
                 draw.deleteAll()
                 if (data !== null) {
@@ -358,7 +281,7 @@ document.addEventListener("turbo:load", function() {
                 }
             });
         };
-        
+
         function clickDrawArea(event) { 
             calculated_area.innerHTML = ''
             let all_data = []
@@ -369,7 +292,7 @@ document.addEventListener("turbo:load", function() {
                 selected_ids.forEach((id) => {
                   const map_feature = draw.get(id)
                   if (map_feature.geometry.type == "MultiPolygon" || map_feature.geometry.type == "Polygon") {
-                    const [poly_for_pv, top_coord, lower_coord, left_coord, right_coord] = drawAreaForPV(id);
+                    const [poly_for_pv] = drawAreaForPV(id);
                     if (poly_for_pv == 'error_square') {
                       window.Turbo.renderStreamMessage(turbo_message('error', 'Полезная площадь равна 0, измените параметры участка'));
                     } else if (poly_for_pv == 'error_hole') {
@@ -379,47 +302,13 @@ document.addEventListener("turbo:load", function() {
                       all_data.push(feature)
                       areas.push(map_feature)
                       outputAreaData(id, poly_for_pv)
+
+                      const offset_pt = +$('#offset_pt').val()
+                      set_grid_points(draw.get(id), poly_for_pv, offset_pt)
                     }
                   } else {
                     window.Turbo.renderStreamMessage(turbo_message('info', 'Приложение работает только с полигонами'));
                   };
-
-                  // выгрузка высот
-                  // const bbox_all = bbox(draw.get(id))
-                  // var extent = bbox_all;
-                  // var cellSide = 3;
-                  // var options = {units: 'meters', mask: poly_for_pv};
-
-                  // var grid = pointGrid(extent, cellSide, options);
-                  // console.log(grid)
-                  
-
-                  // map.addSource('national-park', {
-                  //   'type': 'geojson',
-                  //   'data': grid
-                  // });
-                  // map.addLayer({
-                  //   'id': 'park-volcanoes',
-                  //   'type': 'circle',
-                  //   'source': 'national-park',
-                  //   'paint': {
-                  //   'circle-radius': 3,
-                  //   'circle-color': '#B42222'
-                  //   },
-                  //   'filter': ['==', '$type', 'Point']
-                  // });
-                  // elevationArea = map.queryTerrainElevation(grid.features[0].geometry.coordinates)
-                  
-                  // grid.features.forEach((el) => {
-                  //   elevationArea.push({
-                  //     long: el.geometry.coordinates[1], 
-                  //     lat:  el.geometry.coordinates[0],
-                  //     elevat: map.queryTerrainElevation([el.geometry.coordinates[1], el.geometry.coordinates[0]])
-                  //   })
-                  // })
-                  // console.log(elevationArea)
-                  // const all_tables = drawPVs(item, poly_for_pv, top_coord, lower_coord, left_coord, right_coord);
-                  // outputAreaData(item, poly_for_pv, all_tables); 
                 });
               } catch (e) {
                 console.log(e.stack)
@@ -768,6 +657,12 @@ document.addEventListener("turbo:load", function() {
                 }
                 if (map.getSource('image_plan')) {
                     map.removeSource('image_plan');
+                }
+                if (map.getLayer('grid_points')) {
+                    map.removeLayer('grid_points');
+                }
+                if (map.getSource('grid_points')) {
+                    map.removeSource('grid_points');
                 }
             });
         };
@@ -1142,7 +1037,129 @@ document.addEventListener("turbo:load", function() {
             window.Turbo.renderStreamMessage(turbo_message('info', 'Выберите точку'));
           }
         };
+        
+        function get_selected_polygon() {
+          const selected_ids = draw.getSelectedIds();
+          $('#btn_csv_to_pvsyst').fadeTo(500, 0);
+          if (selected_ids.length != 0) {
+            try {
+              const id = selected_ids[0]
+              const map_feature = draw.get(id)
+              if (map_feature.geometry.type == "MultiPolygon" || map_feature.geometry.type == "Polygon") {
+                const offset_pt = +$('#offset_pt').val()
+                if ($('#type_area_project').is(':checked')){
+                  let source = map.getSource(`poly_for_pv${id}`)
+                  if (source === undefined) {
+                    window.Turbo.renderStreamMessage(turbo_message('error', 'Сконфигурируйте полезную площадь'));
+                  }
+                  else {
+                    $('#loader').fadeTo(500, 1)
+                    const poly_for_pv = source._data
+                    set_grid_points(map_feature, poly_for_pv, offset_pt)
+                  }
+                } else {
+                  $('#loader').fadeTo(500, 1)
+                  set_grid_points(map_feature, map_feature, offset_pt)
+                };
+                $('#loader').fadeTo(500, 0, function() {
+                  $('#loader').hide()
+                });
+              } else {
+                window.Turbo.renderStreamMessage(turbo_message('info', 'Приложение работает только с полигонами'));
+              };
+            } catch (e) {
+              console.log(e.stack)
+              window.Turbo.renderStreamMessage(turbo_message(
+                'error', 
+                `Произошла ошибка при отрисовке области под ФЭМ: ${e};`
+              ));
+              return;
+            }
+          }
+          else {
+            window.Turbo.renderStreamMessage(turbo_message('info', 'Не выбрана область'));
+          }
+        };
 
+        function set_grid_points(box, mask, offset_pt) {
+          const grid_box = bbox(box);
+          const options = {units: 'meters', mask: mask};
+
+          const grid = pointGrid(grid_box, offset_pt, options);
+
+          let source = map.getSource('grid_points')
+          if (source === undefined) {
+            map.addSource('grid_points', { 'type': 'geojson', 'data': grid });
+            map.addLayer({
+              'id': 'grid_points',
+              'type': 'circle',
+              'source': 'grid_points',
+              'paint': {
+              'circle-radius': 3,
+              'circle-color': '#ff3838eb'
+              },
+              'filter': ['==', '$type', 'Point']
+            });
+          }
+          else {
+            source.setData(grid);
+          }
+          document.getElementById("logo_text").scrollIntoView({behavior: "smooth", block: "center"});
+          map.fitBounds(grid_box, {
+            padding: 100,
+            animate: true,
+          })
+        };
+        function getRelief() {
+            const elevationArea = [];
+            const coordinates = []
+            let source = map.getSource('grid_points')
+            if (source === undefined) {
+              window.Turbo.renderStreamMessage(turbo_message('error', 'Расставьте точки'));
+            }
+            else {
+              $('#loader').fadeTo(500, 1, async function() {
+                const grid = source._data
+                grid.features.forEach((el) => {
+                  coordinates.push(el.geometry.coordinates)
+                })
+                for (const c of coordinates) {
+                    const elevation = await elevationProvider.getElevation(c[1], c[0]);
+                    elevationArea.push({
+                      long: c[1], 
+                      lat:  c[0],
+                      elevate: elevation
+                    })
+                }
+                if (elevationArea) {
+                  const formData = new FormData();
+                  formData.append('pvsyst', JSON.stringify(elevationArea));
+                  formData.append('distance_pt', +$('#offset_pt').val());
+                  $.ajax({
+                    method: 'post',
+                    url: 'gen_csv_for_pvsyst',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+                    success: function(data) {
+                      $('#btn_csv_to_pvsyst').fadeTo(500, 1);
+                      window.Turbo.renderStreamMessage(turbo_message('notice', 'Высотные отметки успешно получены'));
+                      $('#loader').fadeTo(500, 0, function() {
+                        $('#loader').hide()
+                      });
+                    },
+                    error: function (request, status, error) {
+                      window.Turbo.renderStreamMessage(turbo_message('error', `Что-то пошло не так :( ${error}`));
+                      $('#loader').fadeTo(500, 0, function() {
+                        $('#loader').hide()
+                      });
+                    }
+                  });
+                }
+              });
+            };
+        };
     };
 })
 

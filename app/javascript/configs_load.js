@@ -1,6 +1,6 @@
 document.addEventListener("turbo:load", function() {
   if (document.getElementById("map") !== null) {
-    
+    $("#type_area_project").prop('disabled', true);
     // $('#select_config').slideUp();
     $('#select_config').fadeOut();
     $('#data').fadeTo(200, 0);
@@ -10,6 +10,7 @@ document.addEventListener("turbo:load", function() {
         $('#data').fadeTo(500, 0);
         $('#btn-draw-area').fadeOut();
         $('#btn-draw-pv').fadeOut();
+        $("#type_area_project").prop('disabled', true);
         $.ajax({
           url: "get_configs_by_project",
           data: "id=" + $("#select_project option:selected").val(),
@@ -23,8 +24,10 @@ document.addEventListener("turbo:load", function() {
         $('#data').fadeTo(500, 0);
         $('#btn-draw-area').fadeOut();
         $('#btn-draw-pv').fadeOut();
+        $("#type_area_project").prop('disabled', true);
       }
       else {
+        $("#type_area_project").prop('disabled', false);
         $('#data').fadeTo(1000, 1);
         $('#btn-draw-area').fadeIn(500);
         $('#btn-draw-pv').fadeIn(500);

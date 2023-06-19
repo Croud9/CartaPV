@@ -29,20 +29,21 @@ table {
   width: 100%;
   border: none;
   margin: 20px 0;
-
+  border-radius: 8px;
   thead th {
     font-weight: bold;
     text-align: left;
     border: none;
     padding: 10px 15px;
-    background: #b1b1b1;
+    background: #00be3fd5;
+    color: white;
     font-size: 14px;
   }
   thead tr th:first-child {
-    border-radius: 8px 0 0 8px;
+    border-radius: 8px 0 0 0;
   }
   thead tr th:last-child {
-    border-radius: 0 8px 8px 0;
+    border-radius: 0 8px 0 0;
   }
   tbody td {
     text-align: left;
@@ -50,15 +51,13 @@ table {
     padding: 10px 15px;
     font-size: 14px;
     vertical-align: center;
-  }
-  tbody tr:nth-child(even){
     background: #f3f3f3;
   }
-  tbody tr td:first-child {
-    border-radius: 8px 0 0 8px;
+  tbody tr:nth-last-child(1) td:first-child{
+    border-radius: 0 0 0 8px;
   }
-  tbody tr td:last-child {
-    border-radius: 0 8px 8px 0;
+  tbody tr:nth-last-child(1) td:last-child{
+    border-radius: 0 0 8px 0;
   }
 }
 
