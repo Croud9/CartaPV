@@ -5,7 +5,7 @@ Rails.application.routes.draw do
   get "get_project_params", to: "pv_maps#get_project_params"
   get "get_configs_by_project", to: "pv_maps#get_configs_by_project"
   get "get_params_for_snapshots", to: "exports#get_params_for_snapshots"
-  get "export_file_path", to: "exports#show"
+  get "export_file", to: "exports#show"
   get "export", to: "exports#index"
   post "gen_csv_for_pvsyst", to: "exports#csv_for_pvsyst"
   post "update_files", to: "exports#update_files"
