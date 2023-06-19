@@ -162,7 +162,6 @@ document.addEventListener("turbo:load", function() {
         btn_distance.click(distance_btn_logic);
         $("#btn_set_grid").click(get_selected_polygon);
         $("#btn_get_elevation").click(getRelief);
-        $("#btn_csv_to_pvsyst").click(create_csv_for_pvsyst);
         $("#btn_create_rect").click(create_rect);
         $("#btn-load-image").click(set_image_on_map);
         $("#btn_load_kml").click(load_kml);
@@ -1041,6 +1040,7 @@ document.addEventListener("turbo:load", function() {
         
         function get_selected_polygon() {
           const selected_ids = draw.getSelectedIds();
+          $('#btn_csv_to_pvsyst').fadeTo(500, 0);
           if (selected_ids.length != 0) {
             try {
               const id = selected_ids[0]
@@ -1096,11 +1096,10 @@ document.addEventListener("turbo:load", function() {
               'source': 'grid_points',
               'paint': {
               'circle-radius': 3,
-              'circle-color': '#B42222'
+              'circle-color': '#ff3838eb'
               },
               'filter': ['==', '$type', 'Point']
             });
-
           }
           else {
             source.setData(grid);
@@ -1111,8 +1110,8 @@ document.addEventListener("turbo:load", function() {
             animate: true,
           })
         };
-        const elevationArea = [];
         function getRelief() {
+            const elevationArea = [];
             const coordinates = []
             let source = map.getSource('grid_points')
             if (source === undefined) {
@@ -1132,37 +1131,34 @@ document.addEventListener("turbo:load", function() {
                       elevate: elevation
                     })
                 }
-                console.log(elevationArea)
-                window.Turbo.renderStreamMessage(turbo_message('notice', 'Высотные отметки успешно получены'));
-                $('#btn_csv_to_pvsyst').fadeTo(500, 1);
-                $('#loader').fadeTo(500, 0, function() {
-                  $('#loader').hide()
-                });
+                if (elevationArea) {
+                  const formData = new FormData();
+                  formData.append('pvsyst', JSON.stringify(elevationArea));
+                  formData.append('distance_pt', +$('#offset_pt').val());
+                  $.ajax({
+                    method: 'post',
+                    url: 'gen_csv_for_pvsyst',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+                    success: function(data) {
+                      $('#btn_csv_to_pvsyst').fadeTo(500, 1);
+                      window.Turbo.renderStreamMessage(turbo_message('notice', 'Высотные отметки успешно получены'));
+                      $('#loader').fadeTo(500, 0, function() {
+                        $('#loader').hide()
+                      });
+                    },
+                    error: function (request, status, error) {
+                      window.Turbo.renderStreamMessage(turbo_message('error', `Что-то пошло не так :( ${error}`));
+                      $('#loader').fadeTo(500, 0, function() {
+                        $('#loader').hide()
+                      });
+                    }
+                  });
+                }
               });
-            }
-        };
-
-        function create_csv_for_pvsyst() {
-          if (elevationArea) {
-            console.log(elevationArea)
-            const formData = new FormData();
-            formData.append('pvsyst', JSON.stringify(elevationArea));
-            console.log(formData)
-            $.ajax({
-              method: 'post',
-              url: 'export_csv.csv',
-              data: formData,
-              processData: false,
-              contentType: false,
-              beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
-              // success: function(data) { window.Turbo.renderStreamMessage(data);}
-            });
-
-          }
-          // lat = float(all_str[1]) * -100000 
-          // long = float(all_str[2]) * 100000
-          // alt = all_str[3]
-          // csv.write(f"{lat},{long},{alt}\n")
+            };
         };
     };
 })

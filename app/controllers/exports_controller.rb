@@ -89,9 +89,12 @@ class ExportsController < ApplicationController
       )
     end
   end
+  
+  def csv_for_pvsyst
+    @@csv_data = ExportsHelper.to_csv(params)
+  end
 
   def show
-    # print params
     respond_to do |format|
       format.pdf do
         pdf_file = get_pdf_file()
@@ -101,8 +104,9 @@ class ExportsController < ApplicationController
           disposition: 'inline'
       end
       format.csv do
-        send_data ExportsHelper.to_csv(params[:pvsyst]), 
-        filename: "users-#{Date.today}.csv",
+        send_data @@csv_data[:data], 
+        filename: "Relief by CartaPV peak(#{@@csv_data[:max_h]}m) #{Date.today}.csv",
+        type: 'text/csv',
         disposition: 'attachment'
       end
     end
