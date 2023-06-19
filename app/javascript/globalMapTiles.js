@@ -1,6 +1,3 @@
-// https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/
-// https://github.com/datalyze-solutions/globalmaptiles
-
 const pi_div_360 = Math.PI / 360.0;
 const pi_div_180 = Math.PI / 180.0;
 const pi_div_2 = Math.PI / 2.0;

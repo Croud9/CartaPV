@@ -1144,8 +1144,10 @@ document.addEventListener("turbo:load", function() {
 
         function create_csv_for_pvsyst() {
           if (elevationArea) {
+            console.log(elevationArea)
             const formData = new FormData();
             formData.append('pvsyst', JSON.stringify(elevationArea));
+            console.log(formData)
             $.ajax({
               method: 'post',
               url: 'export_csv.csv',
