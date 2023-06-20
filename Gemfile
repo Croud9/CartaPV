@@ -49,6 +49,8 @@ gem 'prawn-table'
 gem 'prawn-svg'
 gem 'rmagick'
 
+gem 'rspec-rails'
+gem 'sidekiq'
 # Use Postgres as the database for Active Record
 gem 'pg'
 
