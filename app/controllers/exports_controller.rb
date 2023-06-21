@@ -48,7 +48,7 @@ class ExportsController < ApplicationController
     configs_ajax = params[:configs]
     images = params[:config_imgs]
     location = params[:location]
-    project_img = params[:project_img]
+    project_img = params[:project_img].tempfile.read
     config_ids = []
     title_configs = []
     configs = []
@@ -60,7 +60,7 @@ class ExportsController < ApplicationController
       title_configs << db_config.title
       @project = db_config.project
 
-      image = images[i]
+      image = images[i].tempfile.read
       input_total_params = config['total_params']
 
       pv_module = PvModule.find(db_config.configuration['module_id'])
