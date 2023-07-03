@@ -462,14 +462,18 @@ function calcPVs(poly_for_pv, top_coord, lower_coord, left_coord, right_coord, p
                         }
                     else {
                         line_down = lineString([pt_left_down.geometry.coordinates, pt_right_down.geometry.coordinates]);
+          
                         const inter_points = lineIntersect(poly_for_pv, line_down).features;
-                        // console.log(inter_points)
-                        const pt_left_up = rhumbDestination(inter_points[0].geometry.coordinates, -height_table, angle_90_for_pv, options);
-                        const pt_right_up = rhumbDestination(inter_points[1].geometry.coordinates, -height_table, angle_90_for_pv, options);   
-                        line_down = [inter_points[0].geometry.coordinates, inter_points[1].geometry.coordinates];
-                        line_right_up = [inter_points[1].geometry.coordinates, pt_right_up.geometry.coordinates]; 
-                        line_left_up = [inter_points[0].geometry.coordinates, pt_left_up.geometry.coordinates];
-                        line_up = [pt_left_up.geometry.coordinates, pt_right_up.geometry.coordinates];  
+                        if (inter_points.length <= 1) {
+                          continue;
+                        } else {
+                          const pt_left_up = rhumbDestination(inter_points[0].geometry.coordinates, -height_table, angle_90_for_pv, options);
+                          const pt_right_up = rhumbDestination(inter_points[1].geometry.coordinates, -height_table, angle_90_for_pv, options);   
+                          line_down = [inter_points[0].geometry.coordinates, inter_points[1].geometry.coordinates];
+                          line_right_up = [inter_points[1].geometry.coordinates, pt_right_up.geometry.coordinates]; 
+                          line_left_up = [inter_points[0].geometry.coordinates, pt_left_up.geometry.coordinates];
+                          line_up = [pt_left_up.geometry.coordinates, pt_right_up.geometry.coordinates];  
+                        }
 
                     }
                     if (length(lineString(line_up), options) >= width_table && length(lineString(line_down), options) >= width_table) {

@@ -373,7 +373,7 @@ document.addEventListener("turbo:load", function() {
                       };
                   });
                 } catch (e) {
-                  // console.log(e.stack)
+                  console.log(e.stack)
                   $('#loader').fadeTo(500, 0, function() {
                     $('#loader').hide()
                   });
@@ -1109,7 +1109,7 @@ document.addEventListener("turbo:load", function() {
             animate: true,
           })
         };
-        
+
         function getRelief() {
             const elevationArea = [];
             const coordinates = []
