@@ -304,7 +304,6 @@ document.addEventListener("turbo:load", function() {
                       outputAreaData(id, poly_for_pv)
 
                       const offset_pt = +$('#offset_pt').val()
-                      set_grid_points(draw.get(id), poly_for_pv, offset_pt)
                     }
                   } else {
                     window.Turbo.renderStreamMessage(turbo_message('info', 'Приложение работает только с полигонами'));
@@ -1110,6 +1109,7 @@ document.addEventListener("turbo:load", function() {
             animate: true,
           })
         };
+        
         function getRelief() {
             const elevationArea = [];
             const coordinates = []
