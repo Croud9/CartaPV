@@ -58,7 +58,7 @@ class ExportPdf
 
     move_down(20)
 
-    image StringIO.open(@project_img.tempfile.read), position: :center, scale: 0.43
+    image StringIO.open(@project_img), position: :center, scale: 0.43
     move_down(10)
     text "Рис. 1 - Местоположение области", align: :center, style: :italic, size: 10
   end
@@ -66,7 +66,7 @@ class ExportPdf
   def single_config
     config = @configs[0][:config]
     pv_module = @configs[0][:pv_module]
-    pv_image = @configs[0][:img].tempfile.read
+    pv_image = @configs[0][:img]
     
     step_table = "vendor/assets/step_table.png"
     distance_table = "vendor/assets/distance_table.png"
@@ -244,7 +244,7 @@ class ExportPdf
   def add_data_column scale, data, index_config
     config = @configs[index_config][:config]
     pv_module = @configs[index_config][:pv_module]
-    pv_image = @configs[index_config][:img].tempfile.read
+    pv_image = @configs[index_config][:img]
     
     img_table = "vendor/assets/scrin_table.png"
     if config.total_params

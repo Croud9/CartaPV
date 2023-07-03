@@ -49,6 +49,10 @@ gem 'prawn-table'
 gem 'prawn-svg'
 gem 'rmagick'
 
+gem 'rspec-rails'
+# gem 'sidekiq'
+gem 'delayed_job_active_record'
+gem 'daemons'
 # Use Postgres as the database for Active Record
 gem 'pg'
 

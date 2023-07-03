@@ -93,7 +93,6 @@ document.addEventListener("turbo:load", function() {
         const min = target.min
         const max = target.max
         const val = target.value
-        console.log(e)
 
         target.style.backgroundSize = (val - min) * 100 / (max - min) + '% 100%'
         }
