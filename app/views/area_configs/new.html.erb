@@ -1,10 +1,10 @@
 <%= link_to '<', project_path(@project), class: "btn_text_only"%>
-<h2>Новая конфигурация для <%= @project.title %> </h2>
+<h3>Новая конфигурация для <%= @project.title %> </h3>
 
 <%= form_tag area_configs_path(project_id: @project) do %>
   <div class="left_align_form">
     <div class="form_label">
-      <%= text_field_tag :input_config_title, nil, placeholder: "Введите название конфигурации"  %>
+      <%= text_field_tag :input_config_title, nil, placeholder: "Введите название конфигурации", required: true %>
       <%= submit_tag "Сохранить", class: "btn_text_only" %>
     </div>  
   </div>

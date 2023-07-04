@@ -1,11 +1,11 @@
-<%= link_to '<', projects_path, class: "btn_text_only"%>
-<h2>Новый проект</h2>
+<%= link_to 'Список проектов', projects_path, class: "btn_text_only"%>
+<h3>Новый проект</h3>
 
+<br>
 <%= form_tag projects_path do %>
-  <div class="left_align_form">
     <div class="form_label">
-      <%= text_field_tag :input_project_title, nil, placeholder: "Введите название проекта"  %>
+      <span class="form_text">Название проекта</span>
+      <%= text_field_tag :input_project_title, nil, placeholder: "Введите название проекта", required: true   %>
       <%= submit_tag "Сохранить", class: "btn_text_only" %>
     </div> 
-  </div>
 <% end %>

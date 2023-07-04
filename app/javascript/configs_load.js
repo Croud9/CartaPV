@@ -1,11 +1,12 @@
 document.addEventListener("turbo:load", function() {
   if (document.getElementById("map") !== null) {
     $("#type_area_project").prop('disabled', true);
-    // $('#select_config').slideUp();
     $('#select_config').fadeOut();
+    $('#select_config_label').fadeOut();
     $('#data').fadeTo(200, 0);
     $('#select_project').change(function() {
         $('#select_config').fadeIn(500);
+        $('#select_config_label').fadeIn(500);
         $('#select_config').empty();
         $('#data').fadeTo(500, 0);
         $('#btn-draw-area').fadeOut();

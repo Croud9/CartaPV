@@ -7,15 +7,15 @@
     <div class="container-config hideToUser" id="config">
         <div id="btn-config-hide"><%=image_tag("close_icon.png", class: "icon")%></div>
         <div class="form_label">
-          <span class="form_text">Проект</span>
+          <span class="form_text">Проект | <%= link_to 'Создать новый', new_project_path, class: "btn_text_only"%> </span>
           <%= select_tag "select_project", 
               options_from_collection_for_select(@projects, :id, :title), 
               prompt: 'Выберите',
               class: "field_one_select"
           %>
-        </div> 
+        </div>
         <div class="form_label">
-          <span class="form_text">Конфигурация</span>
+          <span class="form_text" id="select_config_label">Конфигурация</span>
           <%= select_tag "select_config", 
               options_from_collection_for_select(@area_configs, :id, :title), 
               prompt: 'Выберите',
